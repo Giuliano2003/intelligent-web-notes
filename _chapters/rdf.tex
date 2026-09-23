@@ -796,3 +796,140 @@ RDF fornisce dei predicati built-in per la reificazione:
 
 
 \section{RDFS}
+RDFS è un vocabolario creato dal W3C, questo vocabolario introduce la capacità di creare gerarchie e vincoli di base.
+\textbf{Si può vedere come un estensione del vocabolario base di RDF.}, che aggiunge una modellazione ad oggetti.
+Nello specificio il vocabolario RDFS definisce un insieme di predicati che definiscono classi,domini,codomini e consentono di rappresentare il fatto che:
+\begin{itemize}
+    \item Un individuo appartiene ad una classe. (Tom è un gatto)
+    \item Una classe è sottoclasse di un'altra classe. (i gatti sono felini)
+    \item Il dominio e il codominio di una proprietà. (il dominio e il codominio di \texttt{friend\_of} è Person)
+\end{itemize}
+
+Il vocabolario RDFS, è disponibile in diverse serializzazioni (praticamente tutte quelle che abbiamo visto), noi useremo \textbf{la sintassi di Turtle}.
+
+\subsection{Vocabolario per le classi}
+Le classi permettono di raggruppare le risorse (i nodi del nostro grafo) in insiemi concettuali.
+
+\begin{itemize}
+    \item \textbf{rdfs:Class} (una risorsa e' una classe). \\
+    Si utilizza per dichiarare l'esistenza di un concetto generale all'interno del dominio. Quando dichiariamo qualcosa come \texttt{rdfs:Class}, stiamo creando il ``contenitore'' concettuale.
+    
+    \item \textbf{rdf:type} (una risorsa e' un'istanza di una classe). \\
+    \textit{[Nota: Appartiene al vocabolario RDF di base]}. Questo e' il predicato che collega un individuo specifico (una risorsa concreta) alla sua classe di appartenenza. Rappresenta la relazione ``is-a'' a livello di istanza (es. ``Mario e' un Uomo''), cioè
+    definisce che una risorsa è un'istanza di una classe.
+    
+    \item \textbf{rdfs:subClassOf} (una classe e' sottoclasse di un'altra). \\
+    Permette di creare tassonomie e gerarchie. Se la classe A e' sottoclasse di B, ogni \textbf{istanza di A e' implicitamente anche un'istanza di B}.
+\end{itemize}
+
+\paragraph{Esempio Pratico (Classi):}
+Immaginiamo di voler modellare il concetto di essere umano e di studente.
+
+\begin{verbatim}
+# Definiamo due classi
+ex:Persona rdf:type rdfs:Class .
+ex:Studente rdf:type rdfs:Class .
+
+# Creiamo la gerarchia: ogni Studente e' una Persona
+ex:Studente rdfs:subClassOf ex:Persona .
+
+# Creiamo un'istanza (un dato concreto)
+ex:Mario Rossi rdf:type ex:Studente .
+\end{verbatim}
+
+\noindent
+\textit{Inferenza logica:} Grazie a \texttt{rdfs:subClassOf}, un motore di inferenza che legge questo grafo dedurra' automaticamente la tripla implicita \texttt{ex:Mario Rossi rdf:type ex:Persona}, anche se noi non l'abbiamo scritta esplicitamente.
+Questo perchè grazie a \textbf{rdf:type}, posso dire che Mario Rossi è un'istanza di Studente, ma grazie a \textbf{rdfs:subClassOf}, posso dire che 
+ogni istanza di studente è anche \textbf{un'istanza} di una persona, quindi Mario rossi è un'istanza di Persona, e questo si esprime nel seguente modo:
+ex:Mario Rossi rdf:type ex:Persona . Questo perchè con rdf:type si esprime "è un'istanza".
+
+
+
+\subsection{Vocabolario per le proprieta'}
+Le proprieta' definiscono i tipi di archi che collegano i nodi nel grafo, descrivendo le relazioni tra le risorse.
+
+\begin{itemize}
+    \item \textbf{rdf:Property} (una risorsa e' una proprieta'). \\
+    \textit{[Nota: Appartiene al vocabolario RDF]}. Serve a dichiarare che un certo termine puo' essere usato come predicato in una tripla.
+    
+    \item \textbf{rdfs:subPropertyOf} (una proprieta' e' sottoproprieta' di un'altra). \\
+    Crea una gerarchia tra le relazioni stesse. Se la proprieta' P1 e' sottoproprieta' di P2, ogni volta che due nodi sono collegati da P1, il sistema deduce che sono collegati anche da P2.
+    
+    \item \textbf{rdfs:domain} (il dominio). \\
+    Vincola il Soggetto della tripla. Se una proprieta' ha come dominio la classe C, significa che qualsiasi risorsa che usi questa proprieta' come soggetto appartiene implicitamente alla classe C.
+    
+    \item \textbf{rdfs:range} (il codominio o range). \\
+    Vincola l'Oggetto della tripla. Se una proprieta' ha come range la classe C, il valore di arrivo della relazione sara' implicitamente un'istanza della classe C.
+\end{itemize}
+
+\paragraph{Esempio Pratico (Proprieta'):}
+Definiamo una relazione generale di conoscenza e una piu' specifica di amicizia, applicando dei vincoli.
+
+\begin{verbatim}
+# Definiamo la proprieta' generale "conosce"
+ex:conosce rdf:type rdf:Property ;
+           rdfs:domain ex:Persona ;
+           rdfs:range ex:Persona .
+
+# Definiamo la proprieta' piu' specifica "amico di"
+ex:amicoDi rdf:type rdf:Property ;
+           rdfs:subPropertyOf ex:conosce .
+
+# Dati concreti nel grafo
+ex:Mario Rossi ex:amicoDi ex:Luigi Bianchi .
+\end{verbatim}
+
+\noindent
+\textit{Inferenze logiche generate in questo esempio:}
+\begin{enumerate}
+    \item Poiche' \texttt{amicoDi} e' sottoproprieta' di \texttt{conosce}, il sistema deduce: \\ \texttt{ex:Mario Rossi ex:conosce ex:Luigi Bianchi}.
+    \item Poiche' chiunque usi il predicato \texttt{conosce} deve appartenere alla classe \texttt{Persona} (vincolo di dominio), il sistema deduce che Mario Rossi e' una Persona.
+    \item Poiche' il target del predicato \texttt{conosce} deve essere della classe \texttt{Persona} (vincolo di range), il sistema deduce che anche Luigi Bianchi e' una Persona.
+\end{enumerate}
+
+Un esempio di pezzo del dizionario (serializzato in Turtle):
+\begin{lstlisting}
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+rdfs:Class rdf:type rdfs:Class ;
+           rdfs:subClassOf rdfs:Resource ;
+           rdfs:label "Class" ;
+           rdfs:comment "The class of classes." .
+\end{lstlisting}
+\subsection{Tassonomie}
+Una tassonomia è una gerarchia di classi, dalle più specifiche alle più generali.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{_files/_images/rdf9.png}
+    \caption{Esempio di Tassonomia, cioè di gerarchia fra classi, questa può essere rappresentata in Turtle o diverse serializzazioni.}
+    \label{fig:etichetta}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{_files/_images/rdf10.png}
+    \caption{Grafo delle informazioni esplicite.}
+    \label{fig:etichetta}
+\end{figure}
+Da questo grafo posso infierire due cose:
+\begin{itemize}
+    \item (Frank rdf:type Person)
+    \item (Jeen rdf:type Person)
+\end{itemize}
+
+
+\newpage
+\section{SPARQL}
+SPARQL (Simple Protocol and RDF Query Language) è il linguaggio di query per interrogare modelli RDF.
+Permette di cercare informazioni dentro un grafo RDF specificando pattern di triple da
+trovare.
+\begin{warning}{SPARQL è indipendente dalla serializzazione}
+    SPARQL interroga il grafo RDF, tramite una sintassi simile a Turtle, \textbf{ma questo non implica che può interrogare solo dati in Turtle},
+    anzi, quello che fa SPARQL è interrogare il grafo RDF, che viene rappresentato da tutte le serializzazioni.
+
+    
+    \textbf{Quindi SPARQL è indipendente dalla serializzazione dei dati}
+\end{warning}
+
+
