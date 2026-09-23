@@ -906,6 +906,8 @@ Una tassonomia è una gerarchia di classi, dalle più specifiche alle più gener
     \label{fig:etichetta}
 \end{figure}
 
+\clearpage
+
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.7\textwidth]{_files/_images/rdf10.png}
@@ -925,11 +927,452 @@ SPARQL (Simple Protocol and RDF Query Language) è il linguaggio di query per in
 Permette di cercare informazioni dentro un grafo RDF specificando pattern di triple da
 trovare.
 \begin{warning}{SPARQL è indipendente dalla serializzazione}
-    SPARQL interroga il grafo RDF, tramite una sintassi simile a Turtle, \textbf{ma questo non implica che può interrogare solo dati in Turtle},
+    SPARQL interroga il grafo RDF, \textbf{tramite una sintassi simile a Turtle}, \textbf{ma questo non implica che può interrogare solo dati in Turtle},
     anzi, quello che fa SPARQL è interrogare il grafo RDF, che viene rappresentato da tutte le serializzazioni.
 
     
     \textbf{Quindi SPARQL è indipendente dalla serializzazione dei dati}
 \end{warning}
 
+\begin{lstlisting}[caption={Query SPARQL per capitali e paesi nel continente africano}]
+PREFIX abc: <http://mynamespace.com/exampleOntology#>
+SELECT ?capital ?country
+WHERE { ?x abc:cityname ?capital.
+        ?y abc:countryname ?country.
+        ?x abc:isCapitalOf ?y.
+        ?y abc:isInContinent abc:africa. }
+\end{lstlisting}
 
+In pratica, una query SPARQL descrive la forma delle triple che vogliamo trovare.
+\begin{itemize}
+    \item \textbf{Le variabili} : sono identificate dal prefisso ? , ad esempio ?person,?label
+    \item La clausola \textbf{WHERE} contiene le condizioni della query sotto forma di triple, cioè soggetto,
+predicato e oggetto, questa restituisce una \textbf{tabella di binding delle variabili.}
+    \item La clausola \textbf{SELECT} specifica invece quali variabili devono essere restituite nel risultato
+finale
+\end{itemize}
+La struttura base è quindi:
+\begin{lstlisting}[caption={Struttura base di una query SPARQL}]
+SELECT ?variabile
+WHERE {
+?soggetto ?predicato ?oggetto .
+}
+\end{lstlisting}
+Qui ?soggetto , ?predicato e ?oggetto sono variabili. Il motore SPARQL proverà a sostituirle con valori reali presenti nel grafo RDF.
+\subsection{Esempi pratici di interrogazioni}
+Per ottenere una lista di tutte le risorse che hanno un'etichetta, cioè una label, si può scrivere:
+\begin{lstlisting}
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?resource ?label
+WHERE {
+?resource rdfs:label ?label .
+} 
+\end{lstlisting}
+Supponiamo di avere il grafo definito da questo codice:
+\begin{lstlisting}
+ex:Dante ex:HaScritto ex:DivinaCommedia .
+ex:Dante ex:HaScritto ex:VitaNova .
+ex:Petrarca ex:HaScritto ex:Canzoniere .
+\end{lstlisting}
+e la query è:
+\begin{lstlisting}
+SELECT ?persona ?opera
+WHERE {
+?persona ex:HaScritto ?opera .
+}
+\end{lstlisting}
+Quello che succede è che nel where viene costruita una tabella di binding (come abbiamo detto prima), in questo caso le
+colonne saranno fatto in questo modo:
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?persona} & \textbf{?opera} \\ \hline
+ex:Dante & ex:VitaNova \\ \hline
+ex:Petrarca & ex:Canzoniere \\ \hline
+ex:Dante & ex:DivinaCommedia \\ \hline
+\end{tabular}
+\end{center}
+La select poi da questa tabella, seleziona solo ?persona ed ?opera che già ci sono.
+
+
+\begin{definition}{Basic Graph Pattern}
+Un BGP è un insieme di triple pattern, \textbf{cioè triple RDF in cui alcuni elementi possono essere variabili (giustamente perchè siamo in SPARQL).}
+\end{definition}
+\begin{example}{Esempio di Basic Graph Pattern}
+Supponiamo di avere la query:
+\begin{lstlisting}
+SELECT ?person
+WHERE {
+    ?person :worksFor :Google .
+}
+\end{lstlisting}
+Un esempio di BGP è :
+\begin{center}
+    ?person :worksFor :Google .
+\end{center}
+Il concetto fondamentale è che un BGP, può contenere piu triple di pattern.
+Per esempio:
+\begin{lstlisting}
+SELECT ?person ?company
+WHERE {
+    ?person :worksFor ?company .
+    ?person :knows :Luigi .
+}
+\end{lstlisting}
+Il BGP è formato da due triple di pattern:
+\begin{center}
+?person :worksFor ?company . \\
+?person :knows    :Luigi    .
+\end{center}
+\end{example}
+\begin{definition}{Group Graph Pattern}
+Un insieme di pattern SPARQL raggruppati tra \{\}, che può contenere anche BGP, OPTIONAL, UNION, FILTER, ecc, quindi un contenitore per altri pattern.
+\end{definition}
+\begin{example}{Esempio di GGP}
+Un GGP è piu generale di un BGP, un GGP è \textbf{tutto quello che vi è dentro le parentesi graffe}.
+\begin{lstlisting}
+{
+    ?person :worksFor ?company .
+
+    OPTIONAL {
+        ?person :knows ?friend .
+    }
+}
+\end{lstlisting}
+\begin{center}
+\begin{forest}
+  for tree={
+    font=\ttfamily,
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=child,
+    edge path={
+      \noexpand\path [\forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- (.child anchor)\forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1 {
+        insert before={[,phantom]}
+      }{}
+    },
+    fit=band,
+    s sep=20pt,
+    l sep=15pt
+  }
+[GGP
+  [BGP
+    [?person :worksFor ?company]
+  ]
+  [OPTIONAL
+    [GGP
+      [BGP
+        [?person :knows ?friend]
+      ]
+    ]
+  ]
+]
+\end{forest}
+\end{center}
+\end{example}
+\subsection{Solution Mapping}
+Il concetto di Solution Mapping, indicato spesso con $\mu$, serve a rappresentare formalmente
+una singola soluzione di una query SPARQL. Un solution mapping rappresenta una riga della tabella fuoriuscente dal WHERE.
+
+
+Un solution mapping, associa alle variabili della query a termini RDF. Formalmente un Solution Mapping è una funzione, che è definita:
+\begin{center}
+    $\mu$ : Var $\to$ RDFTerm
+\end{center}
+dove
+\begin{itemize}
+    \item \textbf{Var} : sono le variabili della query, ad esempio nel where, se ho da riempire ?person e ?film, allora il dominio sarà quello
+    \item \textbf{RDFTerm} :  possono essere URI, letterali o blank node.
+\end{itemize}
+
+Per esempio, se una query contiene ?film e ?person , una possibile funzione è:
+\begin{itemize}
+    \item $\mu(?film)$ = eg:Arrival
+    \item $\mu(?person)$ = eg:Adams
+\end{itemize}
+In pratica, $\mu$ corrisponde ad una riga del risultato, ovviamente la tabella fuoriuscente non sarà solo una riga del risultato,
+ma sarà un multiset, cioè
+\[
+\{\mu_1, \mu_2, \dots\}
+\]
+\subsection{Blank Node nei risultati della query}
+
+Una tabella di risultati SPARQL può contenere anche \textbf{blank node}.
+
+È importante ricordare che gli identificatori associati ai blank node sono \textbf{locali al grafo RDF in cui vengono utilizzati}: non sono URI e non costituiscono identificatori globali della risorsa.
+
+Ad esempio, in un grafo RDF possiamo avere:
+
+\begin{lstlisting}
+:Mario :hasAddress _:b1 .
+_:b1 :city "Napoli" .
+\end{lstlisting}
+
+In questo caso, \texttt{\_:b1} identifica un blank node \textbf{all'interno del contesto del grafo}. Non significa che esista una risorsa globalmente identificata dall'identificatore \texttt{\_:b1}.
+
+Di conseguenza, quando un blank node viene restituito come risultato di una query SPARQL, \textbf{l'identificatore utilizzato nella tabella dei risultati non deve necessariamente coincidere con quello utilizzato nel grafo originale}.
+
+Ad esempio, consideriamo la query:
+
+\begin{lstlisting}
+SELECT ?address
+WHERE {
+:Mario :hasAddress ?address .
+}
+\end{lstlisting}
+
+Se nel grafo abbiamo:
+
+\begin{lstlisting}
+:Mario :hasAddress _:b1 .
+_:b1 :city "Napoli" .
+\end{lstlisting}
+
+il risultato potrebbe essere rappresentato come:
+
+\begin{center}
+\begin{tabular}{|c|}
+\hline
+\textbf{?address} \\ \hline
+\texttt{\_:b0} \\ \hline
+\end{tabular}
+\end{center}
+
+Qui \texttt{\_:b0} rappresenta il blank node restituito come valore di \texttt{?address}, ma \textbf{non deve essere interpretato come un nuovo identificatore globale} e non è necessario che coincida con \texttt{\_:b1}, utilizzato nel grafo originale.
+
+In altre parole:
+
+\begin{itemize}
+\item nel grafo originale il blank node può essere rappresentato come \texttt{\_:b1};
+\item nei risultati della query lo stesso blank node può essere rappresentato come \texttt{\_:b0};
+\item ciò che conta è che il blank node sia correttamente identificato \textbf{all'interno del contesto in cui viene rappresentato}, non il valore testuale dell'etichetta.
+\end{itemize}
+
+Pertanto, gli identificatori dei blank node sono \textbf{locali al contesto RDF} e non possono essere utilizzati come identificatori globali per riferirsi a una risorsa al di fuori di tale contesto.
+
+\subsection{Utilizzo di Select}
+La forma di query \texttt{SELECT} è la più utilizzata in SPARQL. Il suo scopo è quello di estrarre e restituire i valori legati a specifiche variabili definite nella clausola \texttt{WHERE}. Il risultato di una query \texttt{SELECT} è un insieme di solution mapping in cui le colonne corrispondono alle variabili richieste e le righe rappresentano ogni singola combinazione di valori (soluzione) trovata all'interno del grafo.
+
+È il costrutto ideale quando si desidera estrapolare informazioni testuali o elenchi da mostrare a un utente o far elaborare a un'applicazione.
+
+\textbf{Esempio Pratico:}
+Supponiamo di voler trovare il nome e l'indirizzo email di tutte le persone presenti nel nostro database utilizzando il vocabolario FOAF (\textit{Friend of a Friend}).
+
+\begin{lstlisting}
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?nome ?email
+WHERE {
+  ?persona a foaf:Person ;
+           foaf:name ?nome ;
+           foaf:mbox ?email .
+}
+\end{lstlisting}
+In questo caso, il motore SPARQL restituirà una tabella con due colonne (\texttt{?nome} e \texttt{?email}) contenenti rispettivamente i nomi e le caselle di posta elettronica trovati.
+
+\subsection{Utilizzo di ASK}
+La forma di query \texttt{ASK} serve per effettuare una verifica dell'esistenza di un determinato pattern. A differenza di \texttt{SELECT}, non restituisce i dati effettivi (non estrae stringhe, URI o numeri), ma si limita a rispondere con un valore booleano: \texttt{True} (Vero) se esiste almeno una soluzione nel dataset che soddisfa le condizioni della clausola \texttt{WHERE}, oppure \texttt{False} (Falso) in caso contrario.
+
+Questo costrutto è estremamente utile ed efficiente per effettuare controlli rapidi. Poiché il database può fermare la ricerca al primo risultato trovato senza dover costruire una tabella completa, le query \texttt{ASK} sono generalmente molto più leggere.
+
+\textbf{Esempio Pratico:}
+Vogliamo semplicemente sapere se all'interno del database è presente una persona che si chiama "Mario Rossi".
+
+\begin{lstlisting}
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+ASK
+WHERE {
+  ?persona a foaf:Person ;
+           foaf:name "Mario Rossi" .
+}
+\end{lstlisting}
+Il risultato di questa query sarà il valore \texttt{true} se Mario Rossi esiste nel grafo, altrimenti \texttt{false}.
+
+In generale il valore di ask sarà \texttt{true}, se esiste almeno una tripla nel Solution Mapping fuoriuscente, altrimenti \texttt{false}
+
+\subsection{Utilizzo di Construct}
+La forma \texttt{CONSTRUCT} è un potente strumento di manipolazione dei dati. Invece di restituire una tabella di risultati (come fa la \texttt{SELECT}), la \texttt{CONSTRUCT} restituisce un \textbf{nuovo grafo RDF}. 
+
+Il funzionamento prevede di definire un "template" di triple subito dopo la parola chiave \texttt{CONSTRUCT}.
+
+Per ogni soluzione trovata nella clausola \texttt{WHERE},\textbf{ i valori delle variabili vengono iniettati nel template scritto in CONSTRUCT per generare nuove triple RDF}. 
+
+\textbf{Esempio Pratico:}
+Immaginiamo di avere un database in cui le persone sono definite tramite il vocabolario FOAF. Vogliamo estrarre questi dati e generare un nuovo grafo RDF in cui le stesse persone sono espresse usando il vocabolario \texttt{vCard}.
+
+\begin{lstlisting}
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX vcard: <http://www.w3.org/2001/vcard-rdf/3.0#>
+
+CONSTRUCT {
+  # Template del nuovo grafo
+  ?persona a vcard:Individual ;
+           vcard:FN ?nome .
+}
+WHERE {
+  # Ricerca nel grafo originale
+  ?persona a foaf:Person ;
+           foaf:name ?nome .
+}
+\end{lstlisting}
+L'output di questa query non sarà una tabella di nomi, ma un vero e proprio grafo RDF contenente le nuove triple tradotte.
+
+\subsection{Utilizzo di Order By}
+Per ordinare i risultati di una tabella, si può usare il costrutto \textbf{Order By}
+\begin{lstlisting}
+SELECT ?person (COUNT(*) AS ?friendCount)
+WHERE {
+?person <http://example.org/hasFriend> ?friend .
+}
+GROUP BY ?person
+ORDER BY DESC(?friendCount)
+LIMIT 1
+\end{lstlisting}
+
+\subsection{Utilizzo di OFFSET e LIMIT}
+\textbf{OFFSET n} indica al motore SPARQL, di saltare i primi n risultati.
+\begin{lstlisting}
+ORDER BY DESC(?pop)
+OFFSET 5
+\end{lstlisting}
+Salta i primi 5 risultati della tabella.
+
+
+Spesso usato insieme a LIMIT, in questo modo:
+\begin{lstlisting}
+ORDER BY DESC(?pop)
+OFFSET 5
+LIMIT 10
+\end{lstlisting}
+Questa query ordina i risultati in base alla popolazione decrescente, salta i primi 5 risultati e poi
+restituisce i successivi 10.
+
+\subsection{La clausola Group By}
+La clausola Group By viene usata per raggrupare un insieme di triple, per un dato valore.
+
+
+Supponiamo che dal \textbf{where} ci escono questi dati:
+\begin{table}[h]
+\centering
+\ttfamily
+\begin{tabular}{ll}
+?city & ?population \\
+\hline
+Roma & 2800000 \\
+Roma & 100000 \\
+Milano & 1400000 \\
+Milano & 50000 \\
+Napoli & 900000 \\
+\end{tabular}
+\end{table}
+
+
+Se faccio:
+\begin{lstlisting}
+SELECT ?city (SUM(?population) AS ?total)
+WHERE {
+...
+}
+GROUP BY ?city
+\end{lstlisting}
+
+SPARQL crea i \textbf{gruppi(vengono chiamati proprio cosi)} (grazie a group by):
+\begin{lstlisting}
+Roma --> {2800000, 100000}
+Milano --> {1400000, 50000}
+Napoli --> {900000}
+\end{lstlisting}
+e poi applica da qui posso applicare la Funzioni principali di aggregazione separatamente a
+ogni gruppo, ad esempio SUM :
+\begin{lstlisting}
+Roma   --> 2900000
+Milano  --> 1450000
+Napoli  --> 900000
+\end{lstlisting}
+Queste funzioni principali di aggregazione, spesso si utilizzano insieme a Group By, perchè
+usarle da sole è poco utile molte volte.    
+
+\subsubsection{Funzioni principali di aggregazione}
+\textbf{Count} conta quanti risultati ci sono in un gruppo:
+\begin{lstlisting}
+(COUNT(?person) AS ?numPeople)
+\end{lstlisting}
+Nell'esempio prima:
+\begin{lstlisting}
+Roma    --> 2
+Milano  --> 2
+Napoli  --> 1
+\end{lstlisting}
+
+
+\textbf{SUM} somma i valori numerici.
+\begin{lstlisting}
+(SUM(?population) AS ?totalPopulation)
+\end{lstlisting}
+
+
+\textbf{AVG}  calcola la media.
+\begin{lstlisting}
+(AVG(?population) AS ?avgPopulation)
+\end{lstlisting}
+
+
+\textbf{MIN} restituisce il minimo.
+\begin{lstlisting}
+(MIN(?age) AS ?minAge)
+\end{lstlisting}
+
+
+\textbf{MAX} restituisce il massimo.
+\begin{lstlisting}
+(MAX(?age) AS ?maxAge)
+\end{lstlisting}
+
+\subsection{La clausola HAVING}
+La clausola HAVING viene utilizzata quando vogliamo applicare una condizione ai risultati che
+abbiamo raggrupato.
+
+
+Supponiamo di voler visualizzare solo i lavori che hanno più di 100 persone associate.
+\begin{lstlisting}
+SELECT ?job (COUNT(?person) AS ?numPeople)
+WHERE {
+?person eg:hasJob ?job .
+}
+GROUP BY ?job
+HAVING (COUNT(?person) > 100)
+\end{lstlisting}
+\textbf{Nota che io qui non posso usare ?numPeople, perchè quello è il nome che si assegna alla colonna}
+\textbf{HAVING si usa sui gruppi dopo GROUP BY}
+
+\subsection{FILTER}
+FILTER agisce dopo il matching: prima si trovano tutte le soluzioni che soddisfano i triple
+pattern, poi si scartano quelle per cui l'espressione del filtro valuta a false.
+
+FILTER agisce in modo tale che, vengono prima trovate tutte le triple che fanno
+MATCHING, e poi viene applicata la condizione.
+
+\begin{lstlisting}
+SELECT ?child1 ?child2
+WHERE {
+?parent <http://example.org/hasChild> ?child1, ?child2 .
+FILTER (?child1 != ?child2)
+}
+\end{lstlisting}
+
+Viene prima riempita la tabella dei Solution Mapping, poi successivamente, vengono eliminate alcune righe, con il costrutto FILTER.
+
+
+Ci sono due regole importante delle triple.
+\begin{itemize}
+    \item \textbf{i filtri non creano nuovi mapping}, cioè non posso usare una nuova variabile, se scrivo FILTER(?age > 18), la variabile ?age, deve comparire, da qualche parte nel WHERE.
+    \item \textbf{ l’ordine del filtro è irrilevante},quindi posso mettere dove voglio il FILTER all'interno del WHERE.
+\end{itemize}

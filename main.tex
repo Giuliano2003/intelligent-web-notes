@@ -6,12 +6,26 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{forest}
+
+\definecolor{tableborder}{rgb}{0.85,0.85,0.85}
+
+
+% Define custom colors
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codebg}{rgb}{0.96,0.96,0.96}
+\definecolor{keywordcolor}{rgb}{0.0,0.2,0.6}
+\definecolor{stringcolor}{rgb}{0.8,0.1,0.1}
+
 \lstdefinelanguage{turtle}{
   morekeywords={@prefix, @base},
   morecomment=[l]{\#},
   morestring=[b]",
   sensitive=true
 }
+
 \lstset{
   language=turtle,
   basicstyle=\small\ttfamily,
@@ -31,6 +45,33 @@
     bottom=2cm,
     left=2cm,
     right=2cm
+}
+% Define SPARQL language styling for listings
+\lstdefinelanguage{SPARQL}{
+  morekeywords={PREFIX, SELECT, WHERE},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]'
+}
+
+\lstset{
+  language=SPARQL,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{keywordcolor},
+  commentstyle=\color{codegray},
+  stringstyle=\color{stringcolor},
+  numbers=left,
+  numberstyle=\tiny\color{codegray},
+  stepnumber=1,
+  numbersep=10pt,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!20},
+  tabsize=2,
+  captionpos=b
 }
 % Document meta
 \title{Intelligent Web}
