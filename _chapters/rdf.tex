@@ -81,6 +81,8 @@ A questo ci servono i Literal:
 
 \section{Literal}
 
+
+
 \begin{definition}{Literal}
     Un literal rappresenta un valore concreto, come:
     \begin{itemize}
@@ -216,6 +218,64 @@ Quindi in RDF, per ora, le triple sono formate da URI (soggetto, predicato, ogge
     Dove il soggetto può essere una risorsa,o un blank node, il predicato deve essere una risorsa, e l'oggetto può essere una risorsa,literal o blank node.
 \end{definition}
 
+
+\newpage
+
+\section{Blank Nodes}
+Per ora abbiamo introdotto:
+\begin{itemize}
+    \item \textbf{Risorse} : che sono identificate da URI.
+    \item \textbf{Literal} : che sono valori letterali, che sono tipati o non tipati.
+\end{itemize}
+Ora consideriamo il seguente esempio:
+\begin{center}
+    exstaff:85740 exterms:address "1501 Grant Avenue, Bedford, Massachusetts 01730" . \footnote{Questa è una serializzazione Turtle, l'abbiamo scritto solo per comodità ma in realtà stiamo ancora in RDF standard e quindi URI completi.}
+\end{center}
+L'indirizzo è rappresentato come una unica stringa, in genere però conviene suddividerlo in
+parti (via, città, stato, codice postale) ottenendo così una informazione aggregata.
+
+Per esempio , quello che si può fare è:
+\begin{lstlisting}
+exstaff:85740 exterms:address exaddressid:85740 .
+exaddressid:85740 exterms:street "1501 Grant Avenue" .
+exaddressid:85740 exterms:city "Bedford" .
+exaddressid:85740 exterms:state "Massachusetts" .
+exaddressid:85740 exterms:postalCode "01730" .
+\end{lstlisting}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{_files/_images/rdf2.png}
+    \caption{Rappresentazione a grafo, del codice turtle sopra}
+    \label{fig:etichetta}
+\end{figure}
+\begin{warning}{Problema}
+In questo modo però si generano numerosi URIref di servizio , come ad esempio
+exaddressid:85740 per reificare informazioni aggregate. Tuttavia
+dall'esterno nessuno può voler riferirsi direttamente a queste reificazioni per questo
+non sembra che meritino degli identificatori universali come gli URIref
+\end{warning}
+Per questo motivo RDF consente di usare in questi casi dei blank node.
+\begin{definition}{Blank Node}
+    Un blank node è un nodo con una etichetta anonima (ovvero non associata a nessun URI).
+
+    Un blank node viene rappresentato in RDF standard, in questo modo:
+    \begin{center}
+        \texttt{\_:identificativo}
+    \end{center}
+\end{definition}
+L'identificativo del Blank Node (come \texttt{\_:b1} o \texttt{\_:node123}) è un puro artificio locale: ha valore soltanto all'interno di quel determinato documento o modello RDF.
+\begin{itemize}
+    \item  Non è un identificativo globale: Fuori da quel modello RDF specifico, l'ID del Blank Node non esiste. Non puoi usarlo come indirizzo sul Web.
+    Invece l'URI è un identificativo globale.
+    \item Non puoi fare un lookup diretto: Non potendo digitare una richiesta web diretta per quello specifico Blank Node, non puoi interrogarlo isolatamente per dire ``Web, dammi le informazioni sul nodo \texttt{\_:\allowbreak b1}.''
+\end{itemize}
+\textbf{Un blank node può occorrere come soggetto o oggetto di una tripla, non come
+predicato}
+
+Quindi questi sono i principali pezzi del RDF standard, le risorse, i blank node e i literal.
+
+
+
 \section{URI e URL}
 L'URI è lo standard generale per denotare qualsiasi risorsa, reale o astratta.
 Gli URIs(a differenza degli URL) non si limitano a denotare risorse che sono deferenziabili sul Web,
@@ -319,8 +379,8 @@ Ad esempio, la stessa informazione RDF
 può essere rappresentata in Turtle come:
 
 \begin{verbatim}
-@prefix ex: http://example.org/ .
-@prefix foaf: http://xmlns.com/foaf/0.1/ .
+@prefix ex: <http://example.org/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 
 ex:Mario foaf:name "Mario" .
 \end{verbatim}
@@ -328,8 +388,8 @@ ex:Mario foaf:name "Mario" .
 oppure in N-Triples come:
 
 \begin{verbatim}
-http://example.org/Mario
-http://xmlns.com/foaf/0.1/name
+<http://example.org/Mario>
+<http://xmlns.com/foaf/0.1/name>
 "Mario" .
 \end{verbatim}
 
@@ -350,51 +410,183 @@ $$
 
 Il \textbf{modello RDF} definisce la struttura e il significato dei dati, mentre la \textbf{serializzazione} definisce come tali dati vengono concretamente rappresentati e scritti.
 
-\section{Turtle}
+\begin{center}
+    \textbf{Le serializzazioni definiscono come rappresentare il modello RDF astratto in un testo/file.}    
+\end{center}
 
-Turtle è una sintassi di serializzazione per RDF che permette di rappresentare
-le triple RDF in una forma più compatta e leggibile.
+Le serializzazioni RDF sono sintassi concrete utilizzate per rappresentare in un documento testuale il modello RDF astratto.
+
+
+\section{N-Triples}
+
+N-Triples è una sintassi di serializzazione per RDF che permette di rappresentare le triple RDF in una forma semplice, esplicita e non ambigua.
+
+Ogni tripla viene rappresentata separatamente nella forma:
+
+\begin{center}
+\texttt{soggetto predicato oggetto .}
+\end{center}
+
+Una tripla può contenere:
 
 \begin{itemize}
 
-    \item Uno statement semplice ha la stessa sintassi della Triple Notation:
-    
-    \begin{center}
-        \texttt{people:Ryan ext:worksWith people:John .}
-    \end{center}
-
-    \item Più statement che condividono lo stesso soggetto possono essere
-    scritti in forma sintetica, scrivendo il soggetto una sola volta e
-    utilizzando il punto e virgola (\texttt{;}) tra i diversi statement.
-
-    \begin{center}
-        \texttt{people:Andrew foaf:knows people:Matt ;}\
-        \texttt{\phantom{people:Andrew }foaf:surname "Perez-Lopez" .}
-    \end{center}
-
-    Questa forma è equivalente a scrivere separatamente:
-
-    \begin{center}
-        \texttt{people:Andrew foaf:knows people:Matt .}\
-        \texttt{people:Andrew foaf:surname "Perez-Lopez" .}
-    \end{center}
-
-    \item Più statement che condividono lo stesso soggetto e predicato
-    possono essere raggruppati utilizzando la virgola (\texttt{,}).
-
-    \begin{center}
-        \texttt{people:Andrew foaf:knows people:Matt , people:Ryan , people:John .}
-    \end{center}
-
-    Questa forma è equivalente alle tre triple:
-
-    \begin{center}
-        \texttt{people:Andrew foaf:knows people:Matt .}\
-        \texttt{people:Andrew foaf:knows people:Ryan .}\
-        \texttt{people:Andrew foaf:knows people:John .}
-    \end{center}
+\item un URI come soggetto, predicato o oggetto;
+\item un \textit{blank node} come soggetto o oggetto;
+\item un literal come oggetto.
 
 \end{itemize}
+
+Ad esempio:
+
+\begin{center}
+\texttt{<http://example.org/Andrew> <http://xmlns.com/foaf/0.1/knows> <http://example.org/Matt> .}
+\end{center}
+\textbf{Gli URI in N-triples, sono racchiusi fra parentesi angolate} : <URI> \\
+\textbf{I literal in N-triples, sono rappresentati cosi : ``valore''\textasciicircum\textasciicircum<URI-datatype>}
+
+\subsection*{Regole principali}
+
+N-Triples non utilizza abbreviazioni sintattiche. Ogni tripla deve essere scritta esplicitamente e terminata dal punto (\texttt{.}).
+
+Ad esempio, se un soggetto è associato a più proprietà:
+
+\begin{center}
+\texttt{<http://example.org/Andrew> <http://xmlns.com/foaf/0.1/knows> <http://example.org/Matt> .} 
+
+\texttt{<http://example.org/Andrew> <http://xmlns.com/foaf/0.1/surname> "Perez-Lopez" .}
+
+\end{center}
+
+il soggetto deve essere ripetuto in entrambe le triple.
+
+Analogamente, se uno stesso soggetto e predicato sono associati a più oggetti, ogni tripla deve essere scritta separatamente:
+
+\begin{center}
+\texttt{<http://example.org/Andrew> <http://xmlns.com/foaf/0.1/knows> <http://example.org/Matt> .}
+
+
+\texttt{<http://example.org/Andrew> <http://xmlns.com/foaf/0.1/knows> <http://example.org/Ryan> .}
+
+\texttt{<http://example.org/Andrew> <http://xmlns.com/foaf/0.1/knows> <http://example.org/John> .}
+
+
+\end{center}
+
+Quindi, N-Triples privilegia una rappresentazione \textbf{esplicita delle singole triple}, senza introdurre abbreviazioni per raggruppare più triple.
+
+\section{Turtle}
+
+Turtle (\textit{Terse RDF Triple Language}) è una sintassi di serializzazione per RDF che permette di rappresentare le triple RDF in una forma più \textbf{compatta e leggibile}.
+
+A differenza di N-Triples, Turtle permette di utilizzare diverse \textbf{abbreviazioni sintattiche}, che consentono di evitare la ripetizione di parti comuni delle triple.
+
+\subsection*{Prefissi}
+
+Una delle principali abbreviazioni consiste nell'utilizzo dei \textbf{prefissi}, che permettono di sostituire una parte comune degli URI con un identificatore più breve.
+
+Ad esempio:
+
+\begin{center}
+\texttt{@prefix foaf: <http://xmlns.com/foaf/0.1/> .}
+\end{center}
+
+Dopo aver definito il prefisso, è possibile scrivere:
+
+\begin{center}
+\texttt{foaf:name}
+\end{center}
+
+invece dell'URI completo:
+
+\begin{center}
+\texttt{<http://xmlns.com/foaf/0.1/name>}
+\end{center}
+
+Analogamente, possiamo definire:
+
+\begin{center}
+\texttt{@prefix people: <http://example.org/people/> .}
+\end{center}
+
+e utilizzare \texttt{people:Andrew} al posto dell'URI completo.
+
+\subsection*{Statement semplice}
+
+Uno statement semplice ha la forma:
+
+\begin{center}
+\texttt{people:Ryan ext:worksWith people:John .}
+\end{center}
+
+che rappresenta direttamente una tripla RDF.
+
+\subsection*{Abbreviazione tramite punto e virgola}
+
+Più statement che condividono lo stesso soggetto possono essere scritti in forma sintetica, specificando il soggetto una sola volta e utilizzando il punto e virgola (\texttt{;}) tra i diversi predicati.
+
+\begin{center}
+\texttt{people:Andrew foaf:knows people:Matt ;}\
+\texttt{\phantom{people:Andrew }foaf:surname "Perez-Lopez" .}
+\end{center}
+
+Questa forma è equivalente alle due triple:
+
+\begin{center}
+\texttt{people:Andrew foaf:knows people:Matt .}\
+\texttt{people:Andrew foaf:surname "Perez-Lopez" .}
+\end{center}
+
+Il punto e virgola, quindi, permette di \textbf{non ripetere il soggetto}.
+
+\subsection*{Abbreviazione tramite virgola}
+
+Più statement che condividono lo stesso soggetto e predicato possono essere raggruppati utilizzando la virgola (\texttt{,}).
+
+\begin{center}
+\texttt{people:Andrew foaf:knows people:Matt , people:Ryan , people:John .}
+\end{center}
+
+Questa forma è equivalente alle tre triple:
+
+\begin{center}
+\texttt{people:Andrew foaf:knows people:Matt .}\
+\texttt{people:Andrew foaf:knows people:Ryan .}\
+\texttt{people:Andrew foaf:knows people:John .}
+\end{center}
+
+La virgola, quindi, permette di \textbf{non ripetere né il soggetto né il predicato}.
+
+\subsection*{Confronto con N-Triples}
+
+Le abbreviazioni di Turtle non modificano il significato delle informazioni rappresentate: permettono semplicemente di scrivere in maniera più compatta le stesse triple RDF.
+
+Ad esempio, le tre triple:
+
+\begin{center}
+\texttt{people:Andrew foaf:knows people:Matt .}\
+\texttt{people:Andrew foaf:knows people:Ryan .}\
+\texttt{people:Andrew foaf:knows people:John .}
+\end{center}
+
+possono essere abbreviate in Turtle come:
+
+\begin{center}
+\texttt{people:Andrew foaf:knows people:Matt , people:Ryan , people:John .}
+\end{center}
+
+Pertanto:
+
+\begin{center}
+\textbf{RDF} $\rightarrow$ modello astratto basato su triple
+\end{center}
+
+\begin{center}
+\textbf{N-Triples / Turtle} $\rightarrow$ sintassi per serializzare tali triple
+\end{center}
+
+N-Triples privilegia la semplicità e l'esplicitazione delle triple, mentre Turtle introduce abbreviazioni che rendono la rappresentazione più compatta e leggibile.
+
 
 
 \subsection{Blank Node}
@@ -470,37 +662,6 @@ Se io voglio rappresentare queste triple di RDF standard:
 
 \clearpage
 
-\section{QNames}
-I QName non sono elementi del modello RDF, ma una forma sintattica abbreviata per rappresentare gli IRI, 
-utilizzata da alcune serializzazioni RDF, come Turtle.
-
-\begin{observation}{RDF abstract syntax}
-    RDF, a livello di modello dei dati (il cosiddetto RDF abstract syntax o concrete model), è definito come un insieme di triple:
-    \begin{center}
-        (soggetto, predicato, oggetto)
-    \end{center}
-    dove soggetto, predicato e oggetto sono, salvo casi particolari (letterali, blank node), IRI completi. 
-    Non esiste, a questo livello, alcun concetto di "prefisso" o abbreviazione — un IRI è un IRI, per intero.
-\end{observation}
-\begin{example}{QName}
-    Un esempio in Turtle:
-    \begin{lstlisting}
-@prefix ex: <http://example.org/> .
-ex:Giuliano ex:age 22 .
-    \end{lstlisting}
-    Si va a definire un prefisso ex: e ogni volta che si userà davanti ad un nome ad esempio, si appenderà all'URI completo, il nome, in questo modo:
-    \begin{center}
-        <http://example.org/age>
-    \end{center}
-\end{example}
-Alcune abbreviazioni usate spesso:
-\begin{itemize}
-    \item \texttt{rdf:} \quad namespaceURI: \url{http://www.w3.org/1999/02/22-rdf-syntax-ns#}
-    \item \texttt{dc:} \quad namespaceURI: \url{http://purl.org/dc/elements/1.1/}
-    \item \texttt{owl:} \quad namespaceURI: \url{http://www.w3.org/2002/07/owl#}
-    \item \texttt{ex:} \quad namespaceURI: \url{http://www.example.org/}
-    \item \texttt{xsd:} \quad namespaceURI: \url{http://www.w3.org/2001/XMLSchema#}
-\end{itemize}
 \section{Vocabolari}
 In RDF, per identificare risorse e proprietà si usano degli URI, come abbiamo visto in modo precedente.
 
@@ -509,14 +670,11 @@ In RDF, per identificare risorse e proprietà si usano degli URI, come abbiamo v
     generalmente classi e proprietà, utilizzati per descrivere le risorse di uno specifico dominio.Cioè un vocabolario,
     fornisce un insieme coerente di termini (classi e proprietà) per descrivere un certo dominio o ambito.
 \end{definition}
-\begin{observation}{Nota importante}
-    Quando usiamo i vocabolari, come l'esempio che vedremo adesso, facciamo esempi in serializzazioni, se io volessi farli in RDF normale,
-    quello che dovrei avere è scrivere sempre URI completi, il che è molto scomodo.
-\end{observation}
+
 \begin{example}{Esempio Vocabolario per http://example.org/university/}
     Un vocabolario per il dominio universitario definisce le classi e le proprietà necessarie a descrivere le risorse. Utilizzando la sintassi N-Triples/Turtle, un frammento del vocabolario è il seguente:
     
-    \begin{lstlisting}[language=SQL, caption={Definizione del vocabolario universitario in RDFS}]
+    \begin{lstlisting}[language=SQL, caption={Definizione del vocabolario universitario Turtle}]
 @prefix ex: <http://example.org/university/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -587,58 +745,7 @@ ex:LaMiaPlaylist a rdf:Seq ;
 
 Quando poi si andrà a deferenziale : rdf:Seq, quello che succede è che si avrà l'URI : \url{http://www.w3.org/1999/02/22-rdf-syntax-ns#Seq} che sarà la risorsa descritta nel dizionario.
 
-\section{Blank Nodes}
-Per ora abbiamo introdotto:
-\begin{itemize}
-    \item \textbf{Risorse} : che sono identificate da URI.
-    \item \textbf{Literal} : che sono valori letterali, che sono tipati o non tipati.
-\end{itemize}
-Ora consideriamo il seguente esempio:
-\begin{center}
-    exstaff:85740 exterms:address "1501 Grant Avenue, Bedford, Massachusetts 01730" . \footnote{Questa è una serializzazione Turtle.}
-\end{center}
-L'indirizzo è rappresentato come una unica stringa, in genere però conviene suddividerlo in
-parti (via, città, stato, codice postale) ottenendo così una informazione aggregata.
 
-Per esempio , quello che si può fare è:
-\begin{lstlisting}
-exstaff:85740 exterms:address exaddressid:85740 .
-exaddressid:85740 exterms:street "1501 Grant Avenue" .
-exaddressid:85740 exterms:city "Bedford" .
-exaddressid:85740 exterms:state "Massachusetts" .
-exaddressid:85740 exterms:postalCode "01730" .
-\end{lstlisting}
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.7\textwidth]{_files/_images/rdf2.png}
-    \caption{Rappresentazione a grafo, del codice turtle sopra}
-    \label{fig:etichetta}
-\end{figure}
-\begin{warning}{Problema}
-In questo modo però si generano numerosi URIref di servizio , come ad esempio
-exaddressid:85740 per reificare informazioni aggregate. Tuttavia
-dall'esterno nessuno può voler riferirsi direttamente a queste reificazioni per questo
-non sembra che meritino degli identificatori universali come gli URIref
-\end{warning}
-Per questo motivo RDF consente di usare in questi casi dei blank node.
-\begin{definition}{Blank Node}
-    Un blank node è un nodo con una etichetta anonima (ovvero non associata a nessun URI).
-
-    Un blank node viene rappresentato in RDF standard, in questo modo:
-    \begin{center}
-        \texttt{\_:identificativo}
-    \end{center}
-\end{definition}
-L'identificativo del Blank Node (come \texttt{\_:b1} o \texttt{\_:node123}) è un puro artificio locale: ha valore soltanto all'interno di quel determinato documento o modello RDF.
-\begin{itemize}
-    \item  Non è un identificativo globale: Fuori da quel modello RDF specifico, l'ID del Blank Node non esiste. Non puoi usarlo come indirizzo sul Web.
-    Invece l'URI è un identificativo globale.
-    \item Non puoi fare un lookup diretto: Non potendo digitare una richiesta web diretta per quello specifico Blank Node, non puoi interrogarlo isolatamente per dire ``Web, dammi le informazioni sul nodo \texttt{\_:\allowbreak b1}.''
-\end{itemize}
-\textbf{Un blank node può occorrere come soggetto o oggetto di una tripla, non come
-predicato}
-
-Quindi questi sono i principali pezzi del RDF standard, le risorse, i blank node e i literal.
 \section{Containers}
 Il dizionario rdf, definisce alcuni tipi primitivi, detti container, per descrivere informazioni aggregate.
 I container possono essere:
@@ -686,3 +793,6 @@ RDF fornisce dei predicati built-in per la reificazione:
 \begin{center}
     \_x dc:creator ``Digital Library''.
 \end{center}
+
+
+\section{RDFS}
