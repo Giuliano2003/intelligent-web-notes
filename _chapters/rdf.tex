@@ -921,6 +921,74 @@ Da questo grafo posso infierire due cose:
 \end{itemize}
 
 
+
+\subsection{Differenza Fra Vocabolario e Ontologia}
+
+Nel contesto del Web Semantico, i concetti di \textit{vocabolario} e
+\textit{ontologia} sono strettamente correlati, ma non completamente
+sovrapponibili.
+
+Un \textbf{vocabolario} definisce principalmente un insieme di termini
+utilizzabili per descrivere un determinato dominio. Tali termini possono
+essere rappresentati, ad esempio, attraverso classi e proprietà RDF. Per
+esempio, un vocabolario potrebbe definire la classe \texttt{Person} e la
+proprietà \texttt{knows}:
+
+\begin{verbatim}
+:Person a rdfs:Class .
+:knows a rdf:Property .
+\end{verbatim}
+
+In questo caso, il vocabolario introduce i concetti e le proprietà che
+possono essere utilizzati nella descrizione delle risorse, senza
+necessariamente specificare una conoscenza complessa sulle relazioni
+esistenti tra tali concetti.
+
+Un'\textbf{ontologia}, invece, estende questo concetto introducendo una
+descrizione formale della semantica del dominio. Oltre a definire classi e
+proprietà, un'ontologia può specificare relazioni tra classi, gerarchie,
+vincoli e assiomi che descrivono come i diversi concetti sono collegati tra
+loro.
+
+Ad esempio, è possibile stabilire che \texttt{Student} sia una
+sottoclasse di \texttt{Person}:
+
+\begin{verbatim}
+:Student rdfs:subClassOf :Person .
+\end{verbatim}
+
+Oppure, utilizzando OWL, è possibile esprimere vincoli più complessi.
+Ad esempio:
+
+\[
+\mathit{Student} \sqsubseteq
+\exists\,\mathit{attends}.\mathit{University}
+\]
+
+indica che ogni individuo appartenente alla classe \texttt{Student} deve
+essere collegato, tramite la proprietà \texttt{attends}, ad almeno un
+individuo appartenente alla classe \texttt{University}.
+
+La differenza può quindi essere riassunta nel seguente modo:
+
+\begin{itemize}
+    \item il \textbf{vocabolario} definisce i termini, le classi e le
+    proprietà utilizzabili per descrivere un dominio;
+    \item l'\textbf{ontologia} aggiunge a tali termini una semantica
+    formale, definendo relazioni, gerarchie, vincoli e assiomi che
+    descrivono il dominio e che possono essere utilizzati per effettuare
+    inferenze.
+\end{itemize}
+
+È importante sottolineare che la distinzione non è sempre netta: un
+vocabolario sufficientemente ricco può contenere anche informazioni
+semantiche e, in senso lato, essere considerato un'ontologia. Per questo
+motivo, nella letteratura sul Web Semantico i due termini vengono talvolta
+utilizzati in modo intercambiabile. La distinzione precedente è quindi
+soprattutto utile per comprendere il diverso livello di formalizzazione
+della conoscenza rappresentata.
+
+
 \newpage
 \section{SPARQL}
 SPARQL (Simple Protocol and RDF Query Language) è il linguaggio di query per interrogare modelli RDF.
@@ -1301,16 +1369,95 @@ Queste funzioni principali di aggregazione, spesso si utilizzano insieme a Group
 usarle da sole è poco utile molte volte.    
 
 \subsubsection{Funzioni principali di aggregazione}
-\textbf{Count} conta quanti risultati ci sono in un gruppo:
-\begin{lstlisting}
-(COUNT(?person) AS ?numPeople)
-\end{lstlisting}
-Nell'esempio prima:
-\begin{lstlisting}
-Roma    --> 2
-Milano  --> 2
-Napoli  --> 1
-\end{lstlisting}
+\textbf{Operatore COUNT}
+
+
+L'operatore \texttt{COUNT} è una funzione di aggregazione che calcola il numero totale di soluzioni, righe o valori associati a una specifica variabile all'interno di un insieme di risultati.
+
+In SPARQL, l'uso delle funzioni di aggregazione richiede spesso la clausola \texttt{GROUP BY} per raggruppare i dati secondo una o più variabili.
+
+Proprietà fondamentali di \texttt{COUNT}:
+\begin{itemize}
+    \item \textbf{\texttt{COUNT(*)}:} Conta il numero totale di righe/soluzioni nel gruppo, incluse quelle con valori non definiti (\textit{unbound}).
+    \item \textbf{\texttt{COUNT(?var)}:} Conta solo il numero di soluzioni in cui la variabile \texttt{?var} è definita (\textit{bound}).
+    \item \textbf{\texttt{COUNT(DISTINCT ?var)}:} Conta solo i valori unici e distinti assunti dalla variabile \texttt{?var}, eliminando i duplicati.
+\end{itemize}
+
+\textbf{Esempio 1: Conteggio totale per gruppo}
+
+Supponiamo di voler contare quanti prodotti appartengono a ciascuna categoria:
+
+\begin{verbatim}
+SELECT ?categoria (COUNT(?prodotto) AS ?numeroProdotti)
+WHERE {
+    ?prodotto :appartieneA ?categoria .
+}
+GROUP BY ?categoria
+\end{verbatim}
+
+\paragraph{Esempio con più colonne}
+
+Anche quando una soluzione è composta da \textbf{più colonne}, \texttt{COUNT(*)} conta comunque il \textbf{numero di righe (soluzioni) appartenenti a ciascun gruppo}.
+
+Ad esempio, supponiamo di avere la seguente tabella di risultati:
+
+\begin{center}
+\begin{tabular}{c|c|c}
+\textbf{persona} & \textbf{amico} & \textbf{città} \\
+\hline
+Giuliano & Marco & Napoli \\
+Giuliano & Luca & Roma \\
+Giuliano & Anna & Napoli \\
+Mario & Paolo & Napoli \\
+Mario & Luca & Roma
+\end{tabular}
+\end{center}
+
+Se utilizziamo:
+
+\begin{verbatim}
+SELECT ?persona (COUNT(*) AS ?numero)
+WHERE {
+?persona foaf:knows ?amico .
+?amico :viveA ?citta .
+}
+GROUP BY ?persona
+\end{verbatim}
+
+Il risultato sarà:
+
+\begin{center}
+\begin{tabular}{c|c}
+\textbf{persona} & \textbf{numero} \\
+\hline
+Giuliano & 3 \\
+Mario & 2
+\end{tabular}
+\end{center}
+
+Infatti, il gruppo di \texttt{Giuliano} contiene \textbf{3 righe}, mentre il gruppo di \texttt{Mario} contiene \textbf{2 righe}. Quindi \texttt{COUNT(*)} conta le \textbf{righe del gruppo}, indipendentemente dal numero di colonne presenti in ogni riga.
+
+Se invece utilizziamo:
+
+\begin{verbatim}
+GROUP BY ?persona ?citta
+\end{verbatim}
+
+le righe vengono raggruppate considerando \textbf{sia la persona sia la città}:
+
+\begin{center}
+\begin{tabular}{c|c|c}
+\textbf{persona} & \textbf{città} & \textbf{numero} \\
+\hline
+Giuliano & Napoli & 2 \\
+Giuliano & Roma & 1 \\
+Mario & Napoli & 1 \\
+Mario & Roma & 1
+\end{tabular}
+\end{center}
+
+In questo caso, ogni gruppo è determinato dalla coppia \texttt{(?persona, ?citta)} e \texttt{COUNT(*)} conta quante righe appartengono a ciascuna coppia.
+
 
 
 \textbf{SUM} somma i valori numerici.
@@ -1376,3 +1523,763 @@ Ci sono due regole importante delle triple.
     \item \textbf{i filtri non creano nuovi mapping}, cioè non posso usare una nuova variabile, se scrivo FILTER(?age > 18), la variabile ?age, deve comparire, da qualche parte nel WHERE.
     \item \textbf{ l’ordine del filtro è irrilevante},quindi posso mettere dove voglio il FILTER all'interno del WHERE.
 \end{itemize}
+
+\subsection{La clausola OPTIONAL}
+\textbf{OPTIONAL permette di aggiungere informazioni opzionali a una soluzione.}
+
+
+Il pattern generale è questo:
+\begin{lstlisting}
+WHERE {
+    Pattern1 .
+    OPTIONAL {
+        Pattern2 .
+    }
+}
+\end{lstlisting}
+\textbf{Prima si cercano le soluzioni che soddisfano i pattern obbligatori,per ciascuna soluzione trovata si prova a verificare il pattern dentro optional}
+Se il pattern trova corrispondenza, viene aggiunta il valore della colonna della tabella corrispondente al solution mapping, se non trova corrispondenza, allora 
+viene aggiunto il valore \textbf{unbound}
+
+
+\paragraph{Esempio}
+Supponiamo di avere il seguente grafo:
+\begin{lstlisting}
+:Giuliano foaf:name "Giuliano" .
+:Giuliano foaf:age 22 .
+:Marco foaf:name "Marco" .
+\end{lstlisting}
+
+Supponiamo di avere la seguente query:
+\begin{lstlisting}
+    WHERE {
+    ?persona foaf:name ?nome .
+
+    OPTIONAL {
+        ?persona foaf:age ?eta .
+    }
+}
+\end{lstlisting}
+Allora il pipeline dell'esecuzione è:
+\begin{itemize}
+    \item Prima ottieni \textbf{dal pattern obbligatorio}:
+    \begin{lstlisting}
+        Giuliano --> "Giuliano"
+        Marco    --> "Marco"
+    \end{lstlisting}
+    \item Poi il motore prova l'OPTIONAL, per ogni riga:
+    \begin{lstlisting}
+        Giuliano --> ha age --> 22
+        Marco    --> non ha age --> unbound
+    \end{lstlisting}
+\end{itemize}
+Il risultato finale è:
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l||l|}
+\hline
+\textbf{?persona} & \textbf{?nome} & \textbf{?eta} \\ \hline
+:Giuliano          & Giuliano & 22      \\ \hline
+:Marco             & Marco    & UNBOUND \\ \hline
+\end{tabular}
+\end{table}
+
+
+Supponiamo ora di avere la seguente query:
+\begin{lstlisting}
+SELECT ?person ?age
+WHERE {
+    OPTIONAL {
+        ?person foaf:age ?age .
+    }
+}
+\end{lstlisting}
+Qui non c'è un pattern obbligatorio, OPTIONAL,si comporta esattamente come il pattern all'interno,quindi il solution mapping trovato è:
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?person} & \textbf{?age} \\ \hline
+:Giuliano          & 22      \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Operatore IN e NOT IN}
+
+Gli operatori \texttt{IN} e \texttt{NOT IN} verificano l'appartenenza di un termine a una lista di valori.
+
+\vspace{0.5em}
+\noindent Per esempio:
+
+\begin{lstlisting}
+SELECT ?person
+WHERE {
+    ?person :citta ?city .
+    FILTER(?city IN ("Roma", "Milano", "Napoli"))
+}
+\end{lstlisting}
+
+\noindent Se abbiamo:
+
+\begin{lstlisting}
+:Mario :citta :Napoli
+:Dario :citta :Roma
+:Luigi :citta :Torino
+\end{lstlisting}
+
+\noindent tiene solo le soluzioni in cui \texttt{?city} è uno dei valori indicati.
+
+\vspace{0.5em}
+\noindent quindi praticamente nel Solution Mapping, si avrà:
+
+\vspace{0.8em}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|}
+\hline
+\textbf{?person} \\ \hline
+Mario \\ \hline
+Dario \\ \hline
+\end{tabular}
+\end{table}
+
+\newpage
+
+\subsection{Operatore FILTER NOT EXISTS}
+
+\texttt{FILTER NOT EXISTS} permette di escludere soluzioni se un determinato pattern di triple viene trovato.
+
+Detto in modo più semplice: Mantiene le triple trovate, solo se NON esiste una corrispondenza con il pattern specificato, vengono prima trovati i matching di tutte le triple e poi successivamente, vengono filtrate.
+\textbf{Detto in un altro modo, elimina le triple del Solution Mapping, se trova una corrispondenza con il pattern, o equivalente le mantiene se non trova una corrispondenza}
+
+
+
+Si capisce meglio tramite un esempio:
+
+Supponiamo di avere un grafo:
+
+\begin{verbatim}
+:Mario :nome "Mario" .
+:Mario :eta 20 .
+:Luca :nome "Luca" .
+\end{verbatim}
+
+Supponiamo di fare la query:
+
+\begin{verbatim}
+SELECT ?person
+WHERE{
+    ?person :nome ?nome .
+
+    FILTER NOT EXISTS {
+        ?person :eta ?age .
+    }
+}
+\end{verbatim}
+
+Il Solution Mapping della query è:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?person} & \textbf{?nome} \\ \hline
+:Mario & "Mario" \\ \hline
+:Luca & "Luca" \\ \hline
+\end{tabular}
+\end{table}
+
+Poi da qui si valuta il pattern interno del FILTER, per ogni riga del Solution Mapping, e si mantiene solo se non trovano corrispondenza, con il pattern specificato, Mario ha un age, quindi quello che non trova corrispondenza è Luca.
+
+Quindi il Solution Mapping è:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?person} & \textbf{?nome} \\ \hline
+Luca & "Luca" \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Caso senza variabili in comune}
+
+Un caso particolare si verifica quando il pattern contenuto nel
+\texttt{FILTER NOT EXISTS} \textbf{non presenta variabili in comune}
+con il pattern esterno.
+
+In questo caso, il pattern interno viene valutato \textbf{indipendentemente
+dalla singola riga del Solution Mapping}.
+
+Quindi:
+
+\begin{itemize}
+\item se il pattern interno trova \textbf{almeno una corrispondenza nel grafo},
+allora esiste una corrispondenza e il \texttt{FILTER NOT EXISTS}
+\textbf{elimina tutte le righe} del Solution Mapping;
+
+\item se il pattern interno \textbf{non trova alcuna corrispondenza},
+allora il \texttt{FILTER NOT EXISTS} è verificato per tutte le righe
+e quindi \textbf{mantiene tutte le righe}.
+
+\end{itemize}
+
+Ad esempio, supponiamo di avere:
+
+\begin{verbatim}
+:Mario :nome "Mario" .
+:Mario :eta 20 .
+
+:Luca :nome "Luca" .
+\end{verbatim}
+
+e la query:
+
+\begin{verbatim}
+SELECT ?person
+WHERE {
+?person :nome ?nome .
+
+FILTER NOT EXISTS {
+    ?x :eta ?age .
+}
+
+}
+\end{verbatim}
+
+In questo caso, la variabile \texttt{?x} del pattern interno
+\textbf{non è presente nel pattern esterno}. Non ci sono quindi
+variabili in comune.
+
+Il pattern:
+
+\begin{verbatim}
+?x :eta ?age .
+\end{verbatim}
+
+trova comunque una corrispondenza nel grafo, perché esiste:
+
+\begin{verbatim}
+:Mario :eta 20 .
+\end{verbatim}
+
+Di conseguenza, il \texttt{NOT EXISTS} risulta falso.
+
+Poiché questa condizione è indipendente dalla singola riga del
+Solution Mapping, \textbf{vengono eliminate tutte le righe}, questo perchè scorrendo pian piano il solutin mapping originale, per ogni riga, ci sarà sempre una soluzione
+nel filter, che sarà sempre la stessa:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?person} & \textbf{?nome} \\ \hline
+\multicolumn{2}{|c|}{\textit{nessuna soluzione}} \\ \hline
+\end{tabular}
+\end{table}
+
+In modo analogo, se il pattern interno non trovasse \textbf{nessuna}
+corrispondenza nel grafo, allora il \texttt{NOT EXISTS} sarebbe vero
+per ogni riga e \textbf{tutte le soluzioni verrebbero mantenute}.
+
+\textbf{In sintesi:}
+
+\begin{center}
+\textit{Se non ci sono variabili in comune, il risultato del
+\texttt{FILTER NOT EXISTS} è uguale per tutte le righe.}
+\end{center}
+
+Quindi:
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+\textbf{Pattern interno trova una corrispondenza} &
+\textbf{tutte le righe vengono eliminate} \\ \hline
+\textbf{Pattern interno non trova corrispondenze} &
+\textbf{tutte le righe vengono mantenute} \\ \hline
+\end{tabular}
+\end{center}
+
+
+\subsection{Operatore UNION}
+L'operatore \texttt{UNION} permette di ottenere l'unione dei risultati derivanti da \textbf{diversi group graph patterns}.
+
+In altre parole, consente di combinare i risultati di due o più query/pattern separati: una riga farà parte del risultato finale se soddisfa almeno uno dei pattern specificati nelle clausole della \texttt{UNION}.
+
+Si capisce meglio tramite un esempio:
+
+Supponiamo di avere un grafo con informazioni su libri ed e-book:
+
+\begin{verbatim}
+:libro1 :titolo "Il Nome della Rosa" .
+:libro1 :autore "Umberto Eco" .
+
+:ebook1 :titolo "1984" .
+:ebook1 :creatore "George Orwell" .
+\end{verbatim}
+
+Supponiamo di voler cercare tutti i titoli presenti nel grafo, indipendentemente dal fatto che abbiano come predicato \texttt{:autore} o \texttt{:creatore}. Possiamo fare la seguente query:
+
+\begin{verbatim}
+SELECT ?titolo ?persona
+WHERE {
+    { ?item :autore ?persona . ?item :titolo ?titolo }
+    UNION
+    { ?item :creatore ?persona . ?item :titolo ?titolo }
+}
+\end{verbatim}
+
+L'operatore valuta entrambi i pattern e unisce i rispettivi Solution Mapping.
+
+Il primo pattern trova:
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?titolo} & \textbf{?persona} \\ \hline
+"Il Nome della Rosa" & "Umberto Eco" \\ \hline
+\end{tabular}
+\end{table}
+
+Il secondo pattern trova:
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?titolo} & \textbf{?persona} \\ \hline
+"1984" & "George Orwell" \\ \hline
+\end{tabular}
+\end{table}
+
+Eseguendo l'unione delle due soluzioni, il Solution Mapping finale restituito dalla query sarà:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?titolo} & \textbf{?persona} \\ \hline
+"Il Nome della Rosa" & "Umberto Eco" \\ \hline
+"1984" & "George Orwell" \\ \hline
+\end{tabular}
+\end{table}
+
+
+\textbf{Quando i due group graph patterns della \texttt{UNION} utilizzano nomi di variabili differenti}, il Solution Mapping finale conterrà l'insieme di tutte le variabili. Per ciascuna riga, le variabili non appartenenti al pattern corrispondente risulteranno non definite (\textit{unbound}).
+
+Si capisce meglio tramite un esempio:
+
+Supponiamo di avere il seguente grafo RDF:
+
+\begin{verbatim}
+:persona1 :nome "Mario" .
+:persona1 :eta 30 .
+
+:azienda1 :ragioneSociale "TechCorp" .
+:azienda1 :dipendenti 50 .
+\end{verbatim}
+
+Eseguiamo una query \texttt{UNION} in cui il primo branch seleziona \texttt{?nome} e \texttt{?eta}, mentre il secondo seleziona \texttt{?ragioneSociale} e \texttt{?dipendenti}:
+
+\begin{verbatim}
+SELECT ?nome ?eta ?ragioneSociale ?dipendenti
+WHERE {
+    { ?x :nome ?nome . ?x :eta ?eta }
+    UNION
+    { ?y :ragioneSociale ?ragioneSociale . ?y :dipendenti ?dipendenti }
+}
+\end{verbatim}
+
+Il Solution Mapping della prima branca della \texttt{UNION} produce:
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?nome} & \textbf{?eta} \\ \hline
+"Mario" & 30 \\ \hline
+\end{tabular}
+\end{table}
+
+\newpage
+
+Il Solution Mapping della seconda branca della \texttt{UNION} produce:
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?ragioneSociale} & \textbf{?dipendenti} \\ \hline
+"TechCorp" & 50 \\ \hline
+\end{tabular}
+\end{table}
+
+Unendo i risultati, la tabella finale con tutte le colonne evidenzia che i campi non presenti in un dato pattern rimangono non definiti:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{?nome} & \textbf{?eta} & \textbf{?ragioneSociale} & \textbf{?dipendenti} \\ \hline
+"Mario" & 30 & UNBOUND & UNBOUND  \\ \hline
+UNBOUND & UNBOUND & "TechCorp" & 50 \\ \hline
+\end{tabular}
+\end{table}
+\begin{center}
+Quindi, ricapitolando, la tabella finale prodotta dall'operatore
+\textbf{UNION} contiene tutte le righe che appartengono alla tabella
+dei risultati del primo pattern \textbf{oppure} alla tabella dei risultati
+del secondo pattern.
+\end{center}
+
+
+
+\subsection{Operatore Minus}
+L'operatore \texttt{MINUS} è utilizzato per rimuovere i risultati di un group graph pattern da un altro .
+
+In pratica, prima SPARQL trova un insieme di soluzioni, poi elimina quelle che corrispondono al pattern indicato dentro \texttt{MINUS} .
+
+
+MINUS elimina dal risultato del primo pattern le soluzioni per cui esiste una soluzione compatibile del secondo pattern \textbf{sulle variabili condivise}.
+\textbf{Esempio: compositori attualmente in vita} 
+
+Per cercare i compositori di professione che sono attualmente in vita, la query sottrae i soggetti che hanno una data di morte registrata: 
+
+\begin{verbatim}
+SELECT ?person WHERE {
+    ?person wdt:P106 wd:Q36834 # Professione: compositore
+    MINUS {
+        ?person wdt:P570 ?deathDate # Data di morte
+    }
+}
+\end{verbatim} 
+
+Il pattern esterno produce un Solution Mapping, a cui vengono tolte le righe che corrispondono al pattern .
+
+La query prima trova tutte le persone che hanno come professione ``compositore'' .
+
+Poi rimuove quelle per cui esiste una tripla con proprietà \texttt{wdt:P570}, cioè una data di morte .
+
+Il risultato finale contiene quindi i compositori per cui non viene trovata una data di morte .
+
+\begin{center}
+    Quindi le variabili fra le due tabella, devono avere lo stesso valore, \textbf{e lo stesso nome della colonna, cioè devono essere compatibili}.
+\end{center}
+
+\subsection{SottoQuery/SubQuery}
+Le sottoquery permettono di incorporare i risultati di una query all'interno di un'altra per
+ottenere dati che non sarebbero estraibili con pattern semplici.
+In pratica, una sottoquery è una query interna che produce un insieme di risultati, quindi un
+Solution Mapping, questo Solution Mapping poi verrà usato dalla query esterna.
+
+\begin{center}
+La valutazione della query esterna e quella interna, avviene tramite il JOIN.
+Quello che si fa è valutare in modo indipendente, tutte e due le query e poi unirle tramite
+JOIN sulla variabile in comune, lo devi pensare proprio come un JOIN fra le variabili
+comuni.
+\end{center}
+
+\paragraph{Esempio : Trovare il massimo in un Reparto}
+
+
+\begin{lstlisting}
+SELECT ?reparto ?persona ?stipendioMax
+WHERE {
+    ?persona :lavoraIn ?reparto .
+    ?persona :stipendio ?stipendioMax .
+{
+SELECT ?reparto (MAX(?s) AS ?stipendioMax)
+WHERE {
+    ?p :lavoraIn ?reparto .
+    ?p :stipendio ?s .
+}
+GROUP BY ?reparto
+}
+}
+\end{lstlisting}
+
+
+\textbf{Spiegazione} 
+
+Quello che viene fatto è valutare prima la subquery interna e la query esterna in modo indipendente, queste producono due Solution Mapping differenti, e poi questi vengono uniti sulla variabile condivisa. (NOTA: Se non vi è una variabile condivisa, allora quello che succede è un vero e proprio prodotto cartesiano.) 
+
+Nella Sub Query si trova il seguente Solution Mapping: 
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{?reparto} & \textbf{?stipendioMax} \\ \hline
+reparto1 & 52000 \\ \hline
+reparto2 & 38000 \\ \hline
+\end{tabular}
+\end{table} 
+
+Nella query esterna si trova il seguente Solution Mapping: 
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{?persona} & \textbf{?reparto} & \textbf{?stipendioMax} \\ \hline
+persona1 & reparto1 & 45000 \\ \hline
+persona2 & reparto2 & 52000 \\ \hline
+persona3 & reparto3 & 38000 \\ \hline
+\end{tabular}
+\end{table} 
+
+Si fa una JOIN sugli attributi in comune (Nota che nella query hanno ESATTAMENTE gli stessi nomi) e quello che esce è: 
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{?persona} & \textbf{?reparto} & \textbf{?stipendioMax} \\ \hline
+persona2 & reparto2 & 52000 \\ \hline
+persona3 & reparto3 & 38000 \\ \hline
+\end{tabular}
+\end{table} 
+
+
+\newpage
+
+\subsection{Operatore Values}
+
+\textbf{L'operatore \texttt{VALUES}}
+
+L'operatore \texttt{VALUES} viene utilizzato per definire un insieme di dati o soluzioni direttamente all'interno della query SPARQL. Permette di specificare \textbf{inline una o più tabelle di valori che vengono poi unite (tramite join) alle altre soluzioni trovate dalla query
+, queste vengono unite sulle variabili comuni!}.
+
+Quindi creare VALUES, è come creare una piccola tabella, con colonne che specifichiamo noi, e valori specificati da noi.
+
+\textbf{Esempio 1: Associazione di una singola variabile}
+
+Supponiamo di voler cercare informazioni solo per una lista specifica di persone (ad esempio `:Mario` e `:Luca`):
+
+\begin{verbatim}
+SELECT ?person ?nome
+WHERE {
+    VALUES ?person { :Mario :Luca }
+    ?person :nome ?nome .
+}
+\end{verbatim}
+
+Qui in \textbf{VALUES}, verrà creata una piccola tabella in questo modo:
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|}
+\hline
+\textbf{?person} \\ \hline
+:Mario  \\ \hline
+:Luca \\ \hline
+\end{tabular}
+\end{table} 
+
+Che poi una volta risolto il pattern della query, verrà messo in \textbf{Join} sulle variabili comuni
+
+
+
+\textbf{Esempio 2: Associazione di più variabili}
+
+È possibile specificare tabelle con più colonne definendo le variabili tra parentesi tonde:
+
+\begin{verbatim}
+SELECT ?person ?ruolo ?stipendio
+WHERE {
+    ?person :lavoraIn :Azienda .
+    
+    VALUES (?ruolo ?stipendio) {
+        ("Manager" 50000)
+        ("Sviluppatore" 35000)
+        ("Stagista" UNDEF)
+    }
+    
+    ?person :haRuolo ?ruolo .
+}
+\end{verbatim}
+
+In questo caso, se la variabile è associata a \texttt{UNDEF}, la variabile \texttt{?stipendio} rimarrà \textit{unbound} per lo stagista.
+
+
+\subsection{Operatore BIND}
+
+
+L'operatore \texttt{BIND} permette di assegnare il risultato di un'espressione aritmetica, logica o di una funzione a una nuova variabile all'interno del pattern della query.
+
+In sintesi:
+\begin{itemize}
+    \item A differenza dell'assegnazione tramite \texttt{SELECT (espressione AS ?var)}, l'operatore \texttt{BIND} assegna il valore all'interno del blocco \texttt{WHERE}, rendendo la nuova variabile subito disponibile per le clausole e i filtri successivi.
+    \item La variabile assegnata deve essere **nuova** e non ancora legata a un valore all'interno dello stesso gruppo.
+\end{itemize}
+
+\textbf{Esempio 1: Calcolo aritmetico}
+
+Supponiamo di voler calcolare il prezzo di un prodotto comprensivo di IVA (22\%):
+
+\begin{verbatim}
+SELECT ?prodotto ?prezzoBase ?prezzoIva
+WHERE {
+    ?prodotto :prezzo ?prezzoBase .
+    
+    BIND(?prezzoBase * 1.22 AS ?prezzoIva)
+}
+\end{verbatim}
+
+Il Solution Mapping risultante conterrà la nuova colonna \texttt{?prezzoIva}:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{?prodotto} & \textbf{?prezzoBase} & \textbf{?prezzoIva} \\ \hline
+:Laptop & 1000 & 1220.0 \\ \hline
+:Mouse & 20 & 24.4 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Esempio 2: Uso di funzioni condizionali (\texttt{IF})}
+
+\texttt{BIND} viene spesso usato in combinazione con la funzione \texttt{IF} per creare nuove etichette o categorie dinamiche:
+
+\begin{verbatim}
+SELECT ?persona ?eta ?categoria
+WHERE {
+    ?persona :eta ?eta .
+    
+    BIND(IF(?eta >= 18, "Maggiorenne", "Minorenne") AS ?categoria)
+}
+\end{verbatim}
+
+\section{DBpedia}
+
+DBpedia è un progetto che estrae informazioni strutturate da Wikipedia sotto forma di dati RDF, creando un grande Knowledge Graph interrogabile con tecnologie del Semantic Web.
+
+DBpedia estrae informazioni da Wikipedia e le rappresenta tramite triple RDF:
+\begin{lstlisting}
+dbr:Diego_Maradona   rdf:type       dbo:Person
+dbr:Diego_Maradona   dbo:birthPlace dbr:Lanin
+\end{lstlisting}
+Queste triple formano naturalmente un grafo.
+
+\begin{definition}{Knowledge Graph}
+    Un Knowledge Graph (grafo della conoscenza) è, in sostanza, un grafo che rappresenta conoscenza su entità e sulle relazioni tra esse.
+\end{definition}
+
+Quindi DBpedia può essere visto come un Knowledge Graph, perché il suo grafo RDF non contiene semplicemente dati generici, ma rappresenta conoscenze.
+
+
+\subsection{DBpedia Ontology}
+
+DBpedia mette a disposizione anche la \textbf{DBpedia Ontology}, ovvero un \textbf{vocabolario/ontologia} che definisce classi e proprietà utilizzabili per descrivere le risorse.
+
+Alcuni esempi di classi e proprietà dell'ontologia sono:
+
+\begin{itemize}
+\item \texttt{dbo:Person}: classe che rappresenta una persona;
+\item \texttt{dbo:birthPlace}: proprietà che rappresenta il luogo di nascita;
+\item \texttt{dbo:birthDate}: proprietà che rappresenta la data di nascita;
+\item \texttt{dbo:author}: proprietà che rappresenta l'autore di una risorsa.
+\end{itemize}
+
+Quindi ricapitolando definendo un dizionario, significa che dbo:Person, sarà definito da qualche parte ad esempio come una classe, come i Vocabolari che abbiamo visto anche precedente
+
+Ad esempio, la tripla:
+
+\begin{center}
+\texttt{dbr:Diego\_Maradona \quad rdf:type \quad dbo:Person}
+\end{center}
+
+indica che la risorsa \texttt{Diego\_Maradona} è un'istanza della classe \texttt{dbo:Person}.
+
+\subsection{CIDOC-CRM}
+
+Il \textbf{CIDOC Conceptual Reference Model (CIDOC-CRM)} è un modello
+concettuale e un'ontologia di dominio sviluppata per la rappresentazione
+e l'integrazione delle informazioni relative al \textbf{patrimonio
+culturale}. È stato sviluppato nell'ambito del \textit{International
+Committee for Documentation (CIDOC)} dell'ICOM
+(\textit{International Council of Museums}).
+
+L'obiettivo principale di CIDOC-CRM è fornire un modello semantico comune
+attraverso il quale descrivere informazioni provenienti da musei,
+biblioteche, archivi e altre istituzioni culturali. Il modello permette
+di rappresentare non solo gli oggetti culturali, ma anche le persone, i
+luoghi, gli eventi e le relazioni che caratterizzano la storia di tali
+oggetti.
+
+\subsubsection{Classi e proprietà}
+
+CIDOC-CRM definisce un insieme di \textbf{classi} e
+\textbf{proprietà} che descrivono i concetti fondamentali del dominio
+del patrimonio culturale.
+
+Le classi sono identificate da codici nella forma \texttt{E} seguito da
+un numero. Alcuni esempi sono:
+
+\begin{itemize}
+    \item \texttt{E21 Person}: rappresenta una persona;
+    \item \texttt{E22 Human-Made Object}: rappresenta un oggetto creato
+    dall'essere umano;
+    \item \texttt{E53 Place}: rappresenta un luogo;
+    \item \texttt{E5 Event}: rappresenta un evento;
+    \item \texttt{E12 Production}: rappresenta un evento di produzione
+    di un oggetto.
+\end{itemize}
+
+Le proprietà sono invece identificate generalmente dalla lettera
+\texttt{P} seguita da un numero e permettono di esprimere le relazioni
+tra le diverse entità. Ad esempio, la proprietà \texttt{P14 carried out
+by} permette di collegare un evento all'agente che lo ha realizzato.
+
+In forma semplificata, è quindi possibile rappresentare una relazione
+come:
+
+\[
+E12\ Production
+\quad \xrightarrow{P14\ carried\ out\ by} \quad
+E21\ Person
+\]
+
+La relazione esprime il fatto che un evento di produzione è stato
+realizzato da una determinata persona.
+
+\subsubsection{CIDOC-CRM come ontologia}
+
+CIDOC-CRM non deve essere considerato semplicemente come un elenco di
+termini o come un vocabolario. Esso definisce una struttura concettuale
+che specifica le relazioni semantiche tra le entità del dominio.
+
+Ad esempio, il modello stabilisce che una determinata proprietà possa
+collegare istanze appartenenti a specifiche classi. In questo modo è
+possibile descrivere non soltanto quali concetti esistono, ma anche come
+essi sono semanticamente collegati.
+
+Questa caratteristica distingue un modello ontologico da un semplice
+vocabolario. Un vocabolario può infatti introdurre termini come
+\texttt{Person}, \texttt{Object} o \texttt{Event}, mentre un'ontologia
+come CIDOC-CRM definisce anche le relazioni che permettono di costruire
+una rappresentazione strutturata della conoscenza.
+
+\subsubsection{Uso di CIDOC-CRM}
+
+CIDOC-CRM può essere utilizzato nel contesto del Web Semantico
+
+Ad esempio, un'utilizzo in RDF potrebbe essere:
+
+\begin{verbatim}
+:dipinto crm:P108_has_produced :produzione .
+
+:produzione a crm:E12_Production ;
+            crm:P14_carried_out_by :artista .
+
+:artista a crm:E21_Person .
+\end{verbatim}
+
+In questo esempio, \texttt{:produzione} rappresenta un evento di
+produzione appartenente alla classe \texttt{E12 Production} (\textbf{che è definita nell'ontologia di CIDOC-CRM}), mentre
+\texttt{P14 carried out by} collega tale evento alla persona che lo ha
+realizzato.
+
+Il vantaggio principale consiste nella possibilità di rappresentare
+informazioni provenienti da fonti diverse utilizzando una struttura
+semantica condivisa. Risorse appartenenti a musei, archivi o
+biblioteche differenti possono quindi essere descritte attraverso
+concetti e relazioni comuni.
