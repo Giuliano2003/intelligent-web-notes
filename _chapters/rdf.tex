@@ -282,8 +282,8 @@ Gli URIs(a differenza degli URL) non si limitano a denotare risorse che sono def
 ovvero che hanno una locazione sulla rete.
 
 \begin{definition}{URL}
-    L'URL è una stringa che identifica una risorsa deferenziabile, cioè che interrogandola sul web, mi restituisce qualcosa, \textbf{questo implica}
-    che a quella stringa corrisponda un \textbf{meccanismo di accesso (http, ftp, ecc.), che permette di recuperare effettivamente la risorsa in rete}.
+    L'URL è una stringa che identifica la posizione di una risorsa e permette di accedervi, \textbf{questo implica}
+    che l'URI ha un \textbf{meccanismo di accesso (http, ftp, ecc.), che permette di recuperare effettivamente la risorsa in rete}.
 
     Quindi se prendo un URL e lo "cerco" (cioè lo dereferenzi, ad esempio digitandolo nel browser),
     il sistema sa esattamente dove andare a bussare e — se tutto funziona correttamente — ottieni indietro la risorsa stessa (una pagina HTML, un'immagine, un file...).
@@ -291,6 +291,7 @@ ovvero che hanno una locazione sulla rete.
     Con l'URI generico questo non è garantito.
 \end{definition}
 
+\textbf{Quindi l'URL è un URI che identifica anche dove e come cercare la risorsa.}
 
 Gli URI possono identificare invece anche risorse non deferenziabili, cioè che \textbf{non ha nessuna locazione di rete associata}, 
 ad esempio una persona, un concetto astratto, una proprietà.
@@ -481,7 +482,7 @@ Turtle (\textit{Terse RDF Triple Language}) è una sintassi di serializzazione p
 
 A differenza di N-Triples, Turtle permette di utilizzare diverse \textbf{abbreviazioni sintattiche}, che consentono di evitare la ripetizione di parti comuni delle triple.
 
-\subsection*{Prefissi}
+\subsection*{@prefix}
 
 Una delle principali abbreviazioni consiste nell'utilizzo dei \textbf{prefissi}, che permettono di sostituire una parte comune degli URI con un identificatore più breve.
 
@@ -510,6 +511,67 @@ Analogamente, possiamo definire:
 \end{center}
 
 e utilizzare \texttt{people:Andrew} al posto dell'URI completo.
+
+\subsection*{@base}
+
+La direttiva \texttt{@base} permette di specificare una \textbf{base URI} all'interno di un documento Turtle.
+
+Viene utilizzata per poter scrivere delle URI in forma \textbf{relativa}, evitando di dover ripetere ogni volta la parte comune della URI.
+
+La sintassi è:
+\[
+\texttt{@base <URI-base> .}
+\]
+
+Ad esempio:
+\begin{verbatim}
+@base <http://example.org/> .
+
+<student/123> <name> "Giuliano" .
+\end{verbatim}
+
+La URI relativa \texttt{<student/123>} viene risolta rispetto alla base URI:
+\[
+\texttt{http://example.org/student/123}
+\]
+
+Analogamente:
+\begin{verbatim}
+@base <http://example.org/data/> .
+
+<student/123>
+\end{verbatim}
+
+corrisponde a:
+\[
+\texttt{http://example.org/data/student/123}
+\]
+
+\paragraph{Scopo}
+\texttt{@base} serve quindi a:
+\begin{itemize}
+    \item definire una URI di riferimento per il documento;
+    \item permettere l'utilizzo di URI relative;
+    \item rendere il documento più compatto e leggibile.
+\end{itemize}
+
+\paragraph{Attenzione}
+\texttt{@base} riguarda la \textbf{risoluzione delle URI relative} e non definisce un prefisso.
+
+Ad esempio:
+
+\begin{verbatim}
+@base <http://example.org/> .
+@prefix ex: <http://example.com/> .
+\end{verbatim}
+
+hanno due scopi differenti:
+\begin{itemize}
+    \item \texttt{@base} stabilisce la base per risolvere URI relative;
+    \item \texttt{@prefix} associa un prefisso ad uno spazio di nomi, permettendo di utilizzare URI abbreviate come \texttt{ex:Student}.
+\end{itemize}
+
+
 
 \subsection*{Statement semplice}
 
@@ -2283,3 +2345,1159 @@ informazioni provenienti da fonti diverse utilizzando una struttura
 semantica condivisa. Risorse appartenenti a musei, archivi o
 biblioteche differenti possono quindi essere descritte attraverso
 concetti e relazioni comuni.
+
+\chapter{Catene Di Markov}
+
+\section{Variabili Aleatorie Discrete}
+
+Per comprendere appieno le Catene di Markov, è necessario richiamare i concetti fondamentali relativi alle variabili aleatorie discrete e alle loro distribuzioni di probabilità.
+
+
+\subsubsection{Spazio di probabilità}
+
+Uno \emph{spazio di probabilità} è una terna
+
+$$
+(\Omega,\mathcal{F},P)
+$$
+
+formata da tre componenti fondamentali:
+
+\begin{itemize}
+\item $\Omega$ è lo \textbf{spazio campionario}, cioè l'insieme di tutti i possibili risultati di un esperimento casuale;
+
+\item $\mathcal{F}$ è una \textbf{$\sigma$-algebra di eventi} (\textbf{la proprietà fondamentale che devi sapere della sigma-algebra di eventi è che $\Omega \in \mathcal{F}$}), cioè una collezione di sottoinsiemi di $\Omega$ ai quali è possibile assegnare una probabilità;
+
+\begin{equation}
+    \mathcal{F} \subseteq P(\Omega)
+\end{equation}
+
+\item $P$ è la \textbf{misura di probabilità}, cioè una funzione che assegna a ogni evento $A\in\mathcal{F}$ un valore compreso tra $0$ e $1$:
+\[
+P:\mathcal{F}\rightarrow[0,1].
+\]
+
+\end{itemize}
+
+\paragraph{Spazio campionario $\Omega$}
+
+Lo spazio campionario $\Omega$ contiene tutti gli esiti possibili dell'esperimento casuale.
+
+Ad esempio, considerando il lancio di un dado a sei facce:
+
+$$
+\Omega=\{1,2,3,4,5,6\}.
+$$
+
+Ogni elemento $\omega\in\Omega$ rappresenta un possibile risultato dell'esperimento.
+
+\paragraph{Insieme degli eventi $\mathcal{F}$}
+
+Un \emph{evento} è un sottoinsieme dello spazio campionario $\Omega$. L'insieme $\mathcal{F}$ raccoglie gli eventi ai quali possiamo assegnare una probabilità.
+
+Ad esempio, nel lancio di un dado, consideriamo l'evento
+
+$$
+A=\{2,4,6\},
+$$
+
+che rappresenta l'evento ``esce un numero pari''. In questo caso:
+
+$$
+A\in\mathcal{F}.
+$$
+
+Formalmente, $\mathcal{F}$ è una $\sigma$-algebra su $\Omega$.
+
+
+\paragraph{Misura di probabilità $P$}
+
+La funzione
+
+$$
+P:\mathcal{F}\rightarrow[0,1]
+$$
+
+assegna a ogni evento $A\in\mathcal{F}$ una probabilità.
+
+Ad esempio, se il dado è equo:
+
+$$
+P(\{2\})=\frac{1}{6}
+$$
+
+mentre per l'evento ``esce un numero pari'':
+
+$$
+P(\{2,4,6\})=\frac{3}{6}=\frac{1}{2}.
+$$
+
+La misura di probabilità soddisfa, tra le altre, le proprietà:
+
+$$
+P(\Omega)=1
+$$
+
+e
+
+$$
+P(A)\geq 0
+\qquad\forall A\in\mathcal{F}.
+$$
+
+In sintesi:
+
+$$
+\boxed{
+\Omega=\text{possibili risultati}
+}
+$$
+
+$$
+\boxed{
+\mathcal{F}=\text{eventi ai quali assegniamo una probabilità}
+}
+$$
+
+$$
+\boxed{
+P=\text{probabilità assegnata agli eventi}
+}
+$$
+
+\subsubsection*{Variabile aleatoria}
+
+Una \emph{variabile aleatoria} è una funzione che associa a ogni possibile risultato $\omega\in\Omega$ un valore numerico.
+
+Formalmente:
+
+$$
+\boxed{X:\Omega\rightarrow\mathbb{R}}
+$$
+
+e quindi:
+
+$$
+\omega\in\Omega
+\quad\xrightarrow{\quad X\quad}\quad
+X(\omega)\in\mathbb{R}.
+$$
+
+La variabile aleatoria permette quindi di trasformare gli esiti dell'esperimento casuale in valori numerici sui quali possiamo effettuare operazioni matematiche.
+
+\paragraph{Esempio: lancio di un dado}
+
+Consideriamo nuovamente:
+
+$$
+\Omega=\{1,2,3,4,5,6\}.
+$$
+
+Possiamo definire una variabile aleatoria $X$ come
+
+$$
+X(\omega)=\omega.
+$$
+
+In questo caso la variabile aleatoria restituisce semplicemente il valore uscito dal dado:
+
+$$
+\begin{array}{c|cccccc}
+\omega & 1 & 2 & 3 & 4 & 5 & 6\\
+\hline
+X(\omega) & 1 & 2 & 3 & 4 & 5 & 6
+\end{array}
+$$
+
+Possiamo però definire anche una variabile aleatoria diversa. Ad esempio:
+
+$$
+X(\omega)=
+\begin{cases}
+1 & \text{se }\omega\text{ è pari},\\
+0 & \text{se }\omega\text{ è dispari}.
+\end{cases}
+$$
+
+In questo caso:
+
+$$
+\begin{array}{c|cccccc}
+\omega & 1 & 2 & 3 & 4 & 5 & 6\\
+\hline
+X(\omega) & 0 & 1 & 0 & 1 & 0 & 1
+\end{array}
+$$
+
+Quindi, se ad esempio il dado restituisce $\omega=4$, si ha:
+
+$$
+X(4)=1.
+$$
+
+L'idea fondamentale può essere rappresentata come:
+
+$$
+\boxed{
+\text{esperimento casuale}
+\longrightarrow
+\omega\in\Omega
+\longrightarrow
+X(\omega)\in\mathbb{R}
+}
+$$
+
+La variabile aleatoria permette quindi di associare un valore numerico a ciascun possibile esito dell'esperimento. Questo consente successivamente di definire e studiare la sua \emph{distribuzione di probabilità}, il \emph{valore atteso}, la \emph{varianza} e altre quantità statistiche.
+
+
+
+\subsection{Definizione e Supporto}
+
+\begin{definition}{Variabile Aleatoria Discreta}
+Sia $(\Omega, \mathcal{F}, \mathcal{P})$ uno spazio di probabilità. Una \textbf{variabile aleatoria} (v.a.) discreta $X$ è una funzione misurabile:
+\[
+X: \Omega \longrightarrow S \subset \mathbb{R}
+\]
+tale che l'insieme immagine $S$ (detto \textbf{supporto} o spazio dei valori assunti da $X$) sia finito oppure numerabile:
+\[
+S = \{s_1, s_2, s_3, \dots\}
+\]
+\end{definition}
+
+Nel contesto dei sistemi dinamici e delle catene di Markov, $X$ rappresenta tipicamente lo \emph{stato} del sistema rilevato in un determinato istante temporale.
+
+\subsection{Funzione di Massa di Probabilità (PMF)}
+
+La distribuzione di probabilità di una variabile aleatoria discreta $X$ è completamente caratterizzata dalla sua \textbf{Funzione di Massa di Probabilità} (PMF, \emph{Probability Mass Function}), indicata con $p_X(x)$:
+
+\[
+p_X : S \to [0,1]
+\]
+
+La PMF è definita in questo modo, quella che fa è prendere gli insiemi di valori che la variabile aleatoria $X$ può assumere e assegnare un numero compreso fra 0 e 1.
+\textbf{Quindi intuitivamente quello che fa è dire quanta probabilità ha la variabile aleatoria di assumere quel valore}.
+Questa è definita cosi:
+
+\[
+p_X(x) = \mathcal{P}(X = x) \quad \text{per ogni } x \in S
+\]
+
+La PMF rispetta due proprietà fondamentali degli assiomi di Kolmogorov:
+\begin{enumerate}
+    \item \textbf{Non negatività}: $p_X(s_k) \ge 0 \quad \forall s_k \in S$
+    \item \textbf{Normalizzazione}: $\sum_{s_k \in S} p_X(s_k) = 1$
+\end{enumerate}
+
+
+\begin{warning}
+    Nota che la funzione $P$ definita nella tripla dello spazio di campionamento, prende in ingresso, un evento sottoinsieme di $\mathcal{F}$,
+    e infatti $X=x$, rappresenta un evento di $\mathcal{F}$, perchè:
+    \begin{equation}
+        \{\omega \in \Omega : X(\omega) = x\}
+    \end{equation}
+\end{warning}
+
+\subsubsection{Esempio Variabile Aleatoria}
+
+Consideriamo lo spazio di probabilità
+
+\[
+\Omega = \{1,2,3,4,5,6\},
+\]
+
+che rappresenta il lancio di un dado a sei facce, con tutti gli esiti equiprobabili:
+
+\[
+P(\{\omega\}) = \frac{1}{6},
+\qquad \forall \omega \in \Omega.
+\]
+
+Definiamo la variabile aleatoria
+
+\[
+X:\Omega \to S
+\]
+
+come
+
+\[
+X(\omega)=
+\begin{cases}
+1 & \text{se } \omega \text{ è pari},\\
+0 & \text{se } \omega \text{ è dispari}.
+\end{cases}
+\]
+
+In particolare:
+
+\[
+\begin{array}{c|cccccc}
+\omega & 1 & 2 & 3 & 4 & 5 & 6\\
+\hline
+X(\omega) & 0 & 1 & 0 & 1 & 0 & 1
+\end{array}
+\]
+
+Pertanto, l'insieme dei possibili valori assunti da \(X\) è
+
+\[
+S=\{0,1\}.
+\]
+
+La \emph{PMF} (Probability Mass Function) di $X$ è la funzione
+
+\[
+p_X:S\to[0,1],
+\]
+
+definita come
+
+\[
+p_X(x)=P(X=x).
+\]
+
+Nel nostro caso:
+
+\[
+p_X(0)=P(X=0)
+=P(\{1,3,5\})=P(\{1\} \cup \{2\} \cup \{3\}) = P(\{1\}) + P(\{2\}) + P(\{3\})
+=\frac{3}{6}
+=\frac12,
+\]
+
+mentre
+
+\[
+p_X(1)=P(X=1)
+=P(\{2,4,6\})
+=\frac{3}{6}
+=\frac12.
+\]
+
+Quindi la PMF è
+
+\[
+\boxed{
+p_X(x)=
+\begin{cases}
+\frac12 & x=0,\\
+\frac12 & x=1,\\
+0 & \text{altrimenti}.
+\end{cases}}
+\]
+
+Si osserva che la PMF soddisfa le due proprietà fondamentali:
+
+\[
+p_X(x)\geq 0
+\qquad \forall x\in S
+\]
+
+e
+
+\[
+\sum_{x\in S}p_X(x)
+=
+p_X(0)+p_X(1)
+=
+\frac12+\frac12
+=1.
+\]
+
+
+
+\subsection{Probabilità Condizionata e Distribuzioni Congiunte}
+
+Quando si studiano le relazioni tra più variabili aleatorie (ad esempio, lo stato $X_t$ al tempo $t$ e lo stato $X_{t+1}$ al tempo $t+1$), si utilizzano la distribuzione congiunta e la probabilità condizionata.
+
+\begin{definition}{Probabilità Condizionata}
+Dati due eventi $A, B \in \mathcal{F}$ con $\mathcal{P}(B) > 0$, la probabilità condizionata di $A$ dato $B$ è definita come:
+\[
+\mathcal{P}(A \mid B) = \frac{\mathcal{P}(A \cap B)}{\mathcal{P}(B)}
+\]
+\end{definition}
+
+\subsection{PMF congiunta}
+
+Consideriamo due variabili aleatorie discrete
+
+$$
+X:\Omega\to S_X,
+\qquad
+Y:\Omega\to S_Y.
+$$
+
+La \emph{PMF congiunta} (Probability Mass Function congiunta) di $X$ e $Y$ descrive la probabilità che le due variabili assumano contemporaneamente determinati valori.
+
+Si definisce come
+
+$$
+\boxed{
+p_{X,Y}(x,y)
+=
+P(X=x,Y=y)
+}
+$$
+
+per ogni
+
+$$
+x\in S_X,\qquad y\in S_Y.
+$$
+
+In altre parole,
+
+$$
+p_{X,Y}(x,y)
+$$
+
+è la probabilità dell'evento in cui contemporaneamente
+
+$$
+X=x
+$$
+
+e
+
+$$
+Y=y.
+$$
+
+L'evento corrispondente è infatti
+$$
+\{X=x\}\cap\{Y=y\}.
+$$
+
+\subsubsection{Proprietà della PMF congiunta}
+
+Essendo una PMF, $p_{X,Y}$ deve soddisfare due proprietà fondamentali.
+
+\paragraph{1. Non negatività}
+
+Per ogni coppia $(x,y)$:
+
+$$
+\boxed{
+p_{X,Y}(x,y)\geq 0
+}
+$$
+
+poiché rappresenta una probabilità.
+
+\paragraph{2. Somma uguale a uno}
+
+La somma della PMF congiunta su tutti i possibili valori di $X$ e $Y$ deve essere uguale a $1$:
+
+$$
+\boxed{
+\sum_{x\in S_X}\sum_{y\in S_Y}
+p_{X,Y}(x,y)=1
+}
+$$
+
+Questo perché le coppie $(x,y)$ comprendono tutti i possibili valori che le due variabili possono assumere.
+
+\subsubsection{Esempio}
+
+Supponiamo che la PMF congiunta di $X$ e $Y$ sia descritta dalla seguente tabella:
+
+$$
+\begin{array}{c|ccc}
+p_{X,Y}(x,y) & Y=0 & Y=1 & Y=2\\
+\hline
+X=0 & \frac{1}{8} & \frac{1}{8} & \frac{1}{4}\\
+X=1 & \frac{1}{8} & \frac{1}{4} & \frac{1}{8}
+\end{array}
+$$
+
+La somma di tutte le probabilità è
+
+$$
+\frac18+\frac18+\frac14+
+\frac18+\frac14+\frac18=1.
+$$
+
+Per esempio,
+
+$$
+p_{X,Y}(1,2)
+=
+P(X=1,Y=2)
+=
+\frac18.
+$$
+
+Quindi la PMF congiunta permette di conoscere la probabilità di ogni possibile combinazione dei valori di $X$ e $Y$.
+
+\subsubsection{PMF marginali}
+
+Dalla PMF congiunta possiamo ottenere le distribuzioni delle singole variabili aleatorie.
+
+La PMF marginale di $X$ si ottiene sommando la PMF congiunta rispetto a tutti i possibili valori di $Y$:
+
+$$
+\boxed{
+p_X(x)
+=
+\sum_{y\in S_Y}p_{X,Y}(x,y)
+}
+$$
+
+Analogamente, la PMF marginale di $Y$ si ottiene sommando rispetto a tutti i possibili valori di $X$:
+
+$$
+\boxed{
+p_Y(y)
+=
+\sum_{x\in S_X}p_{X,Y}(x,y)
+}
+$$
+
+Nel nostro esempio:
+
+$$
+p_X(0)
+=
+\frac18+\frac18+\frac14
+=
+\frac12
+$$
+
+e
+
+$$
+p_X(1)
+=
+\frac18+\frac14+\frac18
+=
+\frac12.
+$$
+
+Analogamente,
+
+$$
+p_Y(0)
+=
+\frac18+\frac18
+=
+\frac14,
+$$
+
+$$
+p_Y(1)
+=
+\frac18+\frac14
+=
+\frac38,
+$$
+
+e
+
+$$
+p_Y(2)
+=
+\frac14+\frac18
+=
+\frac38.
+$$
+
+Quindi la PMF congiunta contiene abbastanza informazioni da permettere di ricostruire le PMF marginali delle singole variabili.
+
+\subsubsection{PMF condizionata}
+
+Possiamo anche studiare la distribuzione di una variabile aleatoria sapendo che l'altra ha assunto un determinato valore.
+
+La PMF di $Y$ condizionata dall'evento ${X=x}$ è definita come
+
+$$
+\boxed{
+p_{Y\mid X}(y\mid x)
+=
+P(Y=y\mid X=x)
+}
+$$
+
+e, per $P(X=x)>0$,
+
+$$
+\boxed{
+p_{Y\mid X}(y\mid x)
+=
+\frac{P(X=x,Y=y)}
+{P(X=x)}
+}
+$$
+
+ossia
+
+$$
+\boxed{
+p_{Y\mid X}(y\mid x)
+=
+\frac{p_{X,Y}(x,y)}
+{p_X(x)}
+}
+$$
+
+Questa formula è semplicemente la definizione di probabilità condizionata applicata agli eventi
+
+$$
+\{Y=y\}
+$$
+
+e
+
+$$
+\{X=x\}.
+$$
+
+\subsubsection{Esempio di PMF condizionata}
+
+Consideriamo nuovamente la tabella precedente e calcoliamo
+
+$$
+P(Y=1\mid X=0).
+$$
+
+Abbiamo
+
+$$
+p_{X,Y}(0,1)=\frac18
+$$
+
+e
+
+$$
+p_X(0)=\frac12.
+$$
+
+Pertanto:
+
+$$
+p_{Y\mid X}(1\mid0)
+=
+\frac{p_{X,Y}(0,1)}
+{p_X(0)}
+=
+\frac{\frac18}{\frac12}
+=
+\frac14.
+$$
+
+Quindi, sapendo che
+
+$$
+X=0,
+$$
+
+la probabilità che
+
+$$
+Y=1
+$$
+
+è
+
+$$
+\boxed{
+P(Y=1\mid X=0)=\frac14.
+}
+$$
+
+\subsubsection{Proprietà della PMF condizionata}
+
+Anche la PMF condizionata è una PMF. Pertanto deve soddisfare:
+
+$$
+p_{Y\mid X}(y\mid x)\geq0
+$$
+
+e, fissato un valore $x$ con $p_X(x)>0$,
+
+$$
+\boxed{
+\sum_{y\in S_Y}
+p_{Y\mid X}(y\mid x)=1.
+}
+$$
+
+Quindi, una volta fissato $X=x$, le probabilità condizionate di tutti i possibili valori di $Y$ devono sommare a $1$.
+
+
+
+\subsection{Esempio di probabilità congiunta con variabili aleatorie}
+
+Consideriamo il lancio di due monete equilibrate. Definiamo lo spazio di probabilità
+
+$$
+(\Omega,\mathcal{F},P).
+$$
+
+Lo spazio di campionamento è
+
+$$
+\Omega=\{TT,TC,CT,CC\},
+$$
+
+dove:
+\begin{itemize}
+\item $T$ indica testa;
+\item $C$ indica croce.
+\end{itemize}
+
+L'insieme degli eventi è
+
+$$
+\mathcal{F}=2^\Omega,
+$$
+
+cioè l'insieme di tutti i sottoinsiemi di $\Omega$.
+
+Poiché le due monete sono equilibrate e indipendenti, ogni esito elementare ha probabilità
+
+$$
+P(\{\omega\})=\frac14,
+\qquad \forall\omega\in\Omega.
+$$
+
+Ricordiamo però, che :
+\begin{equation}
+    F=\{\varnothing,\{TT\},\{TC\},\ldots,\{TT,TC,CT,CC\}\},
+\end{equation}
+E $P$ è definita su $F$, quindi poi $P$, assegnando le probabilità agli eventi \{TT,CC,CT,TC\}, riesce ad assegnare una probabilità a tutti gli eventi:
+\newpage
+\[
+P({TT,TC})=P({TT})+P({TC})=\frac{1}{2}
+\]
+$\dots$
+\[
+P(\Omega)=1
+\]
+
+
+
+Definiamo ora due variabili aleatorie discrete:
+
+$$
+X:\Omega\to\{0,1,2\}
+$$
+
+e
+
+$$
+Y:\Omega\to\{0,1\}.
+$$
+
+La variabile $X$ rappresenta il numero totale di teste ottenute, mentre $Y$ indica se la prima moneta è testa:
+
+$$
+X(\omega)=
+\begin{cases}
+2 & \text{se ci sono due teste},\\
+1 & \text{se c'è una sola testa},\\
+0 & \text{se non ci sono teste},
+\end{cases}
+$$
+
+e
+
+$$
+Y(\omega)=
+\begin{cases}
+1 & \text{se la prima moneta è testa},\\
+0 & \text{se la prima moneta è croce}.
+\end{cases}
+$$
+
+Possiamo rappresentare i valori delle due variabili nella seguente tabella:
+
+$$
+\begin{array}{c|cccc}
+\omega & TT & TC & CT & CC\\
+\hline
+X(\omega) & 2 & 1 & 1 & 0\\
+Y(\omega) & 1 & 1 & 0 & 0
+\end{array}
+$$
+
+Consideriamo ora la probabilità congiunta
+
+$$
+P(X=1,Y=0).
+$$
+
+Questa espressione indica la probabilità che si verifichino
+\emph{contemporaneamente} i due eventi:
+
+$$
+X=1
+$$
+
+e
+
+$$
+Y=0.
+$$
+
+In termini di eventi appartenenti a $\mathcal F$:
+
+$$
+\{X=1\}=\{TC,CT\}
+$$
+
+mentre
+
+$$
+\{Y=0\}=\{CT,CC\}.
+$$
+
+Pertanto:
+
+$$
+\{X=1\}\cap\{Y=0\}
+=
+\{CT\}.
+$$
+
+Di conseguenza,
+
+$$
+P(X=1,Y=0)
+=
+P(\{CT\})
+=
+\frac14.
+$$
+
+Questa probabilità è un esempio di \emph{probabilità congiunta}.
+
+Possiamo quindi definire la PMF congiunta di $X$ e $Y$ come
+
+$$
+p_{X,Y}(x,y)
+=
+P(X=x,Y=y).
+$$
+
+Nel nostro esempio otteniamo:
+
+$$
+\begin{array}{c|cc}
+p_{X,Y}(x,y) & Y=0 & Y=1\\
+\hline
+X=0 & \frac14 & 0\\
+X=1 & \frac14 & \frac14\\
+X=2 & 0 & \frac14
+\end{array}
+$$
+
+Ad esempio:
+
+$$
+p_{X,Y}(1,0)
+=
+P(X=1,Y=0)
+=
+\frac14.
+$$
+
+Analogamente:
+
+$$
+p_{X,Y}(1,1)
+=
+P(X=1,Y=1)
+=
+P(\{TC\})
+=
+\frac14.
+$$
+
+Notiamo che la somma di tutte le probabilità della PMF congiunta è uguale a $1$:
+
+$$
+\sum_x\sum_y p_{X,Y}(x,y)
+=
+\frac14+\frac14+\frac14+\frac14
+=
+1.
+$$
+
+Quindi la PMF congiunta descrive la probabilità di tutte le possibili combinazioni dei valori assunti contemporaneamente da $X$ e $Y$.
+
+
+
+\subsubsection{Esempio di Probabilità Condizionata}
+
+Consideriamo uno spazio di probabilità
+
+\[
+(\Omega,\mathcal{F},P),
+\]
+
+dove lo spazio di campionamento è
+
+\[
+\Omega=\{TT,TC,CT,CC\},
+\]
+
+con:
+\begin{itemize}
+    \item $T$ = testa;
+    \item $C$ = croce.
+\end{itemize}
+
+Supponiamo che le due monete siano equilibrate e indipendenti. 
+L'insieme degli eventi è
+
+\[
+\mathcal{F}=2^\Omega,
+\]
+
+cioè l'insieme di tutti i sottoinsiemi di $\Omega$.
+
+Poiché i quattro risultati sono equiprobabili,
+
+\[
+P(\{\omega\})=\frac14,
+\qquad \forall \omega\in\Omega.
+\]
+
+Definiamo ora due variabili aleatorie:
+
+\[
+X:\Omega\to\{0,1,2\},
+\]
+
+dove $X$ rappresenta il numero di teste ottenute, e
+
+\[
+Y:\Omega\to\{0,1\},
+\]
+
+dove $Y$ indica se la prima moneta è testa:
+
+\[
+Y(\omega)=
+\begin{cases}
+1 & \text{se la prima moneta è testa},\\
+0 & \text{altrimenti}.
+\end{cases}
+\]
+
+La variabile $X$ assume i seguenti valori:
+
+\[
+\begin{array}{c|cccc}
+\omega & TT & TC & CT & CC\\
+\hline
+X(\omega) & 2 & 1 & 1 & 0\\
+Y(\omega) & 1 & 1 & 0 & 0
+\end{array}
+\]
+
+Consideriamo ora la probabilità condizionata
+
+\[
+P(X=2\mid Y=1).
+\]
+
+Per definizione,
+
+\[
+P(X=2\mid Y=1)
+=
+\frac{P(X=2\cap Y=1)}
+{P(Y=1)},
+\]
+
+purché $P(Y=1)>0$.
+
+Osserviamo che
+
+\[
+\{X=2\}=\{TT\}
+\]
+
+mentre
+
+\[
+\{Y=1\}=\{TT,TC\}.
+\]
+
+Inoltre,
+
+\[
+\{X=2\}\cap\{Y=1\}
+=
+\{TT\}.
+\]
+
+Pertanto:
+
+\[
+P(X=2\cap Y=1)
+=
+P(\{TT\})
+=
+\frac14
+\]
+
+e
+
+\[
+P(Y=1)
+=
+P(\{TT,TC\})
+=
+\frac24
+=
+\frac12.
+\]
+
+Quindi:
+
+\[
+\boxed{
+P(X=2\mid Y=1)
+=
+\frac{\frac14}{\frac12}
+=
+\frac12
+}
+\]
+
+In altre parole, sapendo che la prima moneta è risultata testa, la probabilità di ottenere due teste è $\frac12$.
+
+
+\subsection{Dai Processi Stocastici alle Sequenze Temporali}
+
+Un \textbf{processo stocastico a tempo discreto} è una famiglia indicizzata di variabili aleatorie:
+\[
+\{X_t\}_{t \in \mathbb{N}_0} = \{X_0, X_1, X_2, \dots\}
+\]
+definite sullo stesso spazio di probabilità, dove l'indice $t$ rappresenta il tempo e $X_t$ descrive lo stato del sistema all'istante $t$. 
+
+In generale, la distribuzione probabilistica di $X_{t+1}$ potrebbe dipendere dall'intera storia passata del processo, ossia dai valori assunti da $X_0, X_1, \dots, X_t$. Le \emph{Catene di Markov} semplificano questa dipendenza mediante un'ipotesi fondamentale.
+
+\newpage
+
+\section{Catene di Markov}
+
+\subsection{Introduzione e Proprietà di Assenza di Memoria}
+
+Una \textbf{catena di Markov a tempo discreto} è un particolare tipo di processo stocastico. Consideriamo uno spazio di probabilità
+
+$$
+(\Omega,\mathcal{F},P),
+$$
+
+dove $\Omega$ è lo spazio campionario, $\mathcal{F}$ è una $\sigma$-algebra di eventi e $P$ è la misura di probabilità definita su $\mathcal{F}$.
+
+Un processo stocastico a tempo discreto è una famiglia di variabili aleatorie
+
+$$
+\{X_t\}_{t\in\mathbb{N}_0}
+=
+\{X_0,X_1,X_2,\ldots\},
+$$
+
+tutte definite sullo stesso spazio di probabilità $(\Omega,\mathcal{F},P)$.
+
+Per ogni istante $t$, la variabile aleatoria
+
+$$
+X_t:\Omega\longrightarrow S
+$$
+
+associa a ogni esito $\omega\in\Omega$ lo stato assunto dal sistema all'istante $t$. L'insieme $S$ è detto \textbf{spazio degli stati} e contiene tutti i possibili valori che il processo può assumere. Nel caso di una catena di Markov a stati discreti possiamo scrivere
+
+$$
+S=\{s_1,s_2,\ldots\}.
+$$
+
+Pertanto, fissato un esito $\omega\in\Omega$, la successione
+
+$$
+X_0(\omega),X_1(\omega),X_2(\omega),\ldots
+$$
+
+descrive l'evoluzione del sistema nel tempo per quell'esito.
+
+In generale, la distribuzione probabilistica dello stato futuro $X_{t+1}$ potrebbe dipendere dall'intera storia del processo, ossia dai valori
+
+$$
+X_0,X_1,\ldots,X_t.
+$$
+
+Le catene di Markov introducono una particolare ipotesi, detta \textbf{proprietà di Markov} o \textbf{proprietà di assenza di memoria}: una volta noto lo stato attuale $X_t$, la conoscenza degli stati precedenti non fornisce ulteriori informazioni sullo stato futuro $X_{t+1}$.
+
+Formalmente, per ogni $t\in\mathbb{N}_0$ e per ogni $s_0,\ldots,s_t,s_{t+1}\in S$,
+
+$$
+\boxed{
+P
+\left(
+X_{t+1}=s_{t+1}
+\mid
+X_t=s_t,X_{t-1}=s_{t-1},\ldots,X_0=s_0
+\right)
+=
+P
+\left(
+X_{t+1}=s_{t+1}
+\mid
+X_t=s_t
+\right)
+}
+$$
+
+La proprietà di Markov afferma quindi che, per prevedere probabilisticamente lo stato successivo, è sufficiente conoscere lo stato attuale: la storia precedente del processo può essere ignorata.
+
+
+\subsection{Spazio degli Stati e Tempo Discreto}
+
+In realtà, la maggior parte dei fenomeni fisici e dei sistemi di interesse sono di fatto modellabili come catene di Markov. Chiaramente, da dominio a dominio, vi sono diverse varianti che dipendono dallo spazio degli stati in cui il sistema si può trovare, dalla natura del tempo, ecc.
+
+Nel nostro contesto assumiamo che:
+\begin{itemize}
+    \item L'insieme degli stati $S$ sia \textbf{finito} di cardinalità $n$: 
+    \[
+    S = \{s_1, s_2, \dots, s_n\}
+    \]
+    \item Il \textbf{tempo sia discreto}: $t \in \{0, 1, 2, \dots\}$.
+\end{itemize}
+
+\subsection{Matrice delle Transizioni}
+
+Una catena di Markov a tempo discreto e spazio degli stati finito può essere rappresentata da una \textbf{matrice delle transizioni} $P$ di dimensione $n \times n$, tale che l'elemento $p_{i,j}$ della matrice corrisponde alla probabilità che il sistema transiti da uno stato $s_i$ ad uno stato $s_j$:
+
+\[
+p_{i,j} = \mathcal{P}(x_{t+1} = s_j \mid x_t = s_i)
+\]
+
+dove la variabile aleatoria $x_t$ indica lo stato del sistema al tempo $t$.
+
+\subsection{Struttura della Matrice di Transizione}
+
+La matrice di transizione $P$ ha la seguente struttura formale:
+\[
+P = \begin{pmatrix}
+p_{1,1} & p_{1,2} & \cdots & p_{1,n} \\
+p_{2,1} & p_{2,2} & \cdots & p_{2,n} \\
+\vdots & \vdots & \ddots & \vdots \\
+p_{n,1} & p_{n,2} & \cdots & p_{n,n}
+\end{pmatrix}
+\]
+
+Essa soddisfa le seguenti proprietà fondanti (matrice stocastica per righe):
+\begin{enumerate}
+    \item Tutti gli elementi sono probabilità valide:
+    \[
+    p_{i,j} \ge 0 \quad \forall i, j \in \{1, \dots, n\}
+    \]
+    \item La somma di ogni riga è pari ad $1$ (poiché il sistema deve necessariamente transitare in uno degli stati dello spazio $S$ all'istante successivo):
+    \[
+    \sum_{j=1}^{n} p_{i,j} = 1 \quad \forall i \in \{1, \dots, n\}
+    \]
+\end{enumerate}
