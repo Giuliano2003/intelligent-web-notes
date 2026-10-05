@@ -2348,6 +2348,10 @@ concetti e relazioni comuni.
 
 \chapter{Catene Di Markov}
 
+\begin{quote}
+    \itshape Non si può discendere due volte nello stesso fiume, né toccare due volte una sostanza nel medesimo stato
+\end{quote}
+
 \section{Variabili Aleatorie Discrete}
 
 Per comprendere appieno le Catene di Markov, è necessario richiamare i concetti fondamentali relativi alle variabili aleatorie discrete e alle loro distribuzioni di probabilità.
@@ -3430,7 +3434,7 @@ $$
 X_0,X_1,\ldots,X_t.
 $$
 
-Le catene di Markov introducono una particolare ipotesi, detta \textbf{proprietà di Markov} o \textbf{proprietà di assenza di memoria}: una volta noto lo stato attuale $X_t$, la conoscenza degli stati precedenti non fornisce ulteriori informazioni sullo stato futuro $X_{t+1}$.
+Le catene di Markov introducono una particolare ipotesi, detta \textbf{proprietà di Markov} o \textbf{proprietà di assenza di memoria}: \textbf{una volta noto lo stato attuale $X_t$, la conoscenza degli stati precedenti non fornisce ulteriori informazioni sullo stato futuro $X_{t+1}$.}
 
 Formalmente, per ogni $t\in\mathbb{N}_0$ e per ogni $s_0,\ldots,s_t,s_{t+1}\in S$,
 
@@ -3452,8 +3456,12 @@ X_t=s_t
 }
 $$
 
-La proprietà di Markov afferma quindi che, per prevedere probabilisticamente lo stato successivo, è sufficiente conoscere lo stato attuale: la storia precedente del processo può essere ignorata.
+La proprietà di Markov afferma quindi che, \textbf{per prevedere probabilisticamente lo stato successivo, è sufficiente conoscere lo stato attuale: la storia precedente del processo può essere ignorata}.
 
+Quindi questa proprietà ci dice che:
+\begin{center}
+    Una volta noto lo stato attuale,\textbf{la conoscenza degli stati precedenti non fornisce ulteriori informazioni sullo stato futuro}
+\end{center}
 
 \subsection{Spazio degli Stati e Tempo Discreto}
 
@@ -3480,7 +3488,7 @@ dove la variabile aleatoria $x_t$ indica lo stato del sistema al tempo $t$.
 
 \subsection{Struttura della Matrice di Transizione}
 
-La matrice di transizione $P$ ha la seguente struttura formale:
+La matrice di transizione $P$ ha la seguente struttura formale :
 \[
 P = \begin{pmatrix}
 p_{1,1} & p_{1,2} & \cdots & p_{1,n} \\
@@ -3490,14 +3498,1017 @@ p_{n,1} & p_{n,2} & \cdots & p_{n,n}
 \end{pmatrix}
 \]
 
+\textbf{Questa matrice la puoi vedere anche come la matrice di transazione al tempo $t$}
+
 Essa soddisfa le seguenti proprietà fondanti (matrice stocastica per righe):
 \begin{enumerate}
     \item Tutti gli elementi sono probabilità valide:
     \[
     p_{i,j} \ge 0 \quad \forall i, j \in \{1, \dots, n\}
     \]
-    \item La somma di ogni riga è pari ad $1$ (poiché il sistema deve necessariamente transitare in uno degli stati dello spazio $S$ all'istante successivo):
+    \item La somma di ogni riga è pari ad $1$ (proprietà della pmf condizionata):
     \[
     \sum_{j=1}^{n} p_{i,j} = 1 \quad \forall i \in \{1, \dots, n\}
     \]
+\end{enumerate}
+
+\subsection{Evoluzione della Distribuzione di Probabilità}
+
+Consideriamo una catena di Markov a tempo discreto con spazio degli stati finito
+
+\[
+S = \{s_1,s_2,\dots,s_n\}.
+\]
+
+Al tempo $t$, la variabile aleatoria $X_t$ descrive lo stato in cui si trova il sistema. La distribuzione di probabilità dello stato al tempo $t$ può essere rappresentata mediante il vettore
+
+\[
+\mu^t =
+\begin{pmatrix}
+\mu_1^t & \mu_2^t & \cdots & \mu_n^t
+\end{pmatrix},
+\]
+
+dove
+
+\[
+\mu_i^t = \mathcal{P}(X_t=s_i).
+\]
+
+Pertanto, il vettore $\mu^t$ contiene le probabilità che il sistema si trovi nei diversi stati al tempo $t$ e, essendo una distribuzione di probabilità, soddisfa
+
+\[
+\sum_{i=1}^{n}\mu_i^t=1.
+\]
+
+L'obiettivo è determinare la distribuzione del sistema al tempo successivo $t+1$, ovvero calcolare
+
+\[
+\mu_j^{t+1}
+=
+\mathcal{P}(X_{t+1}=s_j).
+\]
+
+Per raggiungere lo stato $s_j$ al tempo $t+1$, il sistema deve necessariamente trovarsi in uno degli stati $s_1,\dots,s_n$ al tempo $t$. Possiamo quindi applicare il \textbf{teorema della probabilità totale}:
+
+\[
+\mathcal{P}(X_{t+1}=s_j)
+=
+\sum_{i=1}^{n}
+\mathcal{P}(X_{t+1}=s_j,X_t=s_i).
+\]
+
+Utilizzando la definizione di probabilità condizionata,
+
+\[
+\mathcal{P}(A\cap B)
+=
+\mathcal{P}(A\mid B)\mathcal{P}(B),
+\]
+
+otteniamo
+
+\[
+\mathcal{P}(X_{t+1}=s_j)
+=
+\sum_{i=1}^{n}
+\mathcal{P}(X_{t+1}=s_j\mid X_t=s_i)
+\mathcal{P}(X_t=s_i).
+\]
+
+Per la definizione della distribuzione $\mu^t$,
+
+\[
+\mathcal{P}(X_t=s_i)=\mu_i^t,
+\]
+
+mentre, per la definizione della matrice di transizione,
+
+\[
+\mathcal{P}(X_{t+1}=s_j\mid X_t=s_i)=p_{i,j}.
+\]
+
+Pertanto,
+
+\[
+\boxed{
+\mu_j^{t+1}
+=
+\sum_{i=1}^{n}p_{i,j}\mu_i^t
+}
+\]
+
+Questa relazione mostra come la distribuzione di probabilità del sistema si evolve da un istante temporale al successivo.
+
+\subsubsection{Interpretazione della formula}
+
+La quantità
+
+\[
+p_{i,j}\mu_i^t
+\]
+
+può essere interpretata come la probabilità di seguire il seguente percorso:
+
+\[
+\text{essere nello stato }s_i\text{ al tempo }t
+\quad\longrightarrow\quad
+\text{passare allo stato }s_j\text{ al tempo }t+1.
+\]
+
+Infatti,
+
+\[
+\mu_i^t=\mathcal{P}(X_t=s_i)
+\]
+
+rappresenta la probabilità di trovarsi nello stato $s_i$ al tempo $t$, mentre
+
+\[
+p_{i,j}
+=
+\mathcal{P}(X_{t+1}=s_j\mid X_t=s_i)
+\]
+
+rappresenta la probabilità di passare da $s_i$ a $s_j$.
+
+Per ottenere la probabilità complessiva di trovarsi in $s_j$ al tempo $t+1$, dobbiamo considerare tutti i possibili stati di partenza $s_i$ e sommare i relativi contributi:
+
+\[
+\mu_j^{t+1}
+=
+p_{1,j}\mu_1^t
++
+p_{2,j}\mu_2^t
++\cdots+
+p_{n,j}\mu_n^t.
+\]
+
+\subsubsection{Forma matriciale}
+
+La relazione precedente può essere espressa in forma matriciale in modo molto più compatto.
+
+Consideriamo il vettore riga
+
+\[
+\mu^t=
+\begin{pmatrix}
+\mu_1^t & \mu_2^t & \cdots & \mu_n^t
+\end{pmatrix}
+\]
+
+e la matrice di transizione
+
+\[
+P=
+\begin{pmatrix}
+p_{1,1} & p_{1,2} & \cdots & p_{1,n}\\
+p_{2,1} & p_{2,2} & \cdots & p_{2,n}\\
+\vdots & \vdots & \ddots & \vdots\\
+p_{n,1} & p_{n,2} & \cdots & p_{n,n}
+\end{pmatrix}.
+\]
+
+Il prodotto $\mu^tP$ produce un nuovo vettore riga le cui componenti sono
+
+\[
+(\mu^tP)_j
+=
+\sum_{i=1}^{n}\mu_i^t p_{i,j}.
+\]
+
+Ma abbiamo appena dimostrato che
+
+\[
+\mu_j^{t+1}
+=
+\sum_{i=1}^{n}p_{i,j}\mu_i^t.
+\]
+
+Pertanto,
+
+\[
+\boxed{
+\mu^{t+1}=\mu^tP
+}
+\]
+
+Questa equazione rappresenta l'evoluzione della distribuzione di probabilità della catena di Markov da un istante al successivo.
+
+In particolare, possiamo interpretare la matrice $P$ come un operatore che, applicato alla distribuzione al tempo $t$, permette di ottenere la distribuzione al tempo $t+1$:
+
+\[
+\boxed{
+\mu^t
+\overset{P}{\longrightarrow}
+\mu^{t+1}
+}
+\]
+
+\subsubsection{Esempio}
+
+Consideriamo una catena di Markov con due stati
+
+\[
+S=\{s_1,s_2\}.
+\]
+
+Supponiamo che al tempo $t$ la distribuzione sia
+
+\[
+\mu^t=
+\begin{pmatrix}
+0.7 & 0.3
+\end{pmatrix},
+\]
+
+ossia
+
+\[
+\mathcal{P}(X_t=s_1)=0.7,
+\qquad
+\mathcal{P}(X_t=s_2)=0.3.
+\]
+
+Supponiamo inoltre che la matrice di transizione sia
+
+\[
+P=
+\begin{pmatrix}
+0.8 & 0.2\\
+0.4 & 0.6
+\end{pmatrix}.
+\]
+
+Ad esempio,
+
+\[
+p_{1,1}=0.8
+\]
+
+significa che
+
+\[
+\mathcal{P}(X_{t+1}=s_1\mid X_t=s_1)=0.8,
+\]
+
+mentre
+
+\[
+p_{2,1}=0.4
+\]
+
+significa che
+
+\[
+\mathcal{P}(X_{t+1}=s_1\mid X_t=s_2)=0.4.
+\]
+
+Calcoliamo la probabilità di trovarci nello stato $s_1$ al tempo $t+1$:
+
+\[
+\mu_1^{t+1}
+=
+p_{1,1}\mu_1^t+p_{2,1}\mu_2^t.
+\]
+
+Sostituendo i valori:
+
+\[
+\mu_1^{t+1}
+=
+0.8\cdot0.7+0.4\cdot0.3
+=
+0.56+0.12
+=
+0.68.
+\]
+
+Analogamente,
+
+\[
+\mu_2^{t+1}
+=
+p_{1,2}\mu_1^t+p_{2,2}\mu_2^t
+\]
+
+e quindi
+
+\[
+\mu_2^{t+1}
+=
+0.2\cdot0.7+0.6\cdot0.3
+=
+0.14+0.18
+=
+0.32.
+\]
+
+Di conseguenza,
+
+\[
+\mu^{t+1}
+=
+\begin{pmatrix}
+0.68 & 0.32
+\end{pmatrix}.
+\]
+
+Lo stesso risultato si ottiene direttamente mediante il prodotto matriciale:
+
+\[
+\mu^{t+1}
+=
+\mu^tP
+=
+\begin{pmatrix}
+0.7&0.3
+\end{pmatrix}
+\begin{pmatrix}
+0.8&0.2\\
+0.4&0.6
+\end{pmatrix}
+=
+\begin{pmatrix}
+0.68&0.32
+\end{pmatrix}.
+\]
+
+Quindi la matrice di transizione permette di trasformare la distribuzione di probabilità al tempo $t$ nella distribuzione al tempo $t+1$:
+
+\[
+\boxed{
+\mu^{t+1}=\mu^tP
+}
+\]
+
+\subsection{Distribuzioni Stazionarie}
+Ricordati che vale questo:
+\[
+\begin{aligned}
+\mu^1 &= \mu^0 P \\
+\mu^2 &= \mu^1 P = \mu^0 P P \\
+\dots \\
+\mu^t &= \mu^{t-1} P = \mu^0 P^t
+\end{aligned}
+\]
+
+
+Consideriamo la seguente matrice $P$, che si può vedere anche sottoforma di grafo:
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{_files/_images/mm1.png}
+    \label{fig:etichetta}
+\end{figure}
+
+Consideriamo una distribuzione iniziale 
+\[
+\mu^{0}
+=
+\begin{pmatrix}
+1  &  0
+\end{pmatrix}.
+\]
+Allora avremo questo \textbf{random walk}:
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.4\textwidth]{_files/_images/mm2.png}
+    \label{fig:etichetta}
+\end{figure}
+
+\newpage
+Consideriamo una diversa distribuzione iniziale:
+\[
+\mu^{0}
+=
+\begin{pmatrix}
+0.3  &  0.7
+\end{pmatrix}
+\]
+Questa genera un random walk:
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.4\textwidth]{_files/_images/mm3.png}
+    \label{fig:etichetta}
+\end{figure}
+
+Come possiamo notare, sia la distribuzione 
+\[
+\mu^{0}
+=
+\begin{pmatrix}
+0.3  &  0.7
+\end{pmatrix}
+\]
+e 
+\[
+\mu^{0}
+=
+\begin{pmatrix}
+1  &  0
+\end{pmatrix}
+\]
+tendono alla distribuzione
+\[
+\begin{pmatrix}
+0.5  &  0.5
+\end{pmatrix}
+\]
+
+\textbf{Questa viene chiamata distribuzione stazionaria}, cioè una distribuzione tale che:
+\begin{equation}
+    \mu P = \mu
+\end{equation}
+
+
+Questo vale per ogni 
+\[
+\mu^{0}
+=
+\begin{pmatrix}
+\alpha   &  1 - \alpha
+\end{pmatrix} , \alpha \in [0,1]
+\]
+e dipende dal fatto che:
+\[
+\lim_{t \to \infty} P^t
+=
+\begin{bmatrix}
+0.5 & 0.5 \\
+0.5 & 0.5
+\end{bmatrix}
+\]
+
+e quindi
+\[
+\lim_{t \to \infty} \mu^t
+=
+\lim_{t \to \infty} \mu^0 \cdot P^t
+=
+[0.5(\alpha + 1 - \alpha),\, 0.5(\alpha + 1 - \alpha)]
+=
+[0.5, 0.5].
+\]
+
+\textbf{Questo è un risultato specifico, di un teorema piu generale, chiamato Teorema Ergodico per le Catene di Markov}, il teorema dice che sotto determinata ipotesi,
+quella di \textbf{Irriducibilità} e \textbf{Aperiodicità}, che vedremo dopo valgono:
+\begin{itemize}
+    \item \textbf{Struttura della matrice limite} : cioè la proprietà che abbiamo visto del limite della matrice, dove tutte le righe tendono alla distribuzione stazionaria.
+    \item \textbf{Indipendenza dalla distribuzione iniziale}
+    \item \textbf{Invarianza della distribuzione limite}
+\end{itemize}
+Dopo vedremo meglio queste 3 proprietà, vediamo nel dettaglio le 2 ipotesi che devono soddisfare la catena per far avvenire il teorema.
+
+\subsubsection{Irriducibilità}
+
+Sia $(S, P)$ una catena di Markov a tempo discreto definita su uno spazio degli stati finito $S = \{s_1, s_2, \dots, s_n\}$, descritta dalla matrice di transizione stocastica $P \in \mathbb{R}^{n \times n}$, le cui entrate rappresentano le probabilità di transizione in un singolo passo $P_{i,j} = \mathbb{P}(X_{t+1} = s_j \mid X_t = s_i)$.
+
+\begin{definition}{Irriducibilità}
+Una catena di Markov si dice \emph{irriducibile} se, per ogni coppia di stati $s_i, s_j \in S$, la probabilità di raggiungere $s_j$ da $s_i$ in un numero finito $t \ge 1$ di passi è strettamente positiva:
+\begin{equation*}
+\forall i, j \in \{1, \dots, n\}, \quad \exists t \ge 1 : P_{i,j}^t > 0
+\end{equation*}
+dove $P_{i,j}^t = (P^t)_{i,j}$ indica l'entrata $(i,j)$-esima della matrice di transizione elevata alla $t$-esima potenza, rappresentante le transizioni in $t$ passi, \textbf{cioè la probabilità di passare dallo stato $i$ allo stato $j$ in esattamente t passi}
+\end{definition}
+\begin{example}{Esempio}
+Consideriamo una catena di Markov con spazio degli stati
+
+$$
+S=\{1,2\}
+$$
+
+e matrice di transizione
+
+$$
+P=
+\begin{pmatrix}
+0.5 & 0.5\\
+0.2 & 0.8
+\end{pmatrix}.
+$$
+
+Calcoliamo la matrice di transizione dopo due passi:
+
+$$
+P^2=P\cdot P
+=
+\begin{pmatrix}
+0.35 & 0.65\\
+0.26 & 0.74
+\end{pmatrix}.
+$$
+
+La notazione
+
+$$
+P^2_{1,2}=(P^2)_{1,2}
+$$
+
+indica l'elemento della matrice $P^2$ che si trova alla riga $1$ e alla colonna $2$. Pertanto:
+
+$$
+P^2_{1,2}=0.65.
+$$
+
+Questo valore rappresenta la probabilità di passare dallo stato $1$ allo stato $2$ \emph{in esattamente due passi}.
+
+Infatti, per arrivare da $1$ a $2$ in due passi sono possibili due percorsi:
+
+$$
+1\rightarrow1\rightarrow2
+$$
+
+oppure
+
+$$
+1\rightarrow2\rightarrow2.
+$$
+
+Le rispettive probabilità sono:
+
+$$
+P_{1,1}P_{1,2}=0.5\cdot0.5=0.25
+$$
+
+e
+
+$$
+P_{1,2}P_{2,2}=0.5\cdot0.8=0.40.
+$$
+
+Pertanto:
+
+$$
+P^2_{1,2}
+=
+P_{1,1}P_{1,2}
++
+P_{1,2}P_{2,2}
+=
+0.25+0.40
+=
+0.65.
+$$
+
+In generale,
+
+$$
+\boxed{P^t_{i,j}=(P^t)_{i,j}}
+$$
+
+indica la probabilità di passare dallo stato $i$ allo stato $j$ in esattamente $t$ passi.
+\end{example}
+
+
+\paragraph{Interpretazione Grafo-Teorica}
+Si consideri il grafo orientato delle transizioni $G = (V, E)$, dove $V = S$ e un arco orientato $(s_a, s_b) \in E$ sussiste se e solo se $P_{a,b} > 0$.\textbf{Cioè praticamente il grafo che abbiamo considerato anche prima, qui stiamo solo formalizzando il concetto}
+\begin{itemize}
+    \item Se non esiste alcun cammino orientato da $s_i$ a $s_j$ nel grafo $G$, allora per ogni $t \ge 1$ si ha $P_{i,j}^t = 0$.
+    \item Se esiste un cammino orientato $s_i = v_0 \xrightarrow{\alpha_1} v_1 \xrightarrow{\alpha_2} \dots \xrightarrow{\alpha_m} v_m = s_j$ di lunghezza $m \ge 1$, con $P_{v_{h-1}, v_h} = \alpha_h > 0$, la probabilità della transizione lungo tale cammino soddisfa la disuguaglianza:
+    \begin{equation*}
+    P_{i,j}^m \ge \prod_{h=1}^m \alpha_h > 0 \implies P_{i,j}^m > 0
+    \end{equation*}
+\end{itemize}
+Di conseguenza, la condizione di irriducibilità equivale alla proprietà di \emph{forte connessione} del grafo orientato $G$.
+
+\begin{theorem}{Esistenza e Unicità della Distribuzione Stazionaria}
+In virtù del Teorema di Perron-Frobenius per matrici non negative e irriducibili, se una catena di Markov è irriducibile, ammette una ed una sola distribuzione di probabilità stazionaria $\mu \in \mathbb{R}^{1 \times n}$, ovvero un vettore riga di probabilità tale che:
+\begin{equation*}
+\mu P = \mu \quad \text{con} \quad \sum_{i=1}^n \mu_i = 1 \quad \text{e} \quad \mu_i > 0, \quad \forall i \in \{1, \dots, n\}
+\end{equation*}
+\emph{Nota rigorosa:} L'irriducibilità garantisce l'unicità del punto fisso $\mu$, ma non implica necessariamente che una generica distribuzione iniziale $\mu_0$ converga a $\mu$ per $t \to \infty$. La convergenza richiede un'ulteriore proprietà algebrica e topologica: l'aperiodicità.
+\end{theorem}
+
+\subsubsection{Aperiodicità}
+
+\begin{definition}{Insieme dei tempi di ritorno}
+Sia $s_i \in S$ uno stato della catena di Markov. Si definisce l'insieme dei tempi di ritorno in $s_i$ come:
+\begin{equation*}
+A_i = \{ t \ge 1 \mid P_{i,i}^t > 0 \}
+\end{equation*}
+Quindi \(A_i\) contiene tutti i numeri di passi dopo i quali è possibile partire da \(s_i\) e ritornare in \(s_i\).
+\textbf{è solitamente un insieme infinito}
+\end{definition}
+
+\begin{example}
+Consideriamo una catena di Markov con spazio degli stati
+
+$$
+S=\{1,2\}
+$$
+
+e matrice di transizione
+
+$$
+P=
+\begin{pmatrix}
+0.5 & 0.5\\
+0.5 & 0.5
+\end{pmatrix}.
+$$
+
+Il grafo della catena è:
+
+\begin{center}
+\begin{tikzpicture}[>=stealth, node distance=3cm]
+\node[circle, draw, minimum size=1cm] (1) {$1$};
+\node[circle, draw, minimum size=1cm, right of=1] (2) {$2$};
+
+```
+\draw[->, bend left=25] (1) to node[above] {$0.5$} (2);
+\draw[->, bend left=25] (2) to node[below] {$0.5$} (1);
+
+\draw[->] (1) edge[loop left] node {$0.5$} (1);
+\draw[->] (2) edge[loop right] node {$0.5$} (2);
+```
+
+\end{tikzpicture}
+\end{center}
+
+Consideriamo lo stato $1$. Poiché
+
+$$
+P_{1,1}=0.5>0,
+$$
+
+è possibile partire dallo stato $1$ e ritornarvi dopo un passo. Quindi
+
+$$
+1\in A_1.
+$$
+
+Inoltre, è possibile ritornare nello stato $1$ dopo due passi. Infatti:
+
+$$
+1\rightarrow1\rightarrow1
+$$
+
+è un percorso possibile, e quindi
+
+$$
+P^2_{1,1}>0.
+$$
+
+Lo stesso ragionamento vale per qualsiasi numero di passi $t\geq1$. Infatti, possiamo rimanere nello stato $1$ per $t$ passi consecutivi:
+
+$$
+1\rightarrow1\rightarrow\cdots\rightarrow1.
+$$
+
+Pertanto:
+
+$$
+P^t_{1,1}>0
+\qquad \forall t\geq1.
+$$
+
+Per definizione dell'insieme dei tempi di ritorno:
+
+$$
+A_1=\{t\geq1\mid P^t_{1,1}>0\}.
+$$
+
+Concludiamo quindi che:
+
+$$
+\boxed{A_1=\{1,2,3,4,\ldots\}}.
+$$
+
+In altre parole, partendo dallo stato $1$, è possibile ritornare nello stato $1$ dopo \emph{qualsiasi numero positivo di passi}.
+\end{example}
+
+
+\begin{definition}{Periodo}
+Il \emph{periodo} $d(s_i)$ dello stato $s_i$ è il massimo comune divisore ($\gcd$) degli elementi dell'insieme $A_i$:
+\begin{equation*}
+d(s_i) = \gcd(A_i) = \gcd \{ t \ge 1 \mid P_{i,i}^t > 0 \}
+\end{equation*}
+Geometricamente, $d(s_i)$ rappresenta il massimo comune divisore delle lunghezze di tutti i cicli orientati nel grafo delle transizioni $G$ che contengono lo stato $s_i$.
+\begin{itemize}
+    \item Uno stato $s_i$ si dice \emph{aperiodico} se $d(s_i) = 1$.
+    \item Una catena di Markov si dice \emph{aperiodica} se tutti i suoi stati sono aperiodici, ossia $\forall i \in \{1, \dots, n\}, \quad d(s_i) = 1$.
+\end{itemize}
+\end{definition}
+
+\subsubsection{Esempio aperiodicità}
+
+Una proprietà fondamentale è:
+
+$$
+\boxed{s_i\text{ è aperiodico}\iff d(s_i)=1}
+$$
+
+\paragraph{Esempio periodico}
+
+Consideriamo la catena:
+
+$$
+1\rightarrow2\rightarrow1\rightarrow2\rightarrow\cdots
+$$
+
+Per tornare allo stato $1$, posso farlo solo dopo:
+
+$$
+2,4,6,8,\ldots
+$$
+
+passi.
+
+Quindi:
+
+$$
+A_1=\{2,4,6,8,\ldots\}
+$$
+
+e
+
+$$
+d(1)=\gcd(2,4,6,8,\ldots)=2.
+$$
+
+Pertanto, lo stato $1$ è \textbf{periodico}, di periodo 2.
+
+Il ritorno è infatti ``vincolato'': posso tornare dopo $2,4,6,\ldots$ passi, ma \textbf{mai dopo un numero dispari di passi}.
+
+\paragraph{Esempio aperiodico}
+
+Supponiamo invece che:
+
+$$
+A_i=\{2,3,4,5,6,\ldots\}.
+$$
+
+Allora:
+
+$$
+d(s_i)=\gcd(2,3,4,5,\ldots)=1.
+$$
+
+Quindi $s_i$ è \textbf{aperiodico}.
+
+In questo caso non c'è un ritmo fisso maggiore di $1$ che vincola i ritorni: da un certo punto (in questo caso da 2 passi, ma potrebbero essere di piu) in poi posso tornare dopo \textbf{qualsiasi numero di passi}.
+
+
+\paragraph{Proprietà Algebriche della aperiodicità}
+L'insieme dei tempi di ritorno $A_i$ è chiuso rispetto all'addizione algebrica:
+\begin{equation*}
+\forall a, b \in A_i \implies (a + b) \in A_i
+\end{equation*}
+Infatti, se esiste un ciclo di lunghezza $a$ da $s_i$ a $s_i$ ($P_{i,i}^a > 0$) e un ciclo di lunghezza $b$ ($P_{i,i}^b > 0$), concatenando i due percorsi si ottiene un cammino chiuso di lunghezza $a+b$ tale che $P_{i,i}^{a+b} \ge P_{i,i}^a \cdot P_{i,i}^b > 0$.
+
+In base ad un teorema fondamentale dell'algebra sui semigruppi numerici (classi di residui), se un insieme $A_i \subseteq \mathbb{N}_{\ge 1}$ è chiuso rispetto alla somma e $\gcd(A_i) = 1$ (quindi lo stato è aperiodico), allora esiste un indice soglia $k_i \ge 1$ a partire dal quale tutti i numeri naturali appartengono ad $A_i$:
+\begin{equation*}
+\exists k_i \ge 1 : \forall m \ge k_i, \quad m \in A_i \quad \text{ovvero} \quad P_{i,i}^m > 0
+\end{equation*}
+
+\textbf{E questo enfatizza il fatto dell'aperiodicità, cioè esiste una soglia, per cui da quella soglia,OGNI numero naturale,appartiene all'insieme,
+cioè da una soglia in poi, lo stato può tornare sempre da lui}
+
+\paragraph{Analisi del Controesempio: Catena Periodica ed Oscillazione}
+Per comprendere la necessità dell'aperiodicità, si consideri la matrice di transizione di un sistema a due stati con comportamento periodico:
+\begin{equation*}
+P = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}
+\end{equation*}
+\begin{itemize}
+    \item Dallo stato $s_1$ si passa deterministicamente a $s_2$ ($P_{1,2} = 1$), e da $s_2$ a $s_1$ ($P_{2,1} = 1$).
+    \item Gli insiemi dei tempi di ritorno sono $A_1 = A_2 = \{2, 4, 6, 8, \dots\}$, per cui $d(s_1) = d(s_2) = \gcd(\{2, 4, 6, \dots\}) = 2$. La catena è periodica con periodo 2.
+    \item L'equazione di punto fisso stazionario $\mu P = \mu$ con $\mu_1 + \mu_2 = 1$ ammette la soluzione unica:
+    \begin{equation*}
+    [\mu_1, \mu_2] \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} = [\mu_2, \mu_1] = [\mu_1, \mu_2] \implies \mu_1 = \mu_2 \implies 2\mu_1 = 1 \implies \mu_1 = \mu_2 = \frac{1}{2} \implies \mu = \left[\frac{1}{2}, \frac{1}{2}\right]
+    \end{equation*}
+\end{itemize}
+Abbiamo quindi visto che la distribuzione stazionaria è
+\[
+\mu=
+\begin{bmatrix}
+\frac{1}{2} & \frac{1}{2}
+\end{bmatrix},
+\]
+poiché
+\[
+\mu P=\mu.
+\]
+
+Tuttavia, il fatto che $\mu$ sia una distribuzione stazionaria
+non significa che, partendo da una qualsiasi distribuzione iniziale,
+la distribuzione del sistema converga necessariamente a $\mu$.
+
+Supponiamo, ad esempio, di partire dalla distribuzione iniziale
+\[
+\mu_0=
+\begin{bmatrix}
+0.3 & 0.7
+\end{bmatrix}.
+\]
+
+La distribuzione al passo successivo è ottenuta mediante
+\[
+\mu_1=\mu_0P.
+\]
+
+Pertanto:
+\[
+\mu_1=
+\begin{bmatrix}
+0.3 & 0.7
+\end{bmatrix}
+\begin{pmatrix}
+0&1\\
+1&0
+\end{pmatrix}
+=
+\begin{bmatrix}
+0.7&0.3
+\end{bmatrix}.
+\]
+
+Dopo due passi:
+\[
+\mu_2=\mu_1P
+=
+\begin{bmatrix}
+0.7&0.3
+\end{bmatrix}
+\begin{pmatrix}
+0&1\\
+1&0
+\end{pmatrix}
+=
+\begin{bmatrix}
+0.3&0.7
+\end{bmatrix}
+=\mu_0.
+\]
+
+Di conseguenza, la sequenza delle distribuzioni è
+\[
+\mu_0
+\rightarrow
+\mu_1
+\rightarrow
+\mu_2
+\rightarrow
+\mu_3
+\rightarrow\cdots
+\]
+ossia
+\[
+\begin{bmatrix}
+0.3&0.7
+\end{bmatrix}
+\rightarrow
+\begin{bmatrix}
+0.7&0.3
+\end{bmatrix}
+\rightarrow
+\begin{bmatrix}
+0.3&0.7
+\end{bmatrix}
+\rightarrow
+\begin{bmatrix}
+0.7&0.3
+\end{bmatrix}
+\rightarrow\cdots
+\]
+
+La distribuzione oscilla quindi indefinitamente tra
+\[
+\begin{bmatrix}
+0.3&0.7
+\end{bmatrix}
+\qquad\text{e}\qquad
+\begin{bmatrix}
+0.7&0.3
+\end{bmatrix},
+\]
+senza convergere alla distribuzione stazionaria
+\[
+\mu=
+\begin{bmatrix}
+\frac12&\frac12
+\end{bmatrix}.
+\]
+
+Questo mostra che:
+\[
+\boxed{
+\text{distribuzione stazionaria}
+\neq
+\text{distribuzione verso cui il sistema necessariamente converge}
+}
+\]
+
+La causa è la periodicità della catena: in questo caso tutti gli stati hanno
+periodo $2$.
+
+Se invece scegliessimo come distribuzione iniziale proprio la distribuzione
+stazionaria,
+\[
+\mu_0=
+\begin{bmatrix}
+\frac12&\frac12
+\end{bmatrix},
+\]
+avremmo
+\[
+\mu_1=\mu_2=\mu_3=\cdots=
+\begin{bmatrix}
+\frac12&\frac12
+\end{bmatrix}.
+\]
+
+Quindi una distribuzione stazionaria, una volta assunta come distribuzione
+iniziale, rimane invariata nel tempo.
+\subsubsection{Aperiodicità, Irriducibilità e Matrici Primitive}
+
+\paragraph{Integrazione di Irriducibilità e Aperiodicità}
+Si ipotizzi che una catena di Markov sia contemporaneamente irriducibile e aperiodica:
+\begin{enumerate}
+    \item Per l'aperiodicità, per ogni stato $s_i$ esiste un intero $k_i \ge 1$ tale che per ogni $l \ge k_i$ si ha $P_{i,i}^l > 0$.
+    \item Per l'irriducibilità, per ogni coppia di stati $(s_i, s_j)$ esiste un indice $h_{i,j} \ge 1$ tale che $P_{i,j}^{h_{i,j}} > 0$.
+\end{enumerate}
+Combinando i due risultati attraverso la composizione dei cammini (eseguendo $l$ auto-passaggi nello stato $s_i$ e successivamente il cammino di collegamento da $s_i$ a $s_j$), si ottiene che per ogni tempo $t \ge k_i + h_{i,j}$:
+\begin{equation*}
+P_{i,j}^t \ge P_{i,i}^{t - h_{i,j}} \cdot P_{i,j}^{h_{i,j}} > 0
+\end{equation*}
+Definendo l'indice uniforme $\theta$:
+\begin{equation*}
+\theta = \max_{i, j \in \{1, \dots, n\}} (k_i + h_{i,j})
+\end{equation*}
+si deduce la disuguaglianza fondamentale per l'intero sistema:
+\begin{equation*}
+\forall i, j \in \{1, \dots, n\}, \quad P_{i,j}^\theta > 0
+\end{equation*}
+
+\paragraph{Definizione di Matrice Primitiva}
+Una matrice quadrata non negativa $P$ si definisce \emph{primitiva} se esiste un intero positivo $\theta \ge 1$ tale per cui la potenza $\theta$-esima $P^\theta$ presenti unicamente elementi strettamente positivi ($P^\theta > 0$).
+
+Una catena di Markov finita è irriducibile e aperiodica se e solo se la sua matrice di transizione $P$ è primitiva.
+
+\paragraph{Dimostrazione della Convergenza mediante Contrazione della Distanza di Variazione Totale}
+Sia $P$ una matrice primitiva con potenza $P^\theta > 0$. Sia $\alpha$ il valore minimo assoluto tra gli elementi di $P^\theta$:
+\begin{equation*}
+\alpha = \min_{i, j \in \{1, \dots, n\}} P_{i,j}^\theta > 0 \implies P_{i,j}^\theta \ge \alpha > 0, \quad \forall i, j
+\end{equation*}
+Si considerino due generiche distribuzioni di probabilità iniziali $\mu_0^{(1)}$ e $\mu_0^{(2)}$, ed i rispettivi vettori di stato al tempo $\theta$, dati da $\mu_1 = \mu_0^{(1)} P^\theta$ e $\mu_2 = \mu_0^{(2)} P^\theta$.
+
+La metrica adottata per misurare la distanza tra distribuzioni è la \emph{Distanza di Variazione Totale} ($d_{TV}$):
+\begin{equation*}
+d_{TV}(\mu_1, \mu_2) = \frac{1}{2} \sum_{i=1}^n |\mu_{1,i} - \mu_{2,i}|
+\end{equation*}
+Poiché ogni colonna $j$ della matrice $P^\theta$ garantisce una massa minima di transizione pari ad $\alpha$ indipendentemente dallo stato di partenza, una quota pari a $n\alpha$ della massa di probabilità viene ridistribuita in modo identico, rendendo le due distribuzioni strettamente più vicine. Formale applicazione della teoria della contrazione dimostra la disuguaglianza:
+\begin{equation*}
+d_{TV}(\mu_0^{(1)} P^\theta, \mu_0^{(2)} P^\theta) \le (1 - n\alpha) \cdot d_{TV}(\mu_0^{(1)}, \mu_0^{(2)})
+\end{equation*}
+Poiché $n\alpha > 0$, il fattore $\gamma = (1 - n\alpha) < 1$ costituisce un coefficiente di contrazione. Iterando la matrice al limite $t \to \infty$, la distanza tende a zero.
+
+\paragraph{Teorema Fondamentale delle Catene Ergodiche}
+Se la matrice di transizione $P$ di una catena di Markov è irriducibile e aperiodica (ossia primitiva):
+\begin{enumerate}
+    \item Esiste un'unica distribuzione stazionaria $\mu \in \mathbb{R}^{1 \times n}$.
+    \item Per qualsiasi distribuzione iniziale $\mu_0$, il processo stocastico converge esponenzialmente a $\mu$:
+    \begin{equation*}
+    \lim_{t \to \infty} \mu_t = \lim_{t \to \infty} \mu_0 P^t = \mu
+    \end{equation*}
+\end{enumerate}
+\emph{Caso particolare (Clique complete):} Se il grafo delle transizioni è una clique con cappi su ogni nodo ($P_{i,j} > 0, \quad \forall i,j$), la catena è banalmente irriducibile e aperiodica ($\theta = 1$).
+
+\subsection{Applicazione al PageRank come Catena di Markov}
+
+\paragraph{Formulazione del Modello di Navigazione}
+Il PageRank modella la struttura del Web attraverso un grafo orientato $G = (V, E)$ in cui $|V| = N$ rappresenta l'insieme totale delle pagine web e $E$ la rete degli hyperlink.
+
+Per superare i problemi matematici legati ai nodi pozzo (senza link uscenti) o a componenti disconnesse (spider traps), l'algoritmo introduce un \emph{damping factor} $\alpha \in (0, 1)$ (tipicamente impostato a valori quali $0.85$ o $0.75$).
+\begin{itemize}
+    \item Con probabilità $\alpha$, l'utente segue uno dei collegamenti ipertestuali uscenti dalla pagina corrente $s_i$, scelti con distribuzione uniforme $\frac{1}{r_i}$, dove $r_i$ indica il grado uscente (out-degree) della pagina $s_i$.
+    \item Con probabilità $(1 - \alpha)$, l'utente interrompe la navigazione sequenziale ed effettua un salto casuale (\emph{teleportation}) verso una qualsiasi pagina del Web $N$ scelta uniformemente con probabilità $\frac{1}{N}$.
+\end{itemize}
+
+\paragraph{Matrice di Transizione Modificata}
+La matrice di transizione globale del PageRank $P \in \mathbb{R}^{N \times N}$ ha componenti definite come:
+\begin{equation*}
+P_{i,j} = \begin{cases}
+\alpha \cdot \frac{1}{r_i} + (1 - \alpha) \cdot \frac{1}{N} & \text{se esiste un link da } s_i \text{ a } s_j \\[8pt]
+(1 - \alpha) \cdot \frac{1}{N} & \text{altrimenti}
+\end{cases}
+\end{equation*}
+
+\paragraph{Dimostrazione di Ergodicità e Garanzia di Convergenza del PageRank}
+L'aggiunta del termine di teletrasporto modifica la struttura della catena di Markov garantendo le seguenti proprietà formali:
+\begin{enumerate}
+    \item \textbf{Stretta Positività:} Poiché $\alpha < 1$ e $N \ge 1$, la quantità $(1 - \alpha)\frac{1}{N}$ è strettamente positiva per ogni coordinata. Ne consegue che:
+    \begin{equation*}
+    P_{i,j} > 0, \quad \forall i, j \in \{1, \dots, N\}
+    \end{equation*}
+    \item \textbf{Primitività con $\theta = 1$:} Essendo tutte le entrate della matrice $P$ strettamente positive già al primo passo ($\theta = 1$), la matrice $P$ è per definizione primitiva.
+    \item \textbf{Irriducibilità ed Aperiodicità Implicite:} Il grafo associato a $P$ è una clique completa con archi orientati bidirectionali e cappi su ogni singolo nodo:
+    \begin{itemize}
+        \item Ogni nodo $s_i$ può raggiungere qualsiasi altro nodo $s_j$ in esattamente 1 passo ($\implies$ Irriducibilità).
+        \item La presenza di self-loop ($P_{i,i} > 0$) implica $1 \in A_i \implies d(s_i) = \gcd(\{1, 2, \dots\}) = 1$ ($\implies$ Aperiodicità).
+    \end{itemize}
+    \item \textbf{Conclusione Matematica:} Il Teorema Fondamentale delle Catene Ergodiche assicura che il vettore del PageRank $\mu$ (la distribuzione stazionaria) \emph{esiste, è unico} ed è indipendente dalla configurazione iniziale $\mu_0$. Esso può essere calcolato numericamente tramite il metodo delle potenze (\emph{Power Method}):
+    \begin{equation*}
+    \lim_{t \to \infty} \mu_0 P^t = \mu
+    \end{equation*}
+    garantendo la convergenza algoritmica globale dell'architettura di ricerca.
 \end{enumerate}
