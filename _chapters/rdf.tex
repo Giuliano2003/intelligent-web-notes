@@ -4419,60 +4419,518 @@ avremmo
 
 Quindi una distribuzione stazionaria, una volta assunta come distribuzione
 iniziale, rimane invariata nel tempo.
-\subsubsection{Aperiodicità, Irriducibilità e Matrici Primitive}
 
-\paragraph{Integrazione di Irriducibilità e Aperiodicità}
-Si ipotizzi che una catena di Markov sia contemporaneamente irriducibile e aperiodica:
+\subsubsection{Composizione dei cammini e prodotto delle probabilità}
+
+Supponiamo che una catena di Markov sia finita, irriducibile e aperiodica. L'obiettivo è mostrare che esiste un intero $\theta \geq 1$ tale che
+
+$$
+P^\theta_{i,j}>0
+\qquad
+\forall i,j.
+$$
+
+In altre parole, vogliamo dimostrare che, dopo un numero sufficientemente grande e fissato di passi, è possibile raggiungere qualunque stato $s_j$ partendo da qualunque stato $s_i$ con probabilità strettamente positiva.
+
+\paragraph{1. Il ruolo dell'aperiodicità.}
+
+Poiché la catena è aperiodica, per ogni stato $s_i$ esiste un intero $k_i\geq 1$ tale che
+
+$$
+P^l_{i,i}>0
+\qquad
+\forall l\geq k_i.
+$$
+
+Ricordiamo che
+
+$$
+P^l_{i,i}>0
+$$
+
+significa che esiste almeno un cammino di esattamente $l$ passi che parte da $s_i$ e ritorna a $s_i$, con probabilità positiva.
+
+Quindi, una volta superato il valore $k_i$, possiamo tornare allo stato $s_i$ dopo un numero arbitrariamente grande di passi.
+
+Ad esempio, se $k_i=5$, allora
+
+$$
+P^5_{i,i}>0,\qquad
+P^6_{i,i}>0,\qquad
+P^7_{i,i}>0,\qquad \ldots
+$$
+
+Questo significa che possiamo ``ritornare'' a $s_i$ in $5$, $6$, $7$, $\ldots$ passi.
+
+\paragraph{2. Il ruolo dell'irriducibilità.}
+
+Poiché la catena è irriducibile, per ogni coppia di stati $(s_i,s_j)$ esiste un intero $h_{i,j}\geq1$ tale che
+
+$$
+P^{h_{i,j}}_{i,j}>0.
+$$
+
+Questo significa che esiste un cammino che parte da $s_i$ e raggiunge $s_j$ in esattamente $h_{i,j}$ passi, con probabilità positiva:
+
+$$
+s_i
+\longrightarrow \cdots \longrightarrow
+s_j.
+$$
+
+Il numero $h_{i,j}$ può dipendere dalla coppia di stati considerata.
+
+\paragraph{3. Composizione dei due cammini.}
+
+A questo punto abbiamo due possibilità:
+
 \begin{enumerate}
-    \item Per l'aperiodicità, per ogni stato $s_i$ esiste un intero $k_i \ge 1$ tale che per ogni $l \ge k_i$ si ha $P_{i,i}^l > 0$.
-    \item Per l'irriducibilità, per ogni coppia di stati $(s_i, s_j)$ esiste un indice $h_{i,j} \ge 1$ tale che $P_{i,j}^{h_{i,j}} > 0$.
+\item possiamo partire da $s_i$, fare un certo numero di passi e tornare a $s_i$, grazie all'aperiodicità;
+\item possiamo partire da $s_i$ e raggiungere $s_j$, grazie all'irriducibilità.
 \end{enumerate}
-Combinando i due risultati attraverso la composizione dei cammini (eseguendo $l$ auto-passaggi nello stato $s_i$ e successivamente il cammino di collegamento da $s_i$ a $s_j$), si ottiene che per ogni tempo $t \ge k_i + h_{i,j}$:
-\begin{equation*}
-P_{i,j}^t \ge P_{i,i}^{t - h_{i,j}} \cdot P_{i,j}^{h_{i,j}} > 0
-\end{equation*}
-Definendo l'indice uniforme $\theta$:
-\begin{equation*}
-\theta = \max_{i, j \in \{1, \dots, n\}} (k_i + h_{i,j})
-\end{equation*}
-si deduce la disuguaglianza fondamentale per l'intero sistema:
-\begin{equation*}
-\forall i, j \in \{1, \dots, n\}, \quad P_{i,j}^\theta > 0
-\end{equation*}
 
-\paragraph{Definizione di Matrice Primitiva}
-Una matrice quadrata non negativa $P$ si definisce \emph{primitiva} se esiste un intero positivo $\theta \ge 1$ tale per cui la potenza $\theta$-esima $P^\theta$ presenti unicamente elementi strettamente positivi ($P^\theta > 0$).
+Possiamo quindi concatenare i due cammini:
 
-Una catena di Markov finita è irriducibile e aperiodica se e solo se la sua matrice di transizione $P$ è primitiva.
+$$
+\boxed{
+s_i
+\overset{t-h_{i,j}}{\longrightarrow}
+s_i
+\overset{h_{i,j}}{\longrightarrow}
+s_j
+}
+$$
 
-\paragraph{Dimostrazione della Convergenza mediante Contrazione della Distanza di Variazione Totale}
-Sia $P$ una matrice primitiva con potenza $P^\theta > 0$. Sia $\alpha$ il valore minimo assoluto tra gli elementi di $P^\theta$:
-\begin{equation*}
-\alpha = \min_{i, j \in \{1, \dots, n\}} P_{i,j}^\theta > 0 \implies P_{i,j}^\theta \ge \alpha > 0, \quad \forall i, j
-\end{equation*}
-Si considerino due generiche distribuzioni di probabilità iniziali $\mu_0^{(1)}$ e $\mu_0^{(2)}$, ed i rispettivi vettori di stato al tempo $\theta$, dati da $\mu_1 = \mu_0^{(1)} P^\theta$ e $\mu_2 = \mu_0^{(2)} P^\theta$.
+Il primo tratto ha lunghezza $t-h_{i,j}$, mentre il secondo ha lunghezza $h_{i,j}$. La lunghezza complessiva è quindi
 
-La metrica adottata per misurare la distanza tra distribuzioni è la \emph{Distanza di Variazione Totale} ($d_{TV}$):
-\begin{equation*}
-d_{TV}(\mu_1, \mu_2) = \frac{1}{2} \sum_{i=1}^n |\mu_{1,i} - \mu_{2,i}|
-\end{equation*}
-Poiché ogni colonna $j$ della matrice $P^\theta$ garantisce una massa minima di transizione pari ad $\alpha$ indipendentemente dallo stato di partenza, una quota pari a $n\alpha$ della massa di probabilità viene ridistribuita in modo identico, rendendo le due distribuzioni strettamente più vicine. Formale applicazione della teoria della contrazione dimostra la disuguaglianza:
-\begin{equation*}
-d_{TV}(\mu_0^{(1)} P^\theta, \mu_0^{(2)} P^\theta) \le (1 - n\alpha) \cdot d_{TV}(\mu_0^{(1)}, \mu_0^{(2)})
-\end{equation*}
-Poiché $n\alpha > 0$, il fattore $\gamma = (1 - n\alpha) < 1$ costituisce un coefficiente di contrazione. Iterando la matrice al limite $t \to \infty$, la distanza tende a zero.
+$$
+(t-h_{i,j})+h_{i,j}=t.
+$$
 
-\paragraph{Teorema Fondamentale delle Catene Ergodiche}
-Se la matrice di transizione $P$ di una catena di Markov è irriducibile e aperiodica (ossia primitiva):
-\begin{enumerate}
-    \item Esiste un'unica distribuzione stazionaria $\mu \in \mathbb{R}^{1 \times n}$.
-    \item Per qualsiasi distribuzione iniziale $\mu_0$, il processo stocastico converge esponenzialmente a $\mu$:
-    \begin{equation*}
-    \lim_{t \to \infty} \mu_t = \lim_{t \to \infty} \mu_0 P^t = \mu
-    \end{equation*}
-\end{enumerate}
-\emph{Caso particolare (Clique complete):} Se il grafo delle transizioni è una clique con cappi su ogni nodo ($P_{i,j} > 0, \quad \forall i,j$), la catena è banalmente irriducibile e aperiodica ($\theta = 1$).
+Abbiamo dunque costruito un cammino che parte da $s_i$ e arriva a $s_j$ in esattamente $t$ passi. 
 
+Questo cammino esiste perchè le due probabilità sono maggiori di 0
+
+Per poter utilizzare l'aperiodicità, però, dobbiamo avere
+
+$$
+t-h_{i,j}\geq k_i.
+$$
+
+Equivalentemente,
+
+$$
+\boxed{
+t\geq k_i+h_{i,j}.
+}
+$$
+
+Abbiamo quindi che :
+
+$$
+P^{t}_{i,j}>= P^{t-h_{i,j}}_{i,i} P^{h_{i,j}}_{i,j} > 0.
+$$
+
+Dove 
+$$
+t >= k_i + h_{i,j} \implies P^{t}_{i,j} > 0
+$$
+e quindi
+
+
+\paragraph{4. Perché si fa il prodotto delle probabilità?}
+
+Questo è il punto fondamentale della costruzione.
+
+Abbiamo due eventi consecutivi:
+
+$$
+A=
+\{\text{partire da $s_i$ e tornare a $s_i$ in $t-h_{i,j}$ passi}\}
+$$
+
+e
+
+$$
+B=
+\{\text{partire da $s_i$ e arrivare a $s_j$ in $h_{i,j}$ passi}\}.
+$$
+
+La probabilità del primo tratto è
+
+$$
+P^{t-h_{i,j}}_{i,i},
+$$
+
+mentre la probabilità del secondo tratto è
+
+$$
+P^{h_{i,j}}_{i,j}.
+$$
+
+Per compiere l'intero percorso dobbiamo realizzare prima il tratto $A$ e poi il tratto $B$. Si tratta quindi di due eventi che devono verificarsi entrambi.
+
+Per la regola del prodotto delle probabilità,
+
+$$
+P(A\cap B)
+=
+P(A)P(B\mid A).
+$$
+
+Dopo aver completato il primo tratto, siamo nuovamente nello stato $s_i$. Pertanto la probabilità di compiere il secondo tratto è proprio
+
+$$
+P^{h_{i,j}}_{i,j}.
+$$
+
+Ne segue che la probabilità di compiere l'intero cammino composto è
+
+$$
+\boxed{
+P^{t-h_{i,j}}_{i,i}
+\cdot
+P^{h_{i,j}}_{i,j}.
+}
+$$
+
+\paragraph{5. Un esempio numerico del prodotto.}
+
+Supponiamo che
+
+$$
+P^4_{i,i}=0.5
+$$
+
+e
+
+$$
+P^3_{i,j}=0.2.
+$$
+
+Consideriamo il cammino composto
+
+$$
+s_i
+\overset{4}{\longrightarrow}
+s_i
+\overset{3}{\longrightarrow}
+s_j.
+$$
+
+Per completare l'intero percorso devono verificarsi entrambe le parti. La probabilità è quindi
+
+$$
+0.5\cdot0.2=0.1.
+$$
+
+Quindi quel particolare percorso di $4+3=7$ passi ha probabilità
+
+$$
+0.1>0.
+$$
+
+
+\paragraph{7. Perché compare una disuguaglianza?}
+
+Il prodotto
+
+$$
+P^{t-h_{i,j}}_{i,i}
+P^{h_{i,j}}_{i,j}
+$$
+
+rappresenta la probabilità di \emph{un particolare modo} di andare da $s_i$ a $s_j$ in $t$ passi: prima torniamo a $s_i$ e poi andiamo da $s_i$ a $s_j$.
+
+Tuttavia, potrebbero esistere molti altri cammini che, partendo da $s_i$, arrivano a $s_j$ dopo esattamente $t$ passi.
+
+La quantità
+
+$$
+P^t_{i,j}
+$$
+
+rappresenta la probabilità complessiva di arrivare da $s_i$ a $s_j$ in $t$ passi, considerando tutti i possibili cammini.
+
+Di conseguenza, la probabilità complessiva deve essere almeno uguale alla probabilità del particolare cammino che abbiamo costruito:
+
+$$
+\boxed{
+P^t_{i,j}
+\geq
+P^{t-h_{i,j}}_{i,i}
+P^{h_{i,j}}_{i,j}.
+}
+$$
+
+Poiché, per
+
+$$
+t\geq k_i+h_{i,j},
+$$
+
+l'aperiodicità garantisce
+
+$$
+P^{t-h_{i,j}}_{i,i}>0
+$$
+
+e l'irriducibilità garantisce
+
+$$
+P^{h_{i,j}}_{i,j}>0,
+$$
+
+abbiamo
+
+$$
+P^{t-h_{i,j}}_{i,i}
+P^{h_{i,j}}_{i,j}>0.
+$$
+
+Pertanto:
+
+$$
+\boxed{
+P^t_{i,j}>0.
+}
+$$
+
+\paragraph{8. Costruzione di un unico indice $\theta$.}
+
+Finora abbiamo considerato una singola coppia $(i,j)$. Il problema è che il valore
+
+$$
+k_i+h_{i,j}
+$$
+
+può essere diverso per ogni coppia di stati.
+
+Vogliamo invece trovare un unico numero $\theta$ che funzioni contemporaneamente per tutte le coppie.
+
+Poiché la catena è finita, esiste un numero finito di coppie $(i,j)$. Possiamo quindi definire
+
+$$
+\boxed{
+\theta=
+\max_{i,j\in\{1,\ldots,n\}}
+\left(k_i+h_{i,j}\right).
+}
+$$
+
+Per costruzione, $\theta$ è maggiore o uguale a $k_i+h_{i,j}$ per ogni coppia $(i,j)$:
+
+$$
+\theta\geq k_i+h_{i,j}
+\qquad
+\forall i,j.
+$$
+
+Quindi possiamo applicare il risultato precedente contemporaneamente a tutte le coppie:
+
+$$
+\boxed{
+P^\theta_{i,j}>0
+\qquad
+\forall i,j\in\{1,\ldots,n\}.
+}
+$$
+
+In altre parole, esiste un unico numero di passi $\theta$ tale che, partendo da \emph{qualsiasi} stato $s_i$, possiamo raggiungere \emph{qualsiasi} stato $s_j$ dopo esattamente $\theta$ passi con probabilità positiva.
+
+
+
+
+\begin{definition}{Matrice Primitiva}
+    Una matrice quadrata non negativa $P$ si definisce \emph{primitiva} se esiste un intero positivo $\theta \ge 1$ tale per cui la potenza $\theta$-esima $P^\theta$ presenti unicamente elementi strettamente positivi ($P^\theta > 0$).
+\end{definition}
+
+\begin{theorem}{Teorema}
+Una catena di Markov finita è irriducibile e aperiodica se e solo se la sua matrice di transizione $P$ è primitiva.    
+\end{theorem}
+
+\subsection{Dimostrazione della Convergenza mediante Contrazione della Distanza di Variazione Totale}
+
+Sia $P \in \mathbb{R}^{n \times n}$ una matrice di transizione stocastica e primitiva. Per definizione di primitività, esiste un intero $\theta \ge 1$ tale che tutti gli elementi della matrice $P^\theta$ sono strettamente positivi ($P^\theta > 0$).
+
+Sia $\alpha$ il valore minimo tra gli elementi di $P^\theta$:
+\begin{equation}
+\alpha = \min_{i,j \in \{1,\dots,n\}} P^\theta_{i,j} > 0 \implies P^\theta_{i,j} \ge \alpha > 0, \quad \forall i,j \in \{1,\dots,n\}
+\end{equation}
+
+Poiché ogni riga di $P^\theta$ somma a $1$ (proprietà fondamentale delle matrici stocastiche), la somma di $n$ elementi (di una riga) maggiori o uguali ad $\alpha$ impone che $n\alpha \le 1$.
+
+\subsubsection*{1. Decomposizione della Matrice di Transizione}
+Possiamo decomporre ciascun elemento $P^\theta_{i,j}$ isolando la quota di probabilità uniforme minima $\alpha$:
+\begin{equation}
+P^\theta_{i,j} = (1 - n\alpha) Q_{i,j} + \alpha
+\end{equation}
+dove la matrice $Q$ ha elementi $Q_{i,j} = \frac{P^\theta_{i,j} - \alpha}{1 - n\alpha}$;$P^\theta_{i,j} = (1 - n\alpha) \frac{P^\theta_{i,j} - \alpha}{1 - n\alpha} + \alpha $
+\begin{itemize}
+    \item \textbf{Non-negatività:} Poiché $P^\theta_{i,j} \ge \alpha$ e $1 - n\alpha \ge 0$, si ha $Q_{i,j} \ge 0$.
+    \item \textbf{Stocasticità di $Q$:} Per ogni riga $i$, la somma sugli elementi vale:
+    $$\sum_{j=1}^n Q_{i,j} = \sum_{j=1}^n \frac{P^\theta_{i,j} - \alpha}{1 - n\alpha} = \frac{\left(\sum_{j=1}^n P^\theta_{i,j}\right) - n\alpha}{1 - n\alpha} = \frac{1 - n\alpha}{1 - n\alpha} = 1$$
+    Pertanto, $Q$ è una valida matrice stocastica.
+\end{itemize}
+
+\subsubsection*{2. Evoluzione della Differenza tra Distribuzioni}
+Si considerino due generiche distribuzioni di probabilità iniziali $\mu_0^{(1)}$ e $\mu_0^{(2)}$, rappresentate come vettori riga tali che $\sum_{i=1}^n \mu_{0,i}^{(1)} = 1$ e $\sum_{i=1}^n \mu_{0,i}^{(2)} = 1$. 
+
+I rispettivi vettori di stato al tempo $\theta$ sono dati da $\mu_1 = \mu_0^{(1)} P^\theta$ e $\mu_2 = \mu_0^{(2)} P^\theta$. Sostituendo la decomposizioni di $P^\theta$, la componente $j$-esima della differenza $\mu_1 - \mu_2$ diventa:
+
+
+L'elemento $j-esimo$ della differenza fra $\mu_1$ e $\mu_2$ viene fuori dalla differenza fra l'elemento $j-esimo$ di $\mu_1$ e quello di $\mu_2$, \textbf{l'elemento $j-esimo$ di $\mu_1$ è }:
+\begin{equation}
+    \sum_{i=1}^{n} \mu_{0,i}^{(1)} P_{i,j}
+\end{equation}
+\textbf{La componente chiave è il $j$ nell'indice di P, quello proprio serve ad indicare il $j$ elemento del vettore riga $\mu_1$}, si vede bene anche graficamente, \textbf{Ricordando che però i vettori, sono vettori riga e non colonna come nel grafico}
+
+\begin{center}
+\begin{tikzpicture}[>=stealth, thick]
+
+% Vettore mu_0
+\node at (0,2.2) {$\mu_0^{(1)}$};
+\draw (0,0.5) rectangle (1,3.9);
+\foreach \y/\label in {3.4/$\mu_{0,1}^{(1)}$,2.9/$\mu_{0,2}^{(1)}$,2.4/$\vdots$,1.9/$\mu_{0,i}^{(1)}$,1.4/$\vdots$,0.9/$\mu_{0,n}^{(1)}$}
+\node at (0.5,\y) {\label};
+
+% Matrice P
+\node at (3.7,4.3) {$P$};
+\draw (2,0.5) rectangle (6.5,3.9);
+
+% righe
+\foreach \y in {1,1.5,2,2.5,3,3.5}
+\draw (2,\y) -- (6.5,\y);
+
+% colonne
+\foreach \x in {2.9,3.8,4.7,5.6}
+\draw (\x,0.5) -- (\x,3.9);
+
+% elementi
+\node at (2.45,3.7) {$P_{1,1}$};
+\node at (3.35,3.7) {$P_{1,2}$};
+\node at (4.25,3.7) {$\cdots$};
+\node at (5.15,3.7) {$P_{1,j}$};
+
+\node at (2.45,2.1) {$P_{i,1}$};
+\node at (3.35,2.1) {$P_{i,2}$};
+\node at (4.25,2.1) {$\cdots$};
+\node at (5.15,2.1) {$P_{i,j}$};
+
+\node at (2.45,0.75) {$P_{n,1}$};
+\node at (3.35,0.75) {$P_{n,2}$};
+\node at (4.25,0.75) {$\cdots$};
+\node at (5.15,0.75) {$P_{n,j}$};
+
+% freccia prodotto
+\draw[->] (1.1,2.2) -- (1.9,2.2);
+\draw[->] (6.6,2.2) -- (7.4,2.2);
+
+% vettore mu_1
+\node at (8.1,4.3) {$\mu_1$};
+\draw (7.5,0.5) rectangle (8.7,3.9);
+
+\node at (8.1,3.4) {$\mu_{1,1}$};
+\node at (8.1,2.9) {$\mu_{1,2}$};
+\node at (8.1,2.4) {$\vdots$};
+\node at (8.1,1.9) {$\boxed{\mu_{1,j}}$};
+\node at (8.1,1.4) {$\vdots$};
+\node at (8.1,0.9) {$\mu_{1,n}$};
+
+% evidenziazione colonna j
+\draw[red, very thick] (4.72,0.5) rectangle (5.58,3.9);
+
+% freccia dalla colonna j alla componente j
+\draw[->, red, very thick] (5.6,1.9) .. controls (6.3,1.0) and (7.0,1.9) .. (7.45,1.9);
+
+\end{tikzpicture}
+\end{center}
+
+La componente $j$-esima del prodotto $\mu_1=\mu_0^{(1)}P$ si ottiene prendendo la
+\textbf{colonna $j$ di $P$} e facendo il prodotto scalare con $\mu_0^{(1)}$:
+
+$$
+\boxed{
+\mu_{1,j}
+=
+\sum_{i=1}^{n}\mu_{0,i}^{(1)}P_{i,j}
+}
+$$
+
+Quindi il significato degli indici è:
+
+$$
+\underbrace{P_{i,j}}_{\substack{\text{riga }i\\\text{colonna }j}}
+$$
+
+dove:
+
+\begin{itemize}
+\item $i$ indica quale componente di $\mu_0^{(1)}$ stiamo utilizzando;
+\item $j$ indica \textbf{quale componente di $\mu_1$ vogliamo calcolare}.
+\end{itemize}
+
+In particolare, fissato $j$, percorriamo tutta la \textbf{colonna $j$ di $P$}:
+
+$$
+\boxed{
+\mu_{1,j}
+=
+\mu_{0,1}^{(1)}P_{1,j}
++
+\mu_{0,2}^{(1)}P_{2,j}
++\cdots+
+\mu_{0,n}^{(1)}P_{n,j}
+}
+$$
+
+\textbf{Stesso ragionamento viene fatto per $\mu_2$}, poi si mette in evidenza P ed esce:
+
+\begin{align*}
+(\mu_1 - \mu_2)_j &= \sum_{i=1}^n \left( \mu_{0,i}^{(1)} - \mu_{0,i}^{(2)} \right) P^\theta_{i,j} \\
+&= \sum_{i=1}^n \left( \mu_{0,i}^{(1)} - \mu_{0,i}^{(2)} \right) \left[ (1 - n\alpha) Q_{i,j} + \alpha \right] \\
+&= (1 - n\alpha) \sum_{i=1}^n \left( \mu_{0,i}^{(1)} - \mu_{0,i}^{(2)} \right) Q_{i,j} + \alpha \underbrace{\sum_{i=1}^n \left( \mu_{0,i}^{(1)} - \mu_{0,i}^{(2)} \right)}_{= 1 - 1 = 0} \\
+&= (1 - n\alpha) \left[ \left( \mu_0^{(1)} - \mu_0^{(2)} \right) Q \right]_j
+\end{align*}
+
+Cioè:
+\begin{equation}
+    (\mu_1 - \mu_2) = (1 - n\alpha) \left[ \left( \mu_0^{(1)} - \mu_0^{(2)} \right) Q \right]
+\end{equation}
+
+\textit{Nota:} Il termine costante $\alpha$ si elide completamente poiché la somma dei pesi di una qualsiasi distribuzione di probabilità è sempre uguale a $1$.
+
+\subsubsection*{3. Contrazione nella Distanza di Variazione Totale}
+La metrica adottata per misurare la distanza tra distribuzioni è la \textit{Distanza di Variazione Totale} ($d_{TV}$) :
+\begin{equation}
+d_{TV}(\mu_1, \mu_2) = \frac{1}{2} \sum_{j=1}^n |\mu_{1,j} - \mu_{2,j}| = \frac{1}{2} \|\mu_1 - \mu_2\|_1
+\end{equation}
+
+Sfruttando la proprietà di non-espansione delle matrici stocastiche sotto norma $L^1$ (ovvero $\|v Q\|_1 \le \|v\|_1$), otteniamo:
+\begin{align*}
+d_{TV}(\mu_0^{(1)} P^\theta, \mu_0^{(2)} P^\theta) &= \frac{1}{2} (1 - n\alpha) \left\| \left( \mu_0^{(1)} - \mu_0^{(2)} \right) Q \right\|_1 \\
+&\le (1 - n\alpha) \cdot \frac{1}{2} \left\| \mu_0^{(1)} - \mu_0^{(2)} \right\|_1 \\
+&= (1 - n\alpha) \cdot d_{TV}(\mu_0^{(1)}, \mu_0^{(2)})
+\end{align*}
+
+e quindi :
+\begin{equation}
+    d_{TV}(\mu_0^{(1)} P^\theta, \mu_0^{(2)} P^\theta) <= (1 - n\alpha) \cdot d_{TV}(\mu_0^{(1)}, \mu_0^{(2)})
+\end{equation}
+
+\subsubsection*{4. Dimostrazione della Convergenza al Limite}
+Definiamo il coefficiente $\gamma = (1 - n\alpha)$ . Poiché $\alpha > 0$ e $n \ge 1$, si ha che $0 \le \gamma < 1$, il che rende $\gamma$ un **fattore di contrazione** .
+
+Iterando la catena per $k$ intervalli di ampiezza $\theta$ (corrispondenti al tempo $t = k\theta$):
+\begin{equation}
+d_{TV}(\mu_0^{(1)} P^{k\theta}, \mu_0^{(2)} P^{k\theta}) \le \gamma^k \cdot d_{TV}(\mu_0^{(1)}, \mu_0^{(2)}) \text{ dove } \gamma = 1-\alpha
+\end{equation}
+
+Poiché $\gamma < 1$, per $k \to \infty$ (e quindi per $t \to \infty$), il fattore $\gamma^k \to 0$ . Ne consegue che:
+\begin{equation}
+\lim_{t \to \infty} d_{TV}(\mu_0^{(1)} P^t, \mu_0^{(2)} P^t) = 0
+\end{equation}
+La distanza di variazione totale tende asintoticamente a zero, dimostrando che la catena di Markov converge verso una distribuzione stazionaria unica , indipendentemente dallo stato o dalla distribuzione iniziale .
 \subsection{Applicazione al PageRank come Catena di Markov}
 
 \paragraph{Formulazione del Modello di Navigazione}
@@ -4512,3 +4970,6 @@ L'aggiunta del termine di teletrasporto modifica la struttura della catena di Ma
     \end{equation*}
     garantendo la convergenza algoritmica globale dell'architettura di ricerca.
 \end{enumerate}
+
+
+\chapter{Recommeder Systems}
