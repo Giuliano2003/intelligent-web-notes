@@ -1,5 +1,8 @@
 \chapter{RDF}
 
+\providecolor{borderlight}{HTML}{D9DDE3}
+\providecolor{bglight}{HTML}{F7F8FA}
+
 \begin{definition}{RDF}
 
     RDF (Resource Description Framework) è uno standard per rappresentare
@@ -4972,4 +4975,796 @@ L'aggiunta del termine di teletrasporto modifica la struttura della catena di Ma
 \end{enumerate}
 
 
-\chapter{Recommeder Systems}
+\chapter{Recommender Systems}
+
+\section{Introduzione e Concetti Fondamentali}
+
+\subsection{Inquadramento e Contesto}
+Negli ultimi decenni, la diffusione pervasiva del Web e delle piattaforme digitali ha portato a una \textbf{crescita esponenziale della quantità di informazioni, prodotti e servizi accessibili agli utenti}. Tale fenomeno prende il nome di \textbf{information overload} (sovraccarico informativo). \textbf{In molti contesti decisionali}, la presenza di un numero elevatissimo di opzioni/alternative (dette comunemente \textit{item}) rende la scelta autonoma da parte dell'utente un compito estremamente complesso, lungo e cognitivamente oneroso.
+
+
+
+\textbf{Quindi il testo ci sta dicendo che nel Web, ci sono davvero tante informazioni, e prendere decisioni con cosi tante informazioni, può essere un compito complesso e estramamente oneroso.}
+
+
+
+In tale scenario si inserisce la branca dell'Intelligenza Artificiale nota come \textbf{AI-Supported Decision Making}, il cui obiettivo è sviluppare sistemi (\textbf{tipo i sistemi di raccomandazione}) capaci di assistere l'utente nell'adozione di decisioni ottimali in contesti ad alta complessità.
+
+\begin{definition}{Recommender System}
+Un \textbf{Sistema di Raccomandazione} (\textit{Recommender System}, RS) è \textbf{un'applicazione software appartenente all'area dell'AI-supported decision making} che affronta l'information overload (quindi delle tantissime informazioni presenti nel web) mediante tecniche di \textbf{information filtering}. Il sistema seleziona e propone all'utente un \textbf{sottoinsieme ridotto di opzioni (\textit{shortlist}) ritenute di suo potenziale interesse, apprendendone preventivamente le preferenze su un determinato dominio} (ad es. film, musica, prodotti e-commerce, articoli di notizie).
+\end{definition}
+
+Da un punto di vista concettuale, un sistema di raccomandazione si colloca all'intersezione tra tre macro-aree:
+\begin{enumerate}
+    \item \textbf{Decision Making}: la teoria per supportare l'utente nell'esplorazione dello spazio delle alternative e nella scelta finale, cioè praticamente quello che il sistema decide di far vedere all'utente dopo la fase di filtraggio, ad esempio i primi 5-10 video di YouTube con piu hype.
+    \item \textbf{Learning (Machine Learning \& Statistica)}: l'insieme di algoritmi necessari per estrarre pattern, modellare il comportamento degli utenti e predirne i gusti futuri a partire da dati storici o interazioni.
+    \item \textbf{Information Filtering}: l'insieme di tecniche per filtrare il flusso informativo e ridurre il catalogo di partenza a pochi elementi rilevanti.
+    Da un catalogo gigantesco con milioni di oggetti (film, prodotti, articoli),il filtro rimuove tutto ciò che non è rilevante per te, riducendo l'enorme flusso informativo a un set ristretto di poche decine di opzioni.
+\end{enumerate}
+
+Immagina Youtube:
+\begin{itemize}
+    \item \textbf{Information Filtering}: Dagli oltre un miliardo di video presenti sul server, il filtro ne seleziona una centinaia pertinenti.   
+    \item \textbf{Learning}: Gli algoritmi di ML stimano la probabilità che tu clicchi e guardi ciascuno di quei 100 video basandosi sulla tua cronologia.   
+    \item \textbf{Decision Making}: La home page ti presenta i primi 5-10 video organizzati con miniature accattivanti e titoli chiari per renderti semplice la scelta di cosa guardare ad un primo colpo d'occhio.
+\end{itemize}
+
+\subsection{Contesti Applicativi e Benefici}
+I sistemi di raccomandazione costituiscono oggi il nucleo operativo dei principali servizi aziendali e piattaforme web:
+\begin{itemize}
+    \item \textbf{E-commerce} (es. Amazon, Alibaba): suggerimento di prodotti correlati o acquisti frequenti associati.
+    \item \textbf{Social Networks} (es. Facebook, Instagram, LinkedIn): raccomandazione di nuovi contatti, contenuti multimediali, gruppi o inserzioni pubblicitarie.
+    \item \textbf{Entertainment \& Streaming} (es. Netflix, Spotify, YouTube): raccomandazione di film, brani musicali o video personalizzati.
+\end{itemize}
+
+L'adozione di un sistema di raccomandazione genera benefici tangibili sia per l'utente finale sia per il provider del servizio:
+
+\paragraph{Benefici per l'Utente:}
+\begin{itemize}
+    \item \textbf{Restringimento dello spazio delle scelte}: riduzione drastica del tempo necessario per trovare un contenuto d'interesse.
+    \item \textbf{Selezione degli item più rilevanti}: identificazione di prodotti ad alta utilità individuale.
+    \item \textbf{Supporto alla conoscenza del dominio}: ausilio nella comprensione dell'offerta disponibile all'interno del catalogo.
+    \item \textbf{Esplorazione di nuove alternative}: scoperta di prodotti o contenuti che l'utente non avrebbe cercato autonomamente.
+\end{itemize}
+
+\paragraph{Benefici per il Provider:}
+\begin{itemize}
+    \item \textbf{Aumento della Customer Satisfaction e Retention}: un'esperienza d'uso personalizzata incrementa la fidelizzazione dell'utente.
+    \item \textbf{Promozione del catalogo (\textit{Item Promotion})}: possibilità di guidare l'attenzione degli utenti verso specifici prodotti (es. contenuti di catalogo secondario o a maggior margine economico).
+    \item \textbf{Acquisizione di informazioni sull'utente}: raccolta continua di dati di interazione utile per profilazioni di mercato avanzate.
+\end{itemize}
+
+
+\section{Architettura e Tassonomia dei Dati}
+\subsection{Flusso Input/Output di un Recommender System}
+
+Dal punto di vista architetturale, un \textit{Recommender System} (sistema
+di raccomandazione) può essere rappresentato come una componente che riceve
+in ingresso diverse tipologie di informazioni, le elabora mediante uno o
+più algoritmi e produce in uscita un insieme ordinato di elementi
+(\textit{item}) ritenuti rilevanti per uno specifico utente.
+
+L'obiettivo del sistema è individuare, all'interno di un catalogo, gli
+elementi che presentano la maggiore probabilità di soddisfare gli
+interessi, le preferenze o le esigenze dell'utente target. A tal fine,
+il sistema può sfruttare sia informazioni relative agli elementi
+disponibili e all'utente, sia dati derivanti dalle interazioni della
+comunità e conoscenze strutturate sul dominio applicativo.
+
+In generale, le principali categorie di input sono quattro:
+\textit{Items Data}, \textit{User Data}, \textit{Community Data} e
+\textit{Domain Model}.
+
+\paragraph{Items Data.}
+Gli \textit{Items Data} comprendono le informazioni che descrivono gli
+elementi presenti nel catalogo del sistema di raccomandazione. Tali
+informazioni possono includere caratteristiche descrittive, attributi,
+categorie di appartenenza e altre proprietà utili a identificare e
+confrontare gli elementi.
+
+Ad esempio, in un sistema che raccomanda film, gli \textit{Items Data}
+possono comprendere il titolo, il genere, la durata, l'anno di
+produzione, il regista e gli attori di ciascun film. In un sistema
+di raccomandazione di prodotti, possono invece includere il prezzo,
+la marca, la categoria merceologica e le caratteristiche tecniche
+dei prodotti disponibili.
+
+Queste informazioni permettono al sistema di rappresentare gli
+elementi del catalogo e di individuare quelli che presentano
+caratteristiche compatibili con le preferenze dell'utente.
+
+\paragraph{User Data.}
+Gli \textit{User Data} rappresentano le informazioni relative
+all'utente target, ovvero la persona alla quale il sistema deve
+proporre le raccomandazioni. Possono comprendere preferenze esplicite,
+interessi dichiarati, esigenze specifiche e, quando disponibili,
+informazioni ricavate dal comportamento individuale.
+
+Ad esempio, in un sistema di raccomandazione di film, un utente
+potrebbe manifestare una preferenza per i generi fantascientifico
+e thriller, oppure indicare di preferire film di durata inferiore
+a due ore. Il sistema può utilizzare tali informazioni per
+selezionare gli elementi maggiormente coerenti con il profilo
+dell'utente.
+
+Le informazioni individuali non devono necessariamente essere
+fornite direttamente dall'utente: alcune preferenze possono essere
+inferite dalle sue interazioni precedenti, come visualizzazioni,
+acquisti o valutazioni. In tal caso, il sistema utilizza le evidenze
+disponibili per costruire una rappresentazione degli interessi
+individuali.
+
+\paragraph{Community Data.}
+I \textit{Community Data} comprendono le informazioni generate
+dall'insieme degli utenti attraverso le loro interazioni con gli
+elementi del catalogo. Possono includere valutazioni espresse,
+recensioni, acquisti, visualizzazioni, clic e altre forme di
+feedback esplicito o implicito.
+
+Ad esempio, in un sistema di raccomandazione di film, questi dati
+possono indicare quali film sono stati apprezzati dai diversi utenti
+e quali titoli sono stati maggiormente visualizzati. Il sistema può
+utilizzare tali informazioni per individuare elementi popolari
+oppure per confrontare i comportamenti di utenti con preferenze
+simili.
+
+Un'applicazione particolarmente importante dei \textit{Community Data}
+è il \textit{Collaborative Filtering} (filtraggio collaborativo),
+una famiglia di tecniche che sfrutta le interazioni della comunità
+per produrre raccomandazioni. Ad esempio, se due utenti hanno
+espresso valutazioni simili su diversi film, il sistema può
+utilizzare tale somiglianza per suggerire a uno dei due film
+apprezzati dall'altro.
+
+È importante distinguere questi dati dagli \textit{User Data}:
+mentre questi ultimi riguardano specificamente l'utente target,
+i \textit{Community Data} descrivono le interazioni della comunità
+nel suo complesso e possono essere utilizzati per ricavare
+informazioni utili alla personalizzazione.
+
+\paragraph{Domain Model.}
+Il \textit{Domain Model} è una rappresentazione strutturata della
+conoscenza relativa al dominio applicativo in cui opera il sistema
+di raccomandazione. Può comprendere concetti, relazioni semantiche,
+regole e vincoli che descrivono il significato degli elementi e
+le modalità con cui essi sono collegati tra loro.
+
+A differenza degli \textit{Items Data}, che descrivono le proprietà
+dei singoli elementi del catalogo, il \textit{Domain Model} permette
+di rappresentare la struttura concettuale del dominio e le relazioni
+che intercorrono tra i suoi elementi. Non si limita quindi a
+memorizzare informazioni sui singoli oggetti, ma organizza la
+conoscenza necessaria per interpretarli nel loro contesto.
+
+Ad esempio, nel dominio cinematografico, gli \textit{Items Data}
+possono indicare che un determinato film appartiene al genere
+fantascientifico ed è diretto da un certo regista. Il
+\textit{Domain Model} può invece rappresentare relazioni generali
+quali l'appartenenza di un film a uno o più generi, la relazione
+tra un film e il suo regista oppure i collegamenti semantici tra
+generi e temi narrativi.
+
+Tale conoscenza può essere sfruttata per individuare relazioni
+significative tra elementi diversi. Se un utente apprezza un film
+di fantascienza, ad esempio, il sistema può prendere in
+considerazione altri film dello stesso genere o caratterizzati
+da temi simili. La condivisione di una caratteristica non implica
+necessariamente che il nuovo elemento sarà apprezzato dall'utente,
+ma costituisce un'informazione che può contribuire alla
+valutazione della sua rilevanza.
+
+Un ulteriore esempio riguarda la raccomandazione di materiale
+didattico: un modello del dominio può rappresentare le relazioni
+tra argomenti, corsi ed esami, nonché eventuali conoscenze
+preliminari richieste. In questo modo, il sistema può proporre
+risorse coerenti non soltanto con gli interessi dello studente,
+ma anche con il percorso di apprendimento da seguire.
+
+Il \textit{Domain Model} non coincide necessariamente con un
+algoritmo di raccomandazione: costituisce piuttosto una fonte
+di conoscenza strutturata che il sistema può utilizzare insieme
+alle altre informazioni disponibili.
+
+\paragraph{Dipendenza dal dominio applicativo.}
+Le quattro categorie di input costituiscono una classificazione
+generale, applicabile a diversi contesti. Il loro contenuto
+concreto dipende tuttavia dal dominio applicativo considerato.
+Ad esempio, in un sistema cinematografico gli elementi del
+catalogo sono film, mentre in un sistema di e-commerce sono
+prodotti e in un sistema musicale sono canzoni o album.
+
+Analogamente, il \textit{Domain Model} deve rappresentare i
+concetti e le relazioni specifici del contesto considerato.
+La stessa architettura generale può quindi essere riutilizzata
+in domini differenti, adattando i dati, le conoscenze e le
+tecniche di raccomandazione alle caratteristiche del problema.
+
+\paragraph{Output del sistema.}
+A partire dalle informazioni ricevute, il \textit{Recommender
+System} elabora le informazioni disponibili e produce in uscita
+una \textit{shortlist} di elementi rilevanti per l'utente target.
+La shortlist è generalmente un sottoinsieme del catalogo,
+selezionato in base alla rilevanza stimata dei singoli elementi
+e, quando previsto, ordinato dal più al meno pertinente.
+
+Ad esempio, un catalogo cinematografico può contenere migliaia
+di film, ma il sistema ne seleziona soltanto alcuni da proporre
+a un determinato utente. La selezione può dipendere dalle
+caratteristiche dei film, dalle preferenze individuali, dalle
+interazioni della comunità e dalle relazioni rappresentate nel
+modello del dominio.
+
+Il flusso generale può essere sintetizzato come segue:
+
+\begin{equation}
+\begin{aligned}
+\text{Input} = \{&
+\text{Items Data},\,
+\text{User Data},\\
+&\text{Community Data},\,
+\text{Domain Model}
+\}\\[4pt]
+&\downarrow\\[-2pt]
+&\boxed{\text{Recommender System}}\\[-2pt]
+&\downarrow\\[2pt]
+&\text{Output: Shortlist di Item Rilevanti}
+\end{aligned}
+\end{equation}
+
+Di seguito viene illustrata la rappresentazione dettagliata delle quattro tipologie di dati d'ingresso per un Recommender System operante in un dominio cinematografico.
+
+\paragraph{Esempio Integrato di Input JSON.}
+Considerando una piattaforma di streaming video, l'input complessivo fornito al motore di raccomandazione per elaborare un suggerimento personalizzato per un utente target (\texttt{user\_42}) è strutturato come segue:
+
+\begin{lstlisting}[language=json]
+{
+  "items_data": [
+    {
+      "item_id": "movie_101",
+      "titolo": "Inception",
+      "anno": 2010,
+      "durata_minuti": 148,
+      "regista": "Christopher Nolan",
+      "generi": ["Fantascienza", "Thriller"],
+      "attori_principali": ["Leonardo DiCaprio", "Joseph Gordon-Levitt"]
+    },
+    {
+      "item_id": "movie_102",
+      "titolo": "Interstellar",
+      "anno": 2014,
+      "durata_minuti": 169,
+      "regista": "Christopher Nolan",
+      "generi": ["Fantascienza", "Drammatico"],
+      "attori_principali": ["Matthew McConaughey", "Anne Hathaway"]
+    }
+  ],
+  "user_data": {
+    "user_id": "user_42",
+    "preferenze_esplicite": {
+      "generi_preferiti": ["Fantascienza", "Thriller"],
+      "durata_massima_minuti": 180
+    },
+    "storico_individuale_inferito": {
+      "film_visti_recentemente": ["movie_101"],
+      "tempo_completamento_medio": "95%"
+    }
+  },
+  "community_data": [
+    {
+      "user_id": "user_07",
+      "item_id": "movie_101",
+      "rating": 5,
+      "interazione": "like"
+    },
+    {
+      "user_id": "user_07",
+      "item_id": "movie_102",
+      "rating": 5,
+      "interazione": "like"
+    }
+  ],
+  "domain_model": {
+    "relazioni_generi": {
+      "Fantascienza": {
+        "generi_correlati": ["Cyberpunk", "Space Opera"],
+        "temi_chiave": ["Viaggi nel tempo", "Spazio"]
+      }
+    },
+    "regole_semantiche": [
+      {
+        "regola": "Affinita_Regista_Genere",
+        "descrizione": "I film del medesimo regista appartenenti allo stesso genere presentano un'elevata rilevanza incrociata."
+      }
+    ]
+  }
+}
+\end{lstlisting}
+
+\paragraph{Elaborazione dell'Input.}
+Il sistema elabora questi dati in ingresso combinando i vincoli dell'utente (\emph{User Data}) con la descrizione dei film (\emph{Items Data}). Attraverso i \emph{Community Data}, riconosce la somiglianza tra \texttt{user\_42} e \texttt{user\_07} (Collaborative Filtering), mentre mediante il \emph{Domain Model} interpreta la correlazione tematica e di regia tra i titoli, generando infine la raccomandazione del film \emph{Interstellar}.
+
+\subsection{Modellazione degli Item e Domain Model}
+
+\subsubsection{Items Data}
+La modalità con cui gli item vengono rappresentati all'interno del sistema dipende dal dominio e dalla tecnica algoritmica adottata:
+\begin{itemize}
+    \item \textbf{Dati Non Strutturati}: l'item è identificato unicamente da un'etichetta alfanumerica o ID privo di attributi descrittivi espliciti. Questo approccio è tipico del \textit{Collaborative Filtering}, che opera esclusivamente sulle matrici di interazione senza necessitare del contenuto degli item.
+    \item \textbf{Dati Strutturati}: l'item è descritto da un identificativo e da un insieme strutturato di attributi (o \textit{feature}) che ne specificano le caratteristiche fisiche, tecniche o concettuali (ad esempio, per uno smartphone: RAM, processore, megapixel della fotocamera, prezzo).
+    \item \textbf{Descrizioni Testuali}: testo in linguaggio naturale che descrive l'item (es. sinossi di un libro o trama di un film).
+\end{itemize}
+
+I sistemi \textit{Content-Based} e i sistemi basati su \textit{Bayesian Preference Elicitation} richiedono obbligatoriamente dati strutturati per effettuare il confronto tra le preferenze e gli attributi.
+
+\subsubsection{Domain Model}
+Il \textit{Domain Model} ha lo scopo di modellare la conoscenza del dominio per arricchire la descrizione degli item e definire relazioni esplicite tra di essi. Include:
+\begin{itemize}
+    \item \textbf{Schemi di attributi}: definizioni formali dei domini e dei tipi di dato degli attributi.
+    \item \textbf{Tassonomie}: organizzazioni gerarchiche di categorie e sottocategorie (es. \textit{Film} $\rightarrow$ \textit{Documentario} $\rightarrow$ \textit{Documentario Storico}).
+    \item \textbf{Ontologie}: grafi di conoscenza ed esplicitazioni formali di concetti e relazioni (Linked Data, DBpedia).
+    \item \textbf{Metriche di similitudine}: funzioni matematiche in grado di quantificare quanto due item siano vicini nello spazio delle caratteristiche.
+\end{itemize}
+
+\subsection{Modellazione dell'Utente e della Comunità}
+
+\subsubsection{User Data}
+Rappresenta il profilo del singolo utente:
+\begin{itemize}
+    \item \textbf{Informazioni personali/demografiche}: età, sesso, titolo di studio, professione, localizzazione geografica.
+    \item \textbf{Informazioni di utilizzo}: frequenza d'accesso, grafo sociale, follower/following.
+    \item \textbf{Modello delle preferenze}: rappresentazione esplicita degli interessi, pesi attribuiti ai vari attributi o vera e propria \textit{funzione di utilità}.
+\end{itemize}
+
+\subsubsection{Community Data}
+Registra i comportamenti collettivi di tutti gli utenti registrati:
+\begin{itemize}
+    \item \textbf{Interazioni User-Item}: le valutazioni storiche (es. punteggi, stelle, "like"), i brani ascoltati, gli articoli acquistati.
+    \item \textbf{Statistiche sugli item}: indicatori di popolarità globale (es. prodotti più venduti, film più visti).
+    \item \textbf{Statistiche sugli utenti}: identificazione di utenti centrali, esperti o \textit{influencer} della community.
+\end{itemize}
+
+
+
+\subsection{Tecniche di Acquisizione dei Dati: Esplicita vs Implicita}
+Le informazioni sulle preferenze degli utenti possono essere raccolte mediante due modalità principali:
+
+\subsubsection{Acquisizione Esplicita}
+L'utente fornisce consapevolmente un giudizio o un'informazione al sistema.
+\begin{itemize}
+    \item \textbf{Esempi}: inserimento dati anagrafici, rating numerici (1--5 stelle), recensioni testuali, inserimento di "like/dislike", compilazione di questionari sulle preferenze.
+    \item \textbf{Vantaggi (+)}: dati facili da interpretare semanticamente; elevata consapevolezza dell'utente sulle informazioni rilasciate.
+    \item \textbf{Svantaggi (-)}: richiede sforzo attivo ed energia da parte dell'utente (alto \textit{carico cognitivo}); le attività di compilazione possono risultare noiose; i dati ricevuti possono contenere rumore o valutazioni incostanti.
+\end{itemize}
+
+\subsubsection{Acquisizione Implicita}
+Il sistema osserva passivamente il comportamento dell'utente durante la normale fruizione del servizio.
+\begin{itemize}
+    \item \textbf{Esempi}: storico degli acquisti effettuati, tracciamento dei click, tempo di permanenza (\textit{dwell time}) su una pagina o su un video, cronologia delle ricerche o dei film visti.
+    \item \textbf{Vantaggi (+)}: modalità totalmente non invasiva (non richiede alcuna azione aggiuntiva rispetto alla navigazione standard); garantisce una grande mole di dati continui.
+    \item \textbf{Svantaggi (-)}: dati intrinsecamente ambigui (ad es. l'aver guardato un film per intero implica necessariamente che sia piaciuto? O l'utente potrebbe essersi addormentato?); mancanza di feedback negativi espliciti; potenziale percezione di intrusione nella privacy da parte dell'utente ("sensazione di essere spiati").
+\end{itemize}
+
+
+\section{Tipologia dei Sistemi di Raccomandazione}
+
+I sistemi di raccomandazione si suddividono in due macro-categorie principali: \textbf{Non Personalizzati} e \textbf{Personalizzati}.
+
+\subsection{Sistemi Non Personalizzati vs Personalizzati}
+
+\paragraph{Sistemi Non Personalizzati (\textit{Non-Personalized}):}
+Forniscono la medesima lista di raccomandazioni a tutti gli utenti (o a interi sottoinsiemi non profilati), basandosi esclusivamente su indicatori statistici aggregati del comportamento collettivo o su proprietà intrinseche degli item.
+\begin{itemize}
+    \item \textbf{Vantaggi}: applicabili immediatamente ai nuovi utenti privi di storico; costi computazionali contenuti grazie alla generatività omogenea degli output.
+    \item \textbf{Svantaggi}: raccomandazioni poco accurate per le specifiche preferenze del singolo individuo.
+\end{itemize}
+
+\paragraph{Sistemi Personalizzati (\textit{Personalized}):}
+Analizzano le interazioni pregresse del singolo utente per inferirne il profilo gusti e generare suggerimenti ad-hoc.
+\begin{itemize}
+    \item \textbf{Vantaggi}: raccomandazioni ad alta accuratezza e personalizzazione.
+    \item \textbf{Svantaggi}: elevato carico computazionale (ogni utente richiede un'analisi dedicata); incapacità di operare quando un utente è privo di interazioni passate (\textbf{New User Cold-Start Problem}).
+\end{itemize}
+
+\subsection{Tassonomia dei Metodi Non Personalizzati}
+I sistemi non personalizzati si strutturano principalmente in:
+\begin{enumerate}
+    \item \textbf{Popularity-based}: si basano sul calcolo di metriche aggregate sulla comunità.
+    \begin{itemize}
+        \item \textit{Top-ranked}: item con i punteggi medi più alti.
+        \item \textit{Most viewed / Most clicked}: item con la massima frequenza di fruizione.
+    \end{itemize}
+    \item \textbf{Feature-based}: si basano su criteri descrittivi o promozionali gestiti dal provider.
+    \begin{itemize}
+        \item Item aggiunti di recente o in uscita imminente dal catalogo.
+        \item Prodotti in sconto o promozionali.
+        \item Categorie specifiche (es. "Serie e film storici").
+        \item Item con riconoscimenti di critica.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Tassonomia dei Metodi Personalizzati}
+
+I sistemi di raccomandazione personalizzati si dividono in due grandi famiglie metodologiche in base alla natura dei dati utilizzati e al meccanismo di generazione dei suggerimenti:
+
+\begin{enumerate}
+    \item \textbf{Content-based / Knowledge-based:} raccomandano item che presentano caratteristiche e attributi simili a quelli espressamente richiesti dall'utente o da lui apprezzati in passato.
+    \begin{itemize}
+        \item \textbf{History-based:} analizzano lo storico delle interazioni passate dell'utente per modellarne il profilo. Se un utente fruisce frequentemente di contenuti con determinati attributi (es. film appartenenti al genere \textit{thriller}), il sistema proporrà altri item condividenti i medesimi metadati.
+        \begin{itemize}
+            \item \textit{Sfida principale:} definire ed elaborare adeguate metriche di similarità matematica (es. Cosine Similarity, TF-IDF) tra item rappresentati tramite vettori di attributi.
+        \end{itemize}
+        
+        \item \textbf{Query-based:} sfruttano un linguaggio esplicito di interrogazione mediante il quale l'utente specifica requisiti rigidi (\textit{hard constraints}, es. prezzo massimo) o flessibili (\textit{soft constraints}, es. vicinanza al centro).
+        \begin{itemize}
+            \item \textit{Sfida principale:} progettare un \textit{domain model} sufficientemente ricco dal punto di vista semantico e un'interfaccia utente espressiva ma di semplice utilizzo.
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Collaborative Filtering (CF):} le raccomandazioni derivano dalla sovrapposizione delle interazioni dell'utente corrente con quelle degli altri membri della community. Questi metodi non richiedono la presenza di dati strutturati sugli item (come genere o attributi), operando unicamente sulla matrice delle interazioni, dei giudizi e dei \textit{rating}.
+    Che definiremo dopo.
+    \begin{itemize}
+        \item \textbf{Neighborhood-based (User-based / Item-based)}
+        \item \textbf{Model-based}
+    \end{itemize}
+\end{enumerate}
+
+
+\section{Obiettivi di Valutazione di un Recommender System}
+
+La progettazione e la scelta di un algoritmo di raccomandazione devono bilanciare molteplici obiettivi, sia di natura \textbf{operativa} (orientati all'esperienza utente) che di natura \textbf{strutturale} (orientati all'architettura software).
+
+\subsection{Obiettivi Operativi}
+\begin{itemize}
+    \item \textbf{Relevance (Rilevanza)}: misura il grado di gradimento generale degli item raccomandati. Si valuta tracciando il tasso di selezione, i rating rilasciati o il tempo medio di utilizzo continuo del servizio.
+    \item \textbf{Novelty (Novità)}: misura la capacità del sistema di suggerire item pertinenti che l'utente non conosceva o non avrebbe scoperto autonomamente.
+    \item \textbf{Serendipity (Serendipità)}: misura la capacità di raccomandare item inaspettati e sorprendenti, estranei alle abitudini consolidate dell'utente ma ugualmente apprezzati (ad es., suggerire un ristorante afgano a un utente che ha sempre frequentato trattorie locali). A differenza della \textit{novelty}, la \textit{serendipity} richiede una forte componente di sorpresa positiva.
+    \item \textbf{Diversity (Diversità)}: valuta la varietà degli item presenti nella shortlist proposta, evitando di raccomandare opzioni quasi identiche (es. evitare di proporre tutti i capitoli della stessa saga cinematografica in una singola lista).
+\end{itemize}
+
+\subsection{Obiettivi Strutturali e Sfide Architetturali}
+\begin{itemize}
+    \item \textbf{Scalability (Scalabilità)}: capacità dell'algoritmo di operare in modo efficiente su grandi volumi di dati ($10^7$--$10^8$ utenti e $10^4$--$10^6$ item).
+    \begin{itemize}
+        \item I metodi \textit{Non-Personalized} garantiscono la massima scalabilità.
+        \item I metodi \textit{Neighborhood-based} soffrono di elevata complessità al crescere di utenti e item.
+        \item I metodi basati su \textit{Preference Elicitation} richiedono elaborazioni statistiche in tempo reale che possono limitarne la scalabilità su larghissima scala.
+    \end{itemize}
+
+    \item \textbf{Explainability (Spiegabilità)}: la capacità del sistema di fornire una motivazione comprensibile all'utente riguardo alla raccomandazione effettuata.
+    \begin{itemize}
+        \item Metodi complessi basati su Machine Learning o vettori latenti agiscono spesso come "scatole nere" (\textit{black-box}) difficili da spiegare.
+        \item I metodi \textit{Content-based} guidati da ontologie o attributi espliciti offrono le migliori basi per generare spiegazioni intuitive.
+    \end{itemize}
+
+    \item \textbf{Cold-Start Problem (Problema dell'Avvio a Freddo)}: si verifica quando un nuovo utente (\textit{New User Cold-Start}) o un nuovo item (\textit{New Item Cold-Start}) fa il suo ingresso nel sistema privo di uno storico di interazioni.
+    \begin{itemize}
+        \item \textit{Mitigazione per gli utenti}: ricorso iniziale a raccomandazioni non personalizzate o somministrazione di un questionario d'ingresso (\textit{onboarding}).
+        \item \textit{Mitigazione per gli item}: impiego di approcci content-based che analizzano le proprietà dell'item indipendentemente dai rating ricevuti.
+    \end{itemize}
+\end{itemize}
+
+
+\newpage
+
+
+\section{User Rating Matrix (URM) e Tipologie di Rating}
+
+\subsection{La Matrice User-Rating (URM)}
+La grande maggioranza delle tecniche di raccomandazione (specialmente nel \textit{Collaborative Filtering}) formalizza l'insieme dei dati storici della community attraverso una struttura matriciale incompleta nota come \textbf{User Rating Matrix} (URM), indicata con $R$.
+
+\begin{definition}{User Rating Matrix}
+Sia $U = \{u_1, u_2, \dots, u_N\}$ l'insieme degli $N$ utenti e sia $I = \{i_1, i_2, \dots, i_M\}$ l'insieme degli $M$ item. La \textbf{User Rating Matrix} $R \in \mathbb{R}^{N \times M}$ è una matrice le cui righe corrispondono agli utenti e le cui colonne corrispondono agli item. L'elemento generico $r_{ui}$ rappresenta la valutazione espressa dall'utente $u$ nei confronti dell'item $i$:
+\[
+R = \begin{pmatrix}
+r_{11} & r_{12} & \dots & r_{1M} \\
+r_{21} & r_{22} & \dots & r_{2M} \\
+\vdots & \vdots & \ddots & \vdots \\
+r_{N1} & r_{N2} & \dots & r_{NM}
+\end{pmatrix}
+\]
+Questa matrice contiene tutti gli item relativi ad un determinato dominio/catalogo.
+\end{definition}
+
+
+Poiché ogni singolo utente valuta tipicamente solo una frazione trascurabile dell'intero catalogo, la matrice $R$ risulta \textbf{fortemente sparsa} (\textit{sparse matrix}), ovvero la stragrande maggioranza delle sue celle è priva di valore (valore non osservato).
+
+\subsection{Tipologie di Rating}
+La tipologia di rating determina quali valori possono sostituire i numeri reali presenti nella matrice.
+\begin{enumerate}
+    \item \textbf{Rating Continui : } I valori possono essere qualsiasi \textbf{numero reale} all'interno di un intervallo.
+    \begin{equation}
+        r_{ui} \in [0,10]
+    \end{equation}
+    Esempio di matrice:
+    \[
+        R = \begin{pmatrix}
+        8.7 & 6.25  \\
+        9.1 & 4.83
+        \end{pmatrix}
+    \]
+    \item \textbf{Rating Discreti : } I valori appartengono a un \textbf{INSIEME finito di valori ammessi}.
+    \begin{equation}
+        r_{ui} \in \{1,2,3,4,5\}
+    \end{equation}
+    Esempio di matrice:
+    \[
+        R = \begin{pmatrix}
+        5 & 3  \\
+        4 & 1
+        \end{pmatrix}
+    \]
+    l'utente non può assegnare 3.7 stelle se la scala ammette solo questi cinque valori.
+    \item \textbf{Rating Binari : } Sono ammessi soltanto due valori, che rappresentano due stati contrapposti.
+    \begin{equation}
+        r_{ui} \in \{0,1\}
+    \end{equation}
+    Esempio di matrice:
+    \[
+        R = \begin{pmatrix}
+        1 & 0  \\
+        1 & 1
+        \end{pmatrix}
+    \]
+    Per esempio, 1 significa «Mi piace» e 0 significa «Non mi piace»
+    \item \textbf{Rating Unari} : Si registra soltanto il feedback positivo.
+    Esempio :  $r_{ui} = 1$ indica che l'utente ha cliccato su un prodotto.
+    \[
+        R = \begin{pmatrix}
+        1 & 0 & 0  \\
+        1 & 1 & 0
+        \end{pmatrix}
+    \]
+    In questo esempio, 1 indica \textbf{un'interazione osservata}, mentre 0 significa che non è stata osservata alcuna interazione.
+    \textbf{MA Lo zero non significa necessariamente che l'utente non gradisca l'item, semplicemente potrebbe non averlo mai visto}
+    Contiene sono un informazione, mentre i rating binari, ne contengono due di informazioni, cioè ad esempio se all'utente è piaciuto o meno, mentre nei rating unari, conserviamo
+    una singola informazione
+\end{enumerate}
+
+Sussiste un trade-off architetturale intrinseco tra \textbf{carico cognitivo dell'utente} e \textbf{potere discriminativo/risoluzione della scala}:
+\begin{center}
+\small
+\textbf{Minimo Carico Cognitivo} (Unario $\rightarrow$ Binario $\rightarrow$ Discreto $\rightarrow$ Continuo) \textbf{Massimo Potere Discriminativo}
+\end{center}
+
+\subsection{Frequenza dei Rating e la Proprietà ``Long Tail''}
+
+Analizzando la distribuzione empirica delle valutazioni all'interno di una User Rating Matrix (URM), si osserva frequentemente che gli item non ricevono tutti lo stesso numero di rating. In particolare, pochi item sono estremamente popolari, mentre un numero elevato di item riceve pochissime valutazioni. Questo fenomeno è noto come \textit{Long Tail Property} (proprietà della coda lunga).
+
+\begin{definition}{Proprietà Long Tail}
+La proprietà \textit{Long Tail} descrive una distribuzione fortemente sbilanciata della popolarità degli item: un numero esiguo di item raccoglie una grande quantità di interazioni, mentre una moltitudine di item riceve poche interazioni individuali.
+\end{definition}
+
+\paragraph{Short Head e Long Tail}
+
+La distribuzione può essere suddivisa concettualmente in due parti:
+
+\begin{itemize}
+\item \textbf{Short Head (testa della distribuzione):} comprende i pochi item molto popolari, che raccolgono la maggior parte dei rating complessivi della comunità.
+\item \textbf{Long Tail (coda della distribuzione):} comprende i numerosi item di nicchia, ciascuno caratterizzato da un numero ridotto di rating.
+\end{itemize}
+
+\paragraph{Esempio mediante una User Rating Matrix}
+
+Consideriamo una matrice di valutazione $R$ con $N=5$ utenti e $M=6$ film. Supponiamo, per semplicità, di utilizzare una rappresentazione binaria delle interazioni, nella quale $1$ indica un'interazione osservata e $-$ indica l'assenza di una valutazione osservata.
+
+$$
+R =
+\begin{array}{c|cccccc}
+ & F_1 & F_2 & F_3 & F_4 & F_5 & F_6 \\
+\hline
+U_1 & 1 & 1 & 1 & - & - & - \\
+U_2 & 1 & 1 & - & - & - & - \\
+U_3 & 1 & 1 & - & - & - & - \\
+U_4 & 1 & - & - & 1 & - & - \\
+U_5 & 1 & - & - & - & 1 & -
+\end{array}
+$$
+
+Per individuare la popolarità di ciascun item, è necessario contare le interazioni osservate nella corrispondente colonna. Definiamo quindi la popolarità dell'item $i$ come:
+
+$$
+p_i = \sum_{u=1}^{N}
+\mathbf{1}\bigl[r_{ui}\text{ è osservato}\bigr]
+$$
+
+dove $\mathbf{1}[\cdot]$ è la funzione indicatrice, che assume valore $1$ se la condizione è verificata e $0$ altrimenti.
+
+Applicando questa definizione alla matrice precedente, otteniamo:
+
+$$
+\begin{array}{c|cccccc}
+\text{Item} & F_1 & F_2 & F_3 & F_4 & F_5 & F_6 \\
+\hline
+\text{Numero di rating} & 5 & 3 & 1 & 1 & 1 & 0
+\end{array}
+$$
+
+Si osserva che $F_1$ ha ricevuto cinque interazioni, mentre $F_2$ ne ha ricevute tre. Questi due film costituiscono, nell'esempio, la \textit{Short Head}. Al contrario, $F_3$, $F_4$ e $F_5$ hanno ricevuto una sola interazione ciascuno e rappresentano item di nicchia riconducibili alla \textit{Long Tail}. Infine, $F_6$ non presenta interazioni osservate.
+
+L'esempio è puramente illustrativo: una matrice così piccola consente di comprendere il fenomeno, ma non è sufficiente per dimostrare empiricamente la presenza di una distribuzione a legge di potenza (\textit{power law}).
+
+
+\paragraph{Implicazioni per i Sistemi di Raccomandazione}
+
+La proprietà Long Tail comporta alcune conseguenze importanti:
+
+\begin{enumerate}
+\item \textbf{Difficoltà di stima:} gli item con pochi rating forniscono informazioni limitate sulle preferenze degli utenti. Di conseguenza, le stime delle loro valutazioni o della loro rilevanza possono essere meno affidabili. Ad esempio, una valutazione media di $5$ stelle ottenuta da un solo utente è generalmente meno informativa di una media di $4.2$ stelle calcolata su migliaia di valutazioni.
+
+\item \textbf{Popularity Bias:} molti algoritmi tendono a raccomandare gli item già popolari, anche perché dispongono di un maggior numero di interazioni osservate per apprenderne le caratteristiche e le preferenze associate. Si può così instaurare un circolo vizioso: gli item popolari vengono raccomandati più spesso, ricevono nuove interazioni e rafforzano ulteriormente la propria popolarità, mentre gli item di nicchia rischiano di essere trascurati.
+
+\item \textbf{Impatto economico:} nei sistemi di e-commerce e streaming, raccomandare efficacemente gli item della Long Tail può favorire la scoperta di prodotti o contenuti meno conosciuti, valorizzare un catalogo più ampio e soddisfare interessi specifici degli utenti.
+
+\end{enumerate}
+
+\begin{warning}{Distinzione importante}
+La popolarità di un item non coincide necessariamente con la sua qualità o con la valutazione media ricevuta. Un item molto popolare ha accumulato molte interazioni, ma ciò non implica che sia apprezzato da tutti gli utenti. Analogamente, un item con poche interazioni non è necessariamente di bassa qualità: potrebbe semplicemente essere poco conosciuto o rivolgersi a un pubblico di nicchia.
+\end{warning}
+
+In sintesi, la proprietà Long Tail riguarda la distribuzione del numero di interazioni tra gli item, non i singoli valori della matrice $R$. Per studiarla, si calcola la popolarità di ciascun item contando le valutazioni osservate nella relativa colonna e si analizza successivamente la distribuzione dei conteggi ottenuti.
+
+
+\paragraph{Implicazioni per i Sistemi di Raccomandazione:}
+\begin{enumerate}
+    \item \textbf{Difficoltà di stima}: la scarsità numerica di rating sugli item nella coda rende ardua l'estrazione di stime statisticamente attendibili per essi.
+    \item \textbf{Popularity Bias}: molti algoritmi di raccomandazione tendono a prediligere e suggerire sistematicamente i pochi item popolari situati nella testa, ignorando la coda.
+    \item \textbf{Impatto Economico}: gli item popolari sono spesso quelli su cui i provider hanno margini di profitto inferiori (o costi di licenza più alti). La raccomandazione efficace degli item di nicchia collocati nella \textit{Long Tail} rappresenta una delle principali leve di valore economico per le piattaforme e-commerce e streaming.
+\end{enumerate}
+
+
+\section{Algoritmi Non Personalizzati e Normalizzazione}
+
+Analizziamo ora in dettaglio il funzionamento matematico delle principali tecniche non personalizzate basate sulla URM e le metodologie per la rimozione dei bias sistematici nelle valutazioni.
+
+\subsection{Approccio Most Popular}
+L'approccio \textbf{Most Popular} rappresenta una delle forme più semplici ed essenziali di raccomandazione non personalizzata. Il sistema calcola il numero totale di interazioni o valutazioni ricevute da ciascun item e restituisce in output gli item con il conteggio più elevato.
+
+\begin{definition}{Punteggio Most Popular}
+Sia $S_j = \{u \in U \mid r_{uj} \text{ è osservato}\}$ l'insieme degli utenti che hanno valutato l'item $j$. Il punteggio associato all'item $j$ è dato dal modulo di tale insieme:
+\[
+\text{Score}_{MP}(j) = |S_j| = N_j
+\]
+\textbf{Fissato un item, si scorrono le colonne, cioè gli utenti e si conservano gli utenti che hanno ratato l'item}
+\end{definition}
+
+\paragraph{Fondamento psicologico e limiti:}
+L'approccio si basa sull'\textit{istinto gregario} (gli utenti tendono a conformarsi alle scelte collettive della massa). Tuttavia, quando applicato su una URM, questo metodo presenta un importante limite strutturale: \textbf{considera unicamente il numero di giudizi ricevuti, ignorando del tutto il valore numerico del rating espressi}. Un item con 100 voti negativi (es. rating $1/5$) risulterà posizionato più in alto rispetto a un item con 90 voti eccellenti (es. rating $5/5$).
+
+\subsection{Approccio Top Ranked}
+Per superare i limiti del conteggio puro, l'approccio \textbf{Top Ranked} ordina gli item in base alla media aritmetica dei rating osservati nella URM.
+
+\begin{definition}{Punteggio Top Ranked}
+Sia $N_j = |S_j|$ il numero di valutazioni osservate per l'item $j$. La stima del punteggio medio per l'item $j$ è definita come:
+\[
+\hat{r}_j = \frac{1}{N_j} \sum_{u \in S_j} r_{uj}
+\]
+Cioè praticamente, quello che si fa è scorrere sugli utenti che hanno assegnato una valutazione all'item, e per ognuno prendo la valutazione dell'item (che so che esisterà perchè la prendo dall'insieme $S_j$), si sommano le valutazioni e poi si dividono per il numero di valutazioni totali che ha avuto quell'item $j$
+\end{definition}
+
+\begin{example}{Fallimento della Media Semplice}
+Si consideri una scala di rating discreta $1$--$5$. Siano dati due item $i$ e $j$ presenti nella URM:
+\begin{itemize}
+    \item L'item $i$ ha ricevuto $5$ valutazioni: $\{4, 3, 4, 4, 5\}$.
+    \item L'item $j$ ha ricevuto $1$ sola valutazione: $\{5\}$.
+\end{itemize}
+
+Calcolando la media aritmetica semplice per entrambi gli item si ottiene:
+\[
+\hat{r}_i = \frac{4 + 3 + 4 + 4 + 5}{5} = \frac{20}{5} = 4.0
+\]
+\[
+\hat{r}_j = \frac{5}{1} = 5.0
+\]
+
+In base all'approccio Top Ranked puro, l'item $j$ viene classificato al di sopra dell'item $i$ ($\hat{r}_j > \hat{r}_i$), poiché presenta una media pari a $5.0$. Tuttavia, la stima su $j$ si basa su un singolo voto, risultando totalmente priva di significatività e stabilità statistica. In contesti reali (es. TripAdvisor), questo fenomeno può favorire comportamenti collusivi o recensioni artificiali.
+\end{example}
+
+\subsection{Regolarizzazione mediante Shrink Term (Damped Mean)}
+Per mitigare la distorsione causata da campioni di ampiezza ridotta, si introduce un fattore di regolarizzazione ad-hoc a denominatore, detto \textbf{Shrink Term} (o termine di smorzamento), indicato con $C > 0$.
+
+\begin{definition}{Media Regolarizzata con Shrink Term}
+La media regolarizzata di un item $h$ è definita come:
+\[
+\hat{r}_h = \frac{\sum_{k \in S_h} r_{kh}}{N_h + C}
+\]
+dove $N_h$ è il numero di valutazioni dell'item $h$ e $C$ è una costante \textbf{positiva} di regolarizzazione.
+\end{definition}
+
+\paragraph{Analisi dell'effetto dello Shrink Term:}
+Lo shrink term agisce penalizzando severamente gli item che possiedono un numero ridotto di valutazioni mentre l'impatto di $C$ diventa trascurabile per gli item molto popolari.
+
+Questo perchè matematicamente, quando $N_j$ è piccolo, aggiungendo una costante positiva al denominatore, si penalizza tutto il risultato, mentre se $N_j$ è già grande, aggiungere una costante $C$ cambia poco
+
+\begin{example}{Applicazione dello Shrink Term}
+Riconsideriamo l'esempio precedente applicando uno *shrink term* pari a $C = 1$:
+\begin{itemize}
+    \item Per l'item $i$ ($N_i = 5$, somma voti $= 20$):
+    \[
+    \hat{r}_i = \frac{4 + 3 + 4 + 4 + 5}{5 + 1} = \frac{20}{6} \approx 3.33
+    \]
+    \item Per l'item $j$ ($N_j = 1$, somma voti $= 5$):
+    \[
+    \hat{r}_j = \frac{5}{1 + 1} = \frac{5}{2} = 2.50
+    \]
+\end{itemize}
+A seguito della regolarizzazione, l'item $i$ ottiene un punteggio superiore rispetto a $j$ ($\hat{r}_i = 3.33 > \hat{r}_j = 2.50$). Lo *shrink term* ha penalizzato correttamente l'item $j$ riducendone la stima a causa della scarsa numerosità campionaria.
+\end{example}
+
+\subsection{Limiti dei Metodi Most Popular e Top Ranked}
+Sebbene rappresentino un baseline semplice e veloce, i metodi non personalizzati presentano rilevanti limitazioni operazionali:
+\begin{enumerate}
+    \item \textbf{Penalizzazione di Novelty e Serendipity}: gli item popolari rimangono bloccati nelle prime posizioni, impedendo agli utenti di scoprire contenuti di nicchia.
+    \item \textbf{Feedback Loop Positivo (\textit{Rich-get-richer effect})}: il sistema consiglia continuamente prodotti già popolari, incrementandone ulteriormente le visualizzazioni e le valutazioni a scapito del resto del catalogo.
+    \item \textbf{Concentrazione del catalogo}: insoddisfazione per i fornitori/produttori che vedono azzerata la visibilità dei prodotti di nicchia.
+\end{enumerate}
+
+\subsection{Normalizzazione della URM: Rimozione dei Bias Globali}
+I rating espressi all'interno di una URM dipendono non solo dalla reale qualità degli item, ma anche da \textbf{bias sistematici} legati alle diverse abitudini degli utenti (utenti severi vs. utenti generosi) e \textbf{alla popolarità generale del dominio}.
+
+Per uniformare i dati ed eliminare tali distorsioni, si applica una procedura di \textbf{normalizzazione della URM in 6 passaggi sequenziali}:
+
+\subsubsection{Procedura Algoritmica di Normalizzazione}
+
+\paragraph{Step 1: Calcolo della Media Globale ($\hat{g}$)}
+Si calcola il valore medio di tutti i rating osservati nella matrice $R$:
+\[
+\hat{g} = \frac{\sum_{(i,j) \in S} r_{ij}}{|S|}
+\]
+dove $S = \{(i,j) \mid r_{ij} \text{ è osservato}\}$ e $|S|$ rappresenta il numero totale di celle non vuote nella URM. La media globale $\hat{g}$ rappresenta il livello basale delle valutazioni dell'intero sistema.
+
+\paragraph{Step 2: Sottrazione della Media Globale}
+Si calcola la matrice dei rating centrati rispetto alla media globale:
+\[
+r'_{ij} = r_{ij} - \hat{g} \quad \forall (i,j) \in S
+\]
+Questo passaggio rimuove la tendenza generale dell'intero sistema (ad es. in molti contesti gli utenti lasciano una recensione prevalentemente quando un item è piaciuto, portando la media globale $\hat{g}$ verso valori medio-alti).
+
+\textbf{Si lavora su una nuova matrice $R'$, dove nella posizione $(i,j)$ della matrice originale, se la posizione era vuota, rimane vuota anche in questa}
+
+\paragraph{Step 3: Calcolo dell'Item Bias ($b_j$)}
+L'\textbf{Item Bias} $b_j$ quantifica quanto l'item $j$ si discosti, in media, dalla baseline globale dell'intero catalogo. Applicando un fattore di regolarizzazione $C$, si definisce:
+\[
+b_j = \frac{\sum_{i: (i,j) \in S} r'_{ij}}{N_j + C}
+\]
+dove $N_j$ è il numero totale di valutazioni ricevute dall'item $j$.
+
+\textbf{Operativamente:} tutto quello che si fa è prendere la nuova matrice $R'$ e sommare gli elementi non vuoti lungo le colonne (poiché le colonne rappresentano gli item).
+
+\begin{itemize}
+    \item \textbf{Se $b_j > 0$}: l'item $j$ è percepito come qualitativamente superiore alla media globale, $\hat{g}$. Poiché $r'_{ij} = r_{ij} - \hat{g}$, se il voto originale è superiore alla media globale produce un valore centrato positivo ($r'_{ij} > 0$). Se questi ultimi prevalgono, la somma al numeratore sarà positiva (il denominatore sarà sempre positivo), indicando che l'item spinge i rating verso l'alto rispetto alla baseline.
+    \item \textbf{Se $b_j < 0$}: l'item $j$ è percepito come inferiore alla media globale $\hat{g}$ (prevalgono le valutazioni $r_{ij} < \hat{g}$, che generano valori centrati negativi).
+\end{itemize}
+
+\paragraph{Step 4: Sottrazione dell'Item Bias}
+Si ricalcolano i rating sottraendo la componente dell'item bias:
+\[
+r''_{ij} = r'_{ij} - b_j = r_{ij} - \hat{g} - b_j \quad \forall (i,j) \in S
+\]
+Il valore $r''_{ij}$ misura di quanto il giudizio espresso dall'utente $i$ si discosti dal valore atteso globale dell'item $j$.
+
+\paragraph{Step 5: Calcolo dello User Bias ($b_i$)}
+Lo \textbf{User Bias} $b_i$ quantifica la tendenza individuale dell'utente $i$ a fornire valutazioni sistematicamente superiori o inferiori rispetto alla media della community:
+\[
+b_i = \frac{\sum_{j: (i,j) \in S} r''_{ij}}{N_i + C}
+\]
+dove $N_i$ rappresenta il numero di rating totali forniti dall'utente $i$.
+\begin{itemize}
+    \item $b_i > 0$: utente "benevolo" o generoso (assegna voti mediamente alti).
+    \item $b_i < 0$: utente "severo" (assegna voti mediamente bassi).
+\end{itemize}
+
+\paragraph{Step 6: Calcolo della Matrice Normalizzata / Modello Baseline ($n_{ij}$)}
+Unendo le componenti calcolate, si costruisce la stima basale di valutazione $n_{ij}$ (ovvero il modello di stima non personalizzato basato sui soli bias):
+\begin{equation}
+n_{ij} = \hat{g} + b_j + b_i
+\end{equation}
+
+\begin{definition}{Baseline Normalizzata}
+La stima baseline $n_{ij}$ esprime il punteggio atteso per la coppia utente-item $(i, j)$ sommando tre componenti additive fondamentali:
+\begin{enumerate}
+    \item $\hat{g}$: il livello di rating medio dell'intero ecosistema;
+    \item $b_j$: la deviazione specifica dovuta al valore intrinseco dell'item $j$;
+    \item $b_i$: la deviazione personale legata alla severità o generosità dell'utente $i$.
+\end{enumerate}
+\end{definition}
+
+Tale modello di baseline costituisce sia un efficace predittore non personalizzato, sia la base di partenza per gli algoritmi personalizzati di \textit{Collaborative Filtering}, i quali operano stimando i residui della matrice sui valori normalizzati $r_{ij} - n_{ij}$.
