@@ -5716,30 +5716,54 @@ Si calcola la matrice dei rating centrati rispetto alla media globale:
 \[
 r'_{ij} = r_{ij} - \hat{g} \quad \forall (i,j) \in S
 \]
+
+Se questa differenza è maggiore di 0, allora quel rating viene \textbf{considerato sopra la media globale}
+
 Questo passaggio rimuove la tendenza generale dell'intero sistema (ad es. in molti contesti gli utenti lasciano una recensione prevalentemente quando un item è piaciuto, portando la media globale $\hat{g}$ verso valori medio-alti).
 
 \textbf{Si lavora su una nuova matrice $R'$, dove nella posizione $(i,j)$ della matrice originale, se la posizione era vuota, rimane vuota anche in questa}
 
 \paragraph{Step 3: Calcolo dell'Item Bias ($b_j$)}
-L'\textbf{Item Bias} $b_j$ quantifica quanto l'item $j$ si discosti, in media, dalla baseline globale dell'intero catalogo. Applicando un fattore di regolarizzazione $C$, si definisce:
+L'\textbf{Item Bias} $b_j$ è una media. Ci dice \textbf{in media} quanto il rating dell'utente $i$ sull'item $j$ si discosta dalla baseline globale (media globale).Applicando un fattore di regolarizzazione $C$, si definisce:
 \[
 b_j = \frac{\sum_{i: (i,j) \in S} r'_{ij}}{N_j + C}
 \]
 dove $N_j$ è il numero totale di valutazioni ricevute dall'item $j$.
 
-\textbf{Operativamente:} tutto quello che si fa è prendere la nuova matrice $R'$ e sommare gli elementi non vuoti lungo le colonne (poiché le colonne rappresentano gli item).
+\textbf{Operativamente} quello che si fa è :
+\begin{equation}
+    b_j = r_{1j}-\hat{g} + r_{2j}-\hat{g} + \dots + r_{Nj} - \hat{g}
+\end{equation}
+Quindi $b_j$ misura in media, quanto $r_{ij}$ si discosti da $\hat{g}$
 
 \begin{itemize}
-    \item \textbf{Se $b_j > 0$}: l'item $j$ è percepito come qualitativamente superiore alla media globale, $\hat{g}$. Poiché $r'_{ij} = r_{ij} - \hat{g}$, se il voto originale è superiore alla media globale produce un valore centrato positivo ($r'_{ij} > 0$). Se questi ultimi prevalgono, la somma al numeratore sarà positiva (il denominatore sarà sempre positivo), indicando che l'item spinge i rating verso l'alto rispetto alla baseline.
-    \item \textbf{Se $b_j < 0$}: l'item $j$ è percepito come inferiore alla media globale $\hat{g}$ (prevalgono le valutazioni $r_{ij} < \hat{g}$, che generano valori centrati negativi).
+    \item se $b_j$ è positivo, significa che la maggior parte delle volte $r_{ij}$ > $\hat{g}$, questo significa che le recensioni degli utenti su quel prodotto $j$, erano sopra la baseline globale.
+    Quindi il prodotto è valutato positivamente.
 \end{itemize}
 
+
+
 \paragraph{Step 4: Sottrazione dell'Item Bias}
-Si ricalcolano i rating sottraendo la componente dell'item bias:
+Quindi se $b_j$ = 0.4, questo significa che le recensioni degli utenti, si scostano dalla baseline globale in media di 0.4, cioè le $r_{ij}$ fissato $j$, si discostano dalla baseline globale $\hat{g}$ di 0.4
 \[
 r''_{ij} = r'_{ij} - b_j = r_{ij} - \hat{g} - b_j \quad \forall (i,j) \in S
 \]
-Il valore $r''_{ij}$ misura di quanto il giudizio espresso dall'utente $i$ si discosti dal valore atteso globale dell'item $j$.
+Questo significa che faccio:
+\[
+    R^{''} = \begin{pmatrix}
+        r'_{11} - b_1 & r'_{12} - b_2 & \dots & r'{1M} - b_m  \\
+        \dots \\
+        r'_{N1} - b_1 & r'_{N2} - b_2 & \dots & r'{NM} - b_m
+        \end{pmatrix}
+\]
+Ora nota che se  $r'_{11}$ - $b_1$ > 0, e  $r'_{11}$ = $r_{11}$ - $\hat{g}$ \textbf{significa che} $r_{11} - \hat{g}$ è maggiore della media in cui compare anche lui, quindi è maggiore della media, quindi questo significa che quella recensione è sopra la media per quel prodotto $j$
+
+Questo perchè:
+\[
+    b_j = r_{1j}-\hat{g} + r_{2j}-\hat{g} + \dots + r_{Nj} - \hat{g}
+\]
+e se $ r_{1j}-\hat{g} $ > $b_j$ significa che è al di sopra della media, e \textbf{quella recensione di quell'utente per quel determinato prodotto è al di sopra della baseline globale per quel prodotto $b_j$, quindi è positiva}
+
 
 \paragraph{Step 5: Calcolo dello User Bias ($b_i$)}
 Lo \textbf{User Bias} $b_i$ quantifica la tendenza individuale dell'utente $i$ a fornire valutazioni sistematicamente superiori o inferiori rispetto alla media della community:
