@@ -4117,13 +4117,13 @@ Il grafo della catena è:
 \node[circle, draw, minimum size=1cm] (1) {$1$};
 \node[circle, draw, minimum size=1cm, right of=1] (2) {$2$};
 
-```
+
 \draw[->, bend left=25] (1) to node[above] {$0.5$} (2);
 \draw[->, bend left=25] (2) to node[below] {$0.5$} (1);
 
 \draw[->] (1) edge[loop left] node {$0.5$} (1);
 \draw[->] (2) edge[loop right] node {$0.5$} (2);
-```
+
 
 \end{tikzpicture}
 \end{center}
@@ -5399,12 +5399,25 @@ I sistemi di raccomandazione personalizzati si dividono in due grandi famiglie m
         \end{itemize}
     \end{itemize}
 
-    \item \textbf{Collaborative Filtering (CF):} le raccomandazioni derivano dalla sovrapposizione delle interazioni dell'utente corrente con quelle degli altri membri della community. Questi metodi non richiedono la presenza di dati strutturati sugli item (come genere o attributi), operando unicamente sulla matrice delle interazioni, dei giudizi e dei \textit{rating}.
-    Che definiremo dopo.
+    \item \textbf{Il Collaborative Filtering} (CF) è una tecnica di raccomandazione che si basa sull'idea che utenti con gusti simili tendono ad apprezzare gli stessi item, oppure che item apprezzati dagli stessi utenti possono essere correlati.
+
+    La caratteristica principale è che il sistema sfrutta le interazioni degli utenti con gli item, come voti, valutazioni (rating) e acquisti, senza aver necessariamente bisogno di conoscere le caratteristiche degli item stessi.
+
+    \paragraph{Esempio} :  Consideriamo un recommender system di film:
+
+    - L'utente A ha apprezzato Interstellar e Inception.
+    - L'utente B ha apprezzato gli stessi film, ma anche The Prestige.
+    - Il sistema potrebbe raccomandare The Prestige all'utente A, sfruttando la somiglianza tra le interazioni dei due utenti.
+
+    Il sistema non deve necessariamente sapere che questi film sono di fantascienza o che sono diretti da Christopher Nolan: può formulare la raccomandazione basandosi sulle valutazioni degli utenti.
+
+    Il Collaborative Filtering si divide principalmente in due categorie:
     \begin{itemize}
-        \item \textbf{Neighborhood-based (User-based / Item-based)}
-        \item \textbf{Model-based}
+        \item Neighborhood-based (User-based / Item-based): individua somiglianze tra utenti oppure tra item, utilizzandole direttamente per formulare le raccomandazioni.
+        \item Model-based: apprende un modello a partire dalle interazioni disponibili, per individuare schemi nei dati e generare raccomandazioni.
     \end{itemize}
+
+    In sintesi, la distinzione fondamentale è che il Collaborative Filtering sfrutta il comportamento collettivo degli utenti, anziché basarsi necessariamente sulle caratteristiche intrinseche degli item, come genere, descrizione o categoria.
 \end{enumerate}
 
 
@@ -5744,7 +5757,7 @@ Quindi $b_j$ misura in media, quanto $r_{ij}$ si discosti da $\hat{g}$
 
 
 \paragraph{Step 4: Sottrazione dell'Item Bias}
-Quindi se $b_j$ = 0.4, questo significa che le recensioni degli utenti, si scostano dalla baseline globale in media di 0.4, cioè le $r_{ij}$ fissato $j$, si discostano dalla baseline globale $\hat{g}$ di 0.4
+Quindi se $b_j$ = 0.4, questo significa che le recensioni degli utenti, si scostano dalla baseline globale in media di 0.4, cioè le $r_{ij}$ fissato $i$, si discostano dalla baseline globale $\hat{g}$ di 0.4
 \[
 r''_{ij} = r'_{ij} - b_j = r_{ij} - \hat{g} - b_j \quad \forall (i,j) \in S
 \]
@@ -5756,13 +5769,18 @@ Questo significa che faccio:
         r'_{N1} - b_1 & r'_{N2} - b_2 & \dots & r'{NM} - b_m
         \end{pmatrix}
 \]
-Ora nota che se  $r'_{11}$ - $b_1$ > 0, e  $r'_{11}$ = $r_{11}$ - $\hat{g}$ \textbf{significa che} $r_{11} - \hat{g}$ è maggiore della media in cui compare anche lui, quindi è maggiore della media, quindi questo significa che quella recensione è sopra la media per quel prodotto $j$
+Ora nota che se  $r'_{11}$ - $b_1$ > 0, e  $r'_{11}$ = $r_{11}$ - $\hat{g}$ \textbf{significa che} 
+
+\[
+r_{11} - \hat{g} > b_1,
+\]
+questo significa che la discossione della recensione dell'utente $1$ sull'item $1$ dalla media globale è maggiore della media $b_j$ , cioè di quanto di discostano dalla media globale le recensioni dei diversi utenti su quel prodotto,
+se è maggiore significa che la recensione di quel utente su quel prodotto $j$,è maggiore della media delle recensioni che gli altri utenti hanno assegnato su quello stesso item. 
 
 Questo perchè:
 \[
-    b_j = r_{1j}-\hat{g} + r_{2j}-\hat{g} + \dots + r_{Nj} - \hat{g}
+    b_1 = r_{11}-\hat{g} + r_{21}-\hat{g} + \dots + r_{N1} - \hat{g}
 \]
-e se $ r_{1j}-\hat{g} $ > $b_j$ significa che è al di sopra della media, e \textbf{quella recensione di quell'utente per quel determinato prodotto è al di sopra della baseline globale per quel prodotto $b_j$, quindi è positiva}
 
 
 \paragraph{Step 5: Calcolo dello User Bias ($b_i$)}
@@ -5792,3 +5810,348 @@ La stima baseline $n_{ij}$ esprime il punteggio atteso per la coppia utente-item
 \end{definition}
 
 Tale modello di baseline costituisce sia un efficace predittore non personalizzato, sia la base di partenza per gli algoritmi personalizzati di \textit{Collaborative Filtering}, i quali operano stimando i residui della matrice sui valori normalizzati $r_{ij} - n_{ij}$.
+
+
+
+
+
+
+
+
+\section{Algoritmi Personalizzati}
+
+\subsection{Neighborhood-based Collaborative Filtering}
+Il Neighborhood-based Collaborative Filtering rappresenta l'approccio classico ai sistemi di raccomandazione di natura collaborativa. Questa metodologia si ramifica in due filoni concettuali:
+\begin{itemize}
+\item \textbf{User-based:} Il sistema ricerca un sottoinsieme di utenti (il vicinato) con gusti molto affini all'utente target, sfruttandone i rating per suggerire \textbf{nuove alternative}, intuitivamente si confrontano diverse righe della matrice, perchè rappresentano utenti diversi.
+\item \textbf{Item-based:} Il sistema ricerca relazioni di somiglianza tra gli item stessi sulla base dei voti ricevuti, utilizzando le preferenze storiche dell'utente per estrapolare un gradimento verso item analoghi.
+\end{itemize}
+Dal punto di vista operativo, un sistema di Collaborative Filtering può avere due obiettivi principali:
+
+\begin{enumerate}
+    \item \textbf{Predizione del rating:} consiste nello stimare il voto che un utente assegnerebbe a uno specifico item, quando tale valutazione non è presente nella User-Rating Matrix (URM) $R$. Il risultato è un singolo valore predetto $\hat{r}_{ij}$, che rappresenta il rating stimato dell'utente $i$ per l'item $j$.
+    Si mette il cappelletto ad $r_{ij}$, perchè è il valore stimato, con quello reale che darà l'utente.
+
+    \textit{Esempio:} se Alice ha valutato alcuni film, ma non ha ancora valutato \textit{The Prestige}, il sistema potrebbe stimare che il suo voto per questo film sia $\hat{r}_{ij}=4.8$.
+
+    \item \textbf{Raccomandazione Top-$k$:} consiste nell'individuare e proporre a un utente i $k$ item ritenuti più pertinenti o interessanti. In questo caso, l'obiettivo non è necessariamente prevedere un rating preciso, ma generare una lista ordinata dei migliori $k$ item da raccomandare. Analogamente, è possibile individuare i $k$ utenti ai quali proporre uno specifico item.
+
+    Generalmente questi due tecniche si basano su item, con cui l'utente ancora deve interagire.
+
+    \textit{Esempio:} se il sistema deve raccomandare $k=2$ film ad Alice, potrebbe proporle \textit{The Prestige} e \textit{Dune}, selezionandoli tra quelli con i punteggi di raccomandazione più elevati.
+
+    I due obiettivi sono collegati, ma non equivalenti: un sistema può stimare i rating dei diversi item e poi ordinare i risultati per ottenere una raccomandazione Top-$k$; tuttavia, alcuni algoritmi possono generare direttamente i punteggi di raccomandazione senza predire esplicitamente i rating.
+\end{enumerate}
+
+La raccomandazione Top-$k$ è l'approccio più diffuso, poiché lo scopo principale di un \textit{recommender system} è filtrare un insieme potenzialmente molto ampio di item, presentando all'utente soltanto quelli ritenuti più interessanti.
+
+\subsubsection{User-based Neighborhood Collaborative Filtering}
+La predizione di un'entry $\hat{r}_{ij}$ (il cui rating effettivo \(r_{ij}\) non è stato osservato) in ambito user-based richiede due step sequenziali:
+\begin{enumerate}
+\item Trovare l'insieme dei $h$ utenti maggiormente simili all'utente $i$, restrigendo la ricerca solo tra coloro che hanno già fornito un rating all'item $j$.
+Cioè trovare gli utenti piu vicini all'utente (cioè che hanno gusti simili) $i$, che hanno già valutato l'item $j$
+\item Fondere le valutazioni espresse da questo vicinato per ottenere la stima $\hat{r}_{ij}$.
+\end{enumerate}
+
+Per tradurre matematicamente il concetto di affinità, si definisce una misura di similarità $sim(u,v)$ tra un utente $u$ e un utente $v$, basata sugli insiemi $I_u$ e $I_v$ degli item che hanno recensito in comune ($I_u \cap I_v$).
+Una prima misura è la \textbf{covarianza} dei rating su questi item condivisi:
+
+
+$$sim(u,v) = \text{cov}_{I_u \cap I_v}(u,v) = \frac{1}{\vert{}I_u \cap I_v\vert{}} \sum_{k \in I_u \cap I_v} (r_{uk} - \mu_u)(r_{vk} - \mu_v)$$
+
+La covarianza misura se due utenti tendono a dare valutazioni più alte o più basse della propria media agli item in comune.
+
+\begin{itemize}
+    \item Se la covarianza è \textbf{positiva} : quando un utente assegna un voto superiore alla propria media, anche l'altro tende a farlo;
+    quando un utente assegna un voto inferiore alla propria media, anche l'altro tende a farlo.
+    I due utenti tendono a valutare gli stessi item nella stessa direzione rispetto alle proprie medie: se uno apprezza un film più del solito, anche l'altro tende ad apprezzarlo più del solito.
+    \item Se la covarianza è \textbf{negativa} : I due utenti tendono a valutare gli stessi item in direzioni opposte rispetto alle proprie medie: quando uno apprezza un film più del solito, l'altro tende ad apprezzarlo meno del solito.
+    \item Se la covarianza \textbf{è zero}, non emerge una tendenza lineare sistematica a valutare gli item nella stessa direzione o in direzioni opposte.
+\end{itemize}
+
+
+\begin{center}
+\textbf{Questa misura la devi interpretare come "distaccata" dai due punti che abbiamo detto prima, semplicemente questa misura, prende in input due utenti generici}, e considera gli item che hanno valutatato insieme per determinare quanto sono simili, in termini di gusto.
+\end{center}
+
+\begin{center}
+dove $\mu_u$ e $\mu_v$ indicano i valori medi dei rating degli utenti $u$ e $v$ (sulla riga quindi). Siccome le medie dipendono esclusivamente dal singolo utente e non dalla coppia indagata, si possono calcolare a priori per l'intero sistema, riducendo il carico di calcolo.
+\end{center}
+
+
+La covarianza presenta 3 principali problemi:
+\begin{itemize}
+    \item \textbf{Aumenta la concordanza reale tra le variabili} : gli scarti \textbf{concordi} dalla media diventano più grandi o più frequenti, quindi sostanzialmente diventa piu frequente lo scarto,
+    cioè diventa piu "frequente", che quando un valore è superiore alla propria media, lo è anche l'altro e viceversa.
+    \item Si cambia l'unità di misura: passando a un'unità più piccola (es. da metri a centimetri o da chilogrammi a grammi), i numeri crescono e la covarianza si moltiplica di conseguenza.
+    \item Aumenta il distacco intorno alla media, cioè i dati diventano piu grandi, aumenta il distacco dalla media, cioè aumenta $(r_{uk} - \mu_u)$ e quindi aumenta tutta la covarianza.
+\end{itemize}
+
+Per ovviare a questo problema di scala, si impiega il \textbf{Coefficiente di Correlazione di Pearson}, che normalizza la covarianza introducendo al denominatore le deviazioni standard $\sigma_u$ e $\sigma_v$:
+
+\textbf{La deviazione standard $\sigma$ misura quanto i dati sono dispersi intorno alla media, se la deviazione standard è piccola significa che i dati sono vicini alla media e sono tutti intorno alla media, se la deviazione standard è grande significa che i dati variano tanto}
+\paragraph{Esempio}: Immagina due classi di studenti con la stessa media ai test di matematica ($7/10$):
+\begin{itemize}
+    \item Classe A: i voti sono $6, 7, 7, 7, 8$. I voti sono vicinissimi al $7$. La deviazione standard sarà molto bassa (poca dispersione).
+    \item Classe B: i voti sono $4, 5, 7, 9, 10$. Anche qui la media è $7$, ma i voti variano tantissimo. La deviazione standard sarà molto più alta (alta dispersione).
+\end{itemize}
+
+
+$$sim(u,v) = \frac{\text{cov}_{I_u \cap I_v}(u,v)}{\sigma_u \sigma_v} = \frac{\sum_{k \in I_u \cap I_v} (r_{uk} - \mu_u)(r_{vk} - \mu_v)}{\sqrt{\sum_{k \in I_u \cap I_v} (r_{uk} - \mu_u)^2} \sqrt{\sum_{k \in I_u \cap I_v} (r_{vk} - \mu_v)^2}}$$
+
+Il coefficiente di Pearson è compreso tra \(-1\) e \(1\):
+\begin{itemize}
+    \item +1 : I due utenti seguono esattamente lo stesso andamento nei rating.Indica un andamento perfettamente concorde, non necessariamente voti numericamente uguali, ma significa che quando un utente da un rating sopra la media, lo da anche l'altro.
+    \item 0 : Non emerge una relazione lineare tra gli scostamenti dei due utenti.
+    \item -1 : Quando un utente si discosta dalla propria media verso l'alto, l'altro si discosta verso il basso, e viceversa.
+\end{itemize} 
+
+
+
+I risultati di similarità per tutte le coppie di utenti generano la \textit{user-similarity matrix} $\Gamma$, in cui l'elemento $\Gamma_{uv} = sim(u,v)$. La matrice $\Gamma \in \mathbb{R}^{N \times N }$, dove $N$ è il numero degli utenti.
+\[
+\Gamma =
+\begin{pmatrix}
+1 & 0.9 & -0.4\\
+0.9 & 1 & 0.1\\
+-0.4 & 0.1 & 1
+\end{pmatrix}
+\]
+Il coefficiente di $(i,i)$ è 1, perchè un utente ha correlazione massima con sè stesso.
+
+
+
+
+
+Per limitare l'errore derivante da utenti con metri di giudizio squilibrati, si effettua una predizione centrata sulla media (\textit{mean centered}).
+Sia $P_i(j)$ l'insieme dei $k$ utenti più simili a $i$ (\textit{nearest neighbors}) tra coloro che hanno recensito l'item $j$, questo insieme viene calcolato tramite la matrice $\Gamma$, anche se tramite la matrice, non possiamo vedere se uno ha votato l'item $j$ o meno, si vede tramite la matrice originale $R$ gli utenti da selezionare e poi si passa a $\Gamma$.
+
+
+Supponiamo quindi di voler stimare il rating che Alice assegnerebbe a un item $j$ che non ha ancora valutato. Consideriamo due utenti vicini, Bob e Carlo, (li prendiamo come detto prima dalla matrice $\Gamma$) che hanno già recensito tale item.
+
+Le informazioni a nostra disposizione sono le seguenti:
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Utente} & \textbf{Similarità con Alice} & \textbf{Media personale} & \textbf{Rating dell'item $j$} \\
+\hline
+Bob & $0.9$ & $3$ & $4$ \\
+\hline
+Carlo & $-0.4$ & $4$ & $3$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{1. Calcolo degli scostamenti dalle medie personali}
+
+Per ciascun vicino, calcoliamo la differenza tra il rating assegnato all'item $j$ e la media personale dell'utente. In questo modo, determiniamo se l'utente ha valutato l'item al di sopra o al di sotto del proprio comportamento abituale.
+
+Per Bob, otteniamo:
+
+\[
+r_{\text{Bob},j}-\mu_{\text{Bob}}=4-3=+1
+\]
+
+Bob ha assegnato un rating pari a $4$, superiore di un punto rispetto alla propria media, pari a $3$.
+
+Per Carlo, invece, otteniamo:
+
+\[
+r_{\text{Carlo},j}-\mu_{\text{Carlo}}=3-4=-1
+\]
+
+Carlo ha assegnato un rating pari a $3$, inferiore di un punto rispetto alla propria media, pari a $4$.
+
+Questi scostamenti permettono di confrontare i giudizi dei due utenti rispetto alle rispettive abitudini di valutazione, evitando di considerare direttamente i rating assoluti.
+
+\paragraph{2. Pesatura degli scostamenti tramite i coefficienti di Pearson}
+
+Per stimare lo scostamento del rating di Alice, pesiamo gli scostamenti dei vicini mediante i rispettivi coefficienti di similarità:
+
+\[
+\Gamma_{\text{Alice,Bob}}=0.9
+\]
+
+\[
+\Gamma_{\text{Alice,Carlo}}=-0.4
+\]
+
+Il contributo di Bob è:
+
+\[
+\Gamma_{\text{Alice,Bob}}
+(r_{\text{Bob},j}-\mu_{\text{Bob}})
+=0.9\cdot(4-3)=0.9
+\]
+
+Poiché Bob è positivamente correlato con Alice, il suo scostamento positivo contribuisce positivamente alla predizione.
+
+Il contributo di Carlo è:
+
+\[
+\Gamma_{\text{Alice,Carlo}}
+(r_{\text{Carlo},j}-\mu_{\text{Carlo}})
+=(-0.4)\cdot(3-4)=0.4
+\]
+
+In questo caso, sia la similarità sia lo scostamento sono negativi. Il loro prodotto è quindi positivo: la correlazione negativa suggerisce che, quando Carlo valuta un item al di sotto della propria media, Alice tenda a valutarlo al di sopra della sua.
+
+Sommando i contributi, otteniamo il numeratore della formula di predizione:
+
+\[
+\sum_{v\in P_i(j)}
+\Gamma_{iv}(r_{vj}-\mu_v)
+=0.9+0.4=1.3
+\]
+
+Entrambi i vicini contribuiscono quindi a una previsione di scostamento positivo per Alice.
+
+\paragraph{3. Normalizzazione tramite la somma delle similarità assolute}
+
+Per ottenere una media pesata, dividiamo la somma dei contributi per la somma dei valori assoluti dei coefficienti di similarità:
+
+\[
+\sum_{v\in P_i(j)}|\Gamma_{iv}|
+=|0.9|+|-0.4|=0.9+0.4=1.3
+\]
+
+Si utilizzano i valori assoluti perché il segno della similarità è già stato considerato nel numeratore. Il denominatore deve invece rappresentare la grandezza complessiva dei pesi, senza che le similarità negative si sottraggano a quelle positive.
+
+La formula completa per la predizione dello scostamento è:
+
+\[
+\hat{s}_{ij}=
+\frac{
+\displaystyle\sum_{v\in P_i(j)}
+\Gamma_{iv}(r_{vj}-\mu_v)
+}{
+\displaystyle\sum_{v\in P_i(j)}|\Gamma_{iv}|
+}
+\]
+
+Sostituendo i valori del nostro esempio, otteniamo:
+
+\[
+\hat{s}_{ij}=\frac{1.3}{1.3}=1
+\]
+
+Il risultato indica che il rating di Alice viene stimato superiore di un punto rispetto alla sua media personale.
+
+\paragraph{4. Ricostruzione del rating previsto}
+
+Per ottenere il rating finale, sommiamo lo scostamento stimato alla media dei rating di Alice:
+
+\[
+\hat{r}_{ij}=\mu_i+\hat{s}_{ij}
+\]
+
+Supponendo che la media di Alice sia $\mu_i=3.5$, otteniamo:
+
+\[
+\hat{r}_{ij}=3.5+1=4.5
+\]
+
+Pertanto, il sistema prevede che Alice assegnerà all'item $j$ un rating pari a $4.5$.
+
+\textbf{In sintesi:} il metodo non combina direttamente i rating assoluti dei vicini, ma combina i loro scostamenti dalle rispettive medie, pesandoli in base alla similarità con l'utente target. Infine, aggiunge lo scostamento stimato alla media dell'utente target per ottenere il rating previsto.
+
+
+
+Per restituire un voto coerente con la scala assoluta dell'utente $i$, si somma alla fine la sua media di rating originaria:
+
+
+$$\hat{r}_{ij} = \mu_i + \hat{s}_{ij}$$
+
+\paragraph{Scelta della dimensione del vicinato ($k$)}
+La determinazione empirica del parametro $k$ influisce fortemente sulle performance. Fissare un $k$ troppo piccolo riduce drasticamente i dati a disposizione, causando stime volatili. Al contrario, se $k$ è eccessivamente elevato, vengono inclusi nel calcolo utenti con un basso livello di similarità, generando \textit{data noise} che disallinea la previsione. Esiste pertanto un punto di ottimo che massimizza la qualità dell'algoritmo.
+
+\paragraph{Correzioni Avanzate}
+Esistono casistiche in cui il calcolo base di similarità restituisce falsi positivi. Per irrobustire la metrica si integrano i seguenti approcci:
+\begin{enumerate}
+\item \textbf{Discounted Similarity Function:} Una similarità basata su pochissimi item in comune (es. un singolo film) è poco attendibile, anche qualora il coefficiente di Pearson risulti 1. Si definisce quindi una soglia di attendibilità $\beta$; se il numero di item comuni $\vert{}I_u \cap I_v\vert{}$ risulta inferiore a $\beta$, si applica un fattore di sconto proporzionale:
+
+
+$$\text{DiscountedSim}(u,v) = sim(u,v) \frac{\min(\vert{}I_u \cap I_v\vert{}, \beta)}{\beta}$$
+
+
+\item \textbf{Popular Item Correction:} Gli item \textit{bestseller} registrano valutazioni ampiamente concordanti tra tutti gli utenti, per cui tenderanno a sovrapporsi frequentemente in $I_u \cap I_v$, mascherando le reali sfumature nei gusti personali[cite: 34]. Assegnando un peso $w_k = \log \left(\frac{m}{m_k}\right)$ (in cui $m$ è il totale dei rating di sistema e $m_k$ è il conteggio dei rating specifici per l'item $k$), è possibile penalizzare gli item troppo popolari direttamente all'interno della formula di Pearson[cite: 34]:
+\[sim(u,v) = \frac{\sum_{k \in I_u \cap I_v} w_k (r_{uk} - \mu_u)(r_{vk} - \mu_v)}{\sqrt{\sum_{k \in I_u \cap I_v} (r_{uk} - \mu_u)^2} \sqrt{\sum_{k \in I_u \cap I_v} (r_{vk} - \mu_v)^2}}\]
+
+
+
+\end{enumerate}
+
+\subsubsection{Item-based Neighborhood Collaborative Filtering}
+Traslando orizzontalmente le metodologie, la valutazione collaborativa può essere applicata sugli item piuttosto che sugli utenti.
+Sia $U_h$ l'elenco degli utenti che hanno valutato l'item $h$. Si estrapola la media $\mu_h$ delle recensioni ricevute dal singolo item:
+
+
+$$\mu_h = \frac{1}{\vert{}U_h\vert{}} \sum_{u \in U_h} r_{uh}$$
+
+
+L'adattamento del coefficiente di Pearson per misurare l'affinità oggettiva tra l'item $h$ e l'item $k$ diventa:
+
+
+$$sim(h,k) = \frac{\sum_{u \in U_h \cap U_k} (r_{uh} - \mu_h)(r_{uk} - \mu_k)}{\sqrt{\sum_{u \in U_h \cap U_k} (r_{uh} - \mu_h)^2} \sqrt{\sum_{u \in U_h \cap U_k} (r_{uk} - \mu_k)^2}}$$
+
+
+Tutti questi valori popolano la \textit{item-similarity matrix} $\Delta_{jk} = sim(j,k)$.
+La previsione sfrutta poi l'insieme $Q_j(i)$ dei $k$ item con $\Delta$ maggiore tra quelli valutati dall'utente $i$:
+
+
+$$\hat{s}_{ij} = \frac{\sum_{k \in Q_j(i)} \Delta_{jk}(r_{ik} - \mu_k)}{\sum_{k \in Q_j(i)} \vert{}\Delta_{jk}\vert{}} \quad \implies \quad \hat{r}_{ij} = \mu_j + \hat{s}_{ij}$$
+
+\subsubsection{Confronto tra User-based e Item-based Collaborative Filtering}
+Le architetture commerciali di larga scala presentano un rapporto tra utenti e item enormemente sbilanciato in favore degli utenti. Questo implica che l'intersezione tra chi ha visto l'item $h$ e l'item $k$ sia molto più corposa dell'intersezione tra item visti dall'utente $u$ e $v$ ($\vert{}U_h \cap U_k\vert{} \gg \vert{}I_u \cap I_v\vert{}$).
+Da ciò scaturiscono profonde implicazioni tecniche:
+\begin{itemize}
+\item \textbf{Memory load:} La matrice item-similarity $\Delta$ è di gran lunga meno ingombrante della controparte user-similarity $\Gamma$.
+\item \textbf{Stability:} Le entry $\Delta_{jk}$ si fondano su un campione statistico esteso e sono molto resistenti all'inserimento di nuove transazioni, mentre $\Gamma_{uv}$ rischia di fluttuare drasticamente ad ogni interazione. A fronte della crescita degli utenti, $\Gamma$ esige ricalcoli molto più frequenti.
+\item \textbf{Accuratezza (Accuracy):} Per lo stesso motivo probabilistico, le raccomandazioni item-based godono tipicamente di una maggiore precisione.
+\item \textbf{Explainability:} L'approccio basato sugli item fornisce giustificazioni trasparenti all'utente finale (ad esempio "Visto che hai ascoltato questo brano, ti suggeriamo quest'altro"), risultando esplicativo in modo naturale.
+\item \textbf{Novelty e Serendipity:} Unico vero trionfo del modello user-based. Poiché item associati da $\Delta$ tendono a condividere gli stessi archetipi (sequel della stessa saga, film simili), la sorpresa scema. L'approccio user-based scavalca queste limitazioni potendo suggerire un genere radicalmente diverso unicamente perché apprezzato da un "gemello statistico", innalzando la serendipity.
+\end{itemize}
+
+\subsection{Modelli a Grafo per Neighborhood Collaborative Filtering}
+La bassissima densità dei rating all'interno di una URM inficia l'attendibilità dei classici coefficienti basati sulle preferenze esplicite. Il limite del Pearson risiede nel confrontare esclusivamente nodi con archi diretti condivisi.
+Le topologie a grafo $G = (V,E)$ offrono una soluzione strutturale: schematizzando le entità sui nodi $V$ e i pesi sugli archi $E$, è possibile indagare similarità derivate e indirette tra due nodi $h$ e $k$, analizzando i percorsi che fluiscono attraverso molteplici nodi di rimbalzo.
+
+\subsubsection{Item-Item Graphs}
+Costruendo un grafo che mappa relazioni tra item, il primo passaggio richiede di legare gli item mediante un calcolo di \textbf{Cosine Similarity} $p'_{h,k}$ tra i vettori colonna $\vec{r}_h$ e $\vec{r}_k$ della URM:
+
+
+$$p'_{h,k} = \cos(\vec{r}_h, \vec{r}_k) = \frac{\sum_{u \in U} r_{u,h} \cdot r_{u,k}}{\sqrt{\sum_{u \in U} r_{u,h}^2} \cdot \sqrt{\sum_{u \in U} r_{u,k}^2}}$$
+
+
+Questo genera una matrice di connessione simmetrica. Convertendo tali metriche in transizioni normalizzate, il grafo evolve in una \textbf{Catena di Markov} definita dalla matrice $P$:
+
+
+$$p_{h,k} = \frac{p'_{h,k}}{\sum_{m \in V} p'_{h,m}}$$
+
+
+Per distillare da questa catena valori robusti di prossimità vengono esplorate metriche come l'ItemRank e la misura di Katz.
+
+\subsubsection{Misura di Katz}
+Importata dall'analisi delle reti, la Misura di Katz calcola l'influenza tra il nodo di partenza $h$ e quello di destinazione $k$ pesando ricorsivamente tutte le vie di collegamento. Si introduce un fattore di smorzamento \textit{damping factor} $\beta \in (0,1)$, affinché le connessioni brevi esercitino un peso esponenzialmente maggiore rispetto a quelle lunghe.
+La formulazione classica su una matrice di incidenza $A$ di un grafo orientato è:
+
+
+$$\Delta_{h,k} = \sum_{l=1}^{\infty} \beta^l \cdot \vert{}paths^l(h,k)\vert{} = \sum_{l=1}^{\infty} \beta^l \cdot A_{h,k}^l$$
+
+
+Per far convergere la sommatoria, si impone il vincolo $\beta < \frac{1}{\lambda}$, dove $\lambda$ indica il massimo autovalore di $A$.
+
+Riadattando questo concetto matematico all'interno dei sistemi di raccomandazione, si sostituisce la matrice di incidenza con la matrice $P$ della Catena di Markov generata in precedenza. In questa veste, il termine $P_{h,k}^l$ modella la probabilità esatta di transitare da $h$ verso $k$ in esattamente $l$ salti:
+
+
+$$\Delta_{h,k} = \sum_{l=1}^{\infty} \beta^l \cdot P_{h,k}^l$$
+
+
+Con questo calcolo esplorativo globale, si ottiene una \textit{item similarity matrix} evoluta e densa, pronta per essere integrata all'interno della classica previsione pesata:
+
+
+$$\hat{s}_{ij} = \frac{\sum_{k \in Q_j(i)} \Delta_{jk}(r_{ik} - \mu_k)}{\sum_{k \in Q_j(i)} \vert{}\Delta_{jk}\vert{}}$$
+
+
+dove la selezione dei \textit{nearest item} all'interno del sottoinsieme $Q_j(i)$ avverrà non più per coefficiente locale, bensì in base ai risultati estrapolati dalla Misura di Katz.
