@@ -1266,6 +1266,41 @@ Pertanto ogni rating viene approssimato attraverso il prodotto scalare tra:
     \item un vettore latente associato all'item.
 \end{itemize}
 
+Quindi come si può notare, ogni riga (vettore riga) di $X \in \mathbb{R}^{N \times K}$ rappresenta un utente:
+\begin{equation}
+    \begin{pmatrix}
+        x_{1,1} & x_{1,2} & \dots & x_{1,K} \\
+        x_{2,1} & x_{2,2} & \dots & x_{2,K} \\
+        \dots \\
+        x_{N,1} & x_{N,2} & \dots & x_{N,K} \\
+    \end{pmatrix}
+\end{equation}
+In particolare ad esempio se ci sono $K$ fattori latenti, allora:
+\[
+\mathbf{x}_i = (x_{i1},x_{i2},\dots,x_{iK})
+\]
+e ogni componente \(x_{ik}\) indica quanto il fattore latente \(k\) pesa nelle preferenze di quell'utente.
+Nell'esempio semplice delle slide, con \(K=2\) e fattori \textbf{interpretabili} come \emph{history} e \emph{romance}, potresti avere:
+\[
+\mathbf{x}_i=(0.9,0.2)
+\]
+che intuitivamente significa: l'utente è molto orientato verso il fattore \emph{history} e poco verso \emph{romance}. Un altro utente potrebbe avere
+\[
+\mathbf{x}_h=(0.1,1.1),
+\]
+quindi una preferenza molto più forte verso il secondo fattore. Nelle slide, \(X\) rappresenta infatti, utente per utente, quanto risultano rilevanti i diversi fattori.
+
+Il punto chiave è però questo: nei casi reali il fattore 1 non è necessariamente “history”, il fattore 2 non è necessariamente “romance”, ecc. In generale sono dimensioni apprese automaticamente e possono rappresentare una miscela di caratteristiche.
+
+Quindi puoi pensare a
+\[
+\boxed{\mathbf{x}_i = \text{profilo latente delle preferenze dell'utente } i}
+\]
+
+\begin{center}
+    \textbf{\(\mathbf{x}_i\) descrive il peso dei fattori per l'utente, mentre \(\mathbf{y}_j=(y_{1j},y_{2j},\dots,y_{Kj})\), descrive quanto tali fattori siano presenti nell'item $j$}
+\end{center}
+
 \subsubsection{Riduzione della dimensionalità}
 
 Il vantaggio fondamentale della fattorizzazione consiste nella riduzione del numero di parametri.
@@ -1345,31 +1380,201 @@ In termini di algebra lineare, ciò equivale ad assumere che il rango effettivo 
 <
 \min\{N,M\}.
 \]
+Questo significa che i vettori non sono tutti lineramente indipendenti.
 
 La struttura dei dati sarebbe quindi concentrata in uno spazio di dimensione minore rispetto allo spazio originario.
+\subsubsection{Come scegliere $K$ ?}
 
-Un'intuizione può essere ottenuta considerando tre film simili, come nell'esempio delle slide:
-\begin{itemize}
-    \item \emph{Spartacus};
-    \item \emph{Gladiator};
-    \item \emph{Nero}.
-\end{itemize}
+Per comprendere geometricamente il significato del numero di fattori latenti \(K\), consideriamo un esempio con \(M=3\) item. In questo caso, ogni utente \(i\) può essere rappresentato mediante il vettore dei suoi rating
 
-Ogni utente può essere rappresentato da un punto in uno spazio tridimensionale:
 \[
-(r_{\text{Spartacus}},
- r_{\text{Gladiator}},
- r_{\text{Nero}}).
+\mathbf{r}_i =
+(r_{i1},r_{i2},r_{i3})
+\in \mathbb{R}^{3}.
 \]
 
-Se i giudizi sui tre film fossero completamente indipendenti, i punti potrebbero occupare liberamente tutto lo spazio tridimensionale. Tuttavia, poiché i tre film sono relativamente simili, è ragionevole aspettarsi delle correlazioni tra i rispettivi rating.
+Pertanto, dal punto di vista delle variabili osservabili, ciascun utente corrisponde a un punto nello spazio tridimensionale \(\mathbb{R}^{3}\).
 
-Geometricamente, i punti tenderanno quindi a concentrarsi in prossimità di una struttura di dimensionalità inferiore, ad esempio una retta o un piano nello spazio tridimensionale.
+In generale, considerando \(M\) item, ogni utente è rappresentabile come un punto nello spazio
 
-La figura della slide mostra precisamente questa idea: le valutazioni degli utenti sono distribuite prevalentemente lungo una direzione latente. Tale direzione può essere interpretata come un \emph{latent vector} che cattura una componente comune alle valutazioni dei film.
+\[
+\mathbb{R}^{M}.
+\]
 
-L'informazione presente in più coordinate osservabili può dunque essere sintetizzata attraverso un numero inferiore di coordinate latenti. Questo costituisce l'intuizione geometrica alla base della rappresentazione a rango ridotto.
+Il numero di fattori latenti \(K\) rappresenta invece la dimensione dello spazio latente utilizzato per approssimare questi dati. In una fattorizzazione
 
+\[
+R \approx XY,
+\]
+
+con
+
+\[
+R\in\mathbb{R}^{N\times M},
+\qquad
+X\in\mathbb{R}^{N\times K},
+\qquad
+Y\in\mathbb{R}^{K\times M},
+\]
+
+si considera tipicamente
+
+\[
+K \leq \min\{N,M\},
+\]
+
+e, nel contesto della riduzione dimensionale rispetto allo spazio degli item,
+
+\[
+K \leq M.
+\]
+Questo perchè $M$ rappresenta la dimensione dei vettori.
+
+
+In particolare, l'obiettivo dei Latent Factor Models è utilizzare un numero di fattori molto inferiore al numero di item, ossia
+
+\[
+K \ll M.
+\]
+
+\paragraph{Caso \(K=1\).}
+
+Supponiamo che i rating relativi ai tre item siano fortemente correlati e che gli utenti abbiano i seguenti vettori di rating:
+
+\[
+\mathbf{r}_1=(1,2,1),
+\qquad
+\mathbf{r}_2=(2,4,2),
+\qquad
+\mathbf{r}_3=(3,6,3),
+\qquad
+\mathbf{r}_4=(4,8,4).
+\]
+
+Sebbene ciascun vettore appartenga formalmente a \(\mathbb{R}^{3}\), si osserva che tutti i vettori sono multipli dello stesso vettore:
+
+\[
+\mathbf{r}_1 = 1(1,2,1),
+\]
+
+\[
+\mathbf{r}_2 = 2(1,2,1),
+\]
+
+\[
+\mathbf{r}_3 = 3(1,2,1),
+\]
+
+\[
+\mathbf{r}_4 = 4(1,2,1).
+\]
+
+Di conseguenza, tutti i punti giacciono sulla stessa retta passante per l'origine e avente direzione
+
+\[
+\mathbf{y}=(1,2,1).
+\]
+
+Non sono quindi necessarie tre coordinate indipendenti per descrivere ciascun utente: è sufficiente un unico valore scalare che specifichi la posizione dell'utente lungo tale retta.
+
+Ad esempio,
+
+\[
+\mathbf{r}_i = x_i\mathbf{y},
+\]
+
+dove \(x_i\in\mathbb{R}\) rappresenta la coordinata latente dell'utente \(i\).
+
+Nel nostro esempio:
+
+\[
+x_1=1,
+\qquad
+x_2=2,
+\qquad
+x_3=3,
+\qquad
+x_4=4.
+\]
+
+La matrice dei rating
+
+\[
+R=
+\begin{pmatrix}
+1 & 2 & 1\\
+2 & 4 & 2\\
+3 & 6 & 3\\
+4 & 8 & 4
+\end{pmatrix}
+\]
+
+può quindi essere fattorizzata esattamente come
+
+\[
+R=
+\underbrace{
+\begin{pmatrix}
+1\\
+2\\
+3\\
+4
+\end{pmatrix}
+}_{X\in\mathbb{R}^{4\times 1}}
+\underbrace{
+\begin{pmatrix}
+1 & 2 & 1
+\end{pmatrix}
+}_{Y\in\mathbb{R}^{1\times 3}}.
+\]
+
+In questo caso
+
+\[
+K=1.
+\]
+
+Ciò significa che, nonostante ogni utente sia osservato attraverso \(M=3\) rating, è sufficiente una sola coordinata latente per descriverne completamente il profilo.
+
+Geometricamente:
+
+\[
+\boxed{
+\text{spazio osservabile } \mathbb{R}^{3}
+\quad\longrightarrow\quad
+\text{spazio latente unidimensionale}
+}
+\]
+
+ovvero i dati tridimensionali sono contenuti in una struttura di dimensione \(1\), cioè una retta.
+
+Più in generale:
+
+\[
+\begin{array}{ccl}
+K=1 &\Longrightarrow& \text{struttura latente assimilabile a una retta},\\[2mm]
+K=2 &\Longrightarrow& \text{struttura latente assimilabile a un piano},\\[2mm]
+K=M &\Longrightarrow& \text{nessuna riduzione della dimensionalità rispetto agli item}.
+\end{array}
+\]
+
+Pertanto, \(M\) rappresenta il numero di coordinate osservabili associate agli item, mentre \(K\) rappresenta il numero di coordinate latenti necessarie per descrivere, o approssimare, la struttura dei rating:
+
+\[
+\boxed{
+M=\text{dimensione dello spazio osservabile},
+\qquad
+K=\text{dimensione dello spazio latente}.
+}
+\]
+
+L'idea fondamentale dei Latent Factor Models è quindi che, quando i rating non sono indipendenti, sia possibile scegliere
+
+\[
+K < M
+\]
+
+e descrivere l'informazione contenuta nei rating utilizzando un numero inferiore di dimensioni.
 \subsection{Significato dei fattori latenti}
 
 Partiamo nuovamente dalla relazione
@@ -1435,7 +1640,16 @@ Un singolo fattore latente:
 \end{itemize}
 
 La parola \emph{latent} sottolinea precisamente il fatto che tali dimensioni non sono direttamente osservate né imposte a priori.
-
+Quindi i fattori latenti, possono essere interpretabili,ma non è richiesto che lo siano.
+Le slide fanno esplicitamente il confronto con un domain model: in un domain model siamo noi a decidere gli attributi, per esempio genere, regista, protagonista; nei Latent Factor Models, invece, i fattori sono appresi matematicamente dai dati e non corrispondono necessariamente a un attributo preciso.
+L'esempio “history/romance” serve solo per dare intuizione, e significa che abbiamo interpretato i due fattori in questo modo preciso.
+In generale però non è detto che dopo aver appreso i fattori latenti, non è detto che posso dire con certezza:
+\[
+\text{fattore 1}=\text{history},
+\qquad
+\text{fattore 2}=\text{romance}.
+\]
+Dire “i due fattori sono history e romance” significa che stiamo interpretando quelle due dimensioni latenti in quel modo
 \subsection{Esempio con due fattori latenti: history e romance}
 
 Le slide introducono un esempio volutamente semplice in cui vengono utilizzati soltanto due fattori latenti:
@@ -1542,7 +1756,6 @@ dove $E$ raccoglie gli errori di ricostruzione.
 
 La progettazione di un Latent Factor Model richiede diverse decisioni.
 
-Le slide individuano quattro aspetti principali:
 \begin{enumerate}
     \item il numero $K$ dei fattori latenti;
     \item la definizione della funzione di errore;
@@ -1550,9 +1763,10 @@ Le slide individuano quattro aspetti principali:
     \item eventuali vincoli imposti alle matrici $X$ e $Y$.
 \end{enumerate}
 
-Le diverse scelte producono modelli differenti sia per accuratezza sia per tempo di esecuzione.
+Le diverse scelte producono modelli \textbf{differenti sia per accuratezza sia per tempo di esecuzione}.
+Ora vediamo passo passo i diversi fattori
 
-\subsubsection{Scelta del numero di fattori latenti}
+\subsubsection{Scelta del numero di fattori latenti $K$}
 
 Tipicamente il numero di fattori latenti è dell'ordine
 \[
@@ -1598,7 +1812,7 @@ A seconda della particolare variante di Matrix Factorization, si possono imporre
 
 Le slide citano, a titolo di esempio:
 \begin{itemize}
-    \item nessuna condizione particolare;
+    \item nessuna condizione particolare (i valori assumono qualunque valore reale);
     \item condizioni di ortogonalità;
     \item vincoli di non-negatività:
     \[
@@ -1620,7 +1834,15 @@ occorre definire quantitativamente la distanza tra la matrice reale $R$ e quella
 
 Una scelta naturale è utilizzare la norma di Frobenius al quadrato.
 
-Se tutte le entry di $R$ fossero note, si potrebbe definire
+\textbf{Se tutte le entry di $R$ fossero note}, si potrebbe usare \textbf{la norma di Frobenius al quadrato}
+\[
+\lVert A\rVert_F^2
+=
+\sum_i\sum_j a_{ij}^{2},
+\]
+
+e quindi
+
 \begin{equation*}
 \operatorname{Err}(R,\widehat R)
 =
@@ -1631,13 +1853,6 @@ Se tutte le entry di $R$ fossero note, si potrebbe definire
 \lVert R-XY\rVert_F^2.
 \end{equation*}
 
-La norma di Frobenius soddisfa
-\[
-\lVert A\rVert_F^2
-=
-\sum_i\sum_j a_{ij}^{2},
-\]
-per cui essa corrisponde alla somma dei quadrati degli scarti tra le entry delle due matrici.
 
 Il fattore
 \[
@@ -1702,6 +1917,77 @@ r_{ij}
 
 La differenza rispetto alla norma di Frobenius completa è fondamentale: le entry non osservate non contribuiscono direttamente alla funzione obiettivo.
 
+Quindi anche se 
+\[
+\hat R = XY
+\]
+produce una matrice completa, quindi con una stima
+\[
+\hat r_{ij}
+\]
+per ogni coppia utente-item, la funzione di errore durante l’apprendimento viene calcolata solo sulle entry di \(R\) che sono effettivamente osservate.
+
+Quindi si definisce
+\[
+S=\{(i,j)\mid r_{ij}\text{ è osservato}\}
+\]
+e si minimizza
+\[
+\operatorname{Err}(R,\hat R)
+=
+\frac12
+\sum_{(i,j)\in S}
+(r_{ij}-\hat r_{ij})^2.
+\]
+Il motivo è semplice: per le entry mancanti di \(R\) non conosciamo il vero rating \(r_{ij}\), quindi non possiamo calcolare
+\[
+r_{ij}-\hat r_{ij}.
+\]
+Quindi:
+\[
+\boxed{\hat R \text{ è completa, ma l'errore si valuta solo dove } R \text{ è nota}}
+\]
+Ed è proprio grazie a questo che, una volta appresi \(X\) e \(Y\), possiamo usare le entry mancanti di \(\hat R\) come predizioni dei rating non osservati.
+
+Per esempio, se
+\[
+R=
+\begin{pmatrix}
+5 & ? & 3\\
+? & 4 & ?
+\end{pmatrix}
+\]
+e il modello produce
+\[
+\hat R=
+\begin{pmatrix}
+4.8 & 4.2 & 3.1\\
+2.7 & 3.9 & 4.5
+\end{pmatrix},
+\]
+durante il training l’errore viene calcolato solo su
+\[
+(1,1),\ (1,3),\ (2,2),
+\]
+cioè:
+\[
+\frac12
+\left[
+(5-4.8)^2
++
+(3-3.1)^2
++
+(4-3.9)^2
+\right].
+\]
+Le entry
+\[
+\hat r_{12}=4.2,\qquad
+\hat r_{21}=2.7,\qquad
+\hat r_{23}=4.5
+\]
+non partecipano direttamente al calcolo dell’errore, perché i corrispondenti valori reali in \(R\) sono sconosciuti.
+Quelle sono proprio le predizioni che il modello sta cercando di inferire.
 \subsection{Missing as Random Assumption}
 
 Il fatto di calcolare l'errore soltanto sull'insieme
@@ -1712,7 +1998,7 @@ implica un'assunzione statistica importante.
 
 Si assume che i rating osservati costituiscano un campione sufficientemente rappresentativo dell'insieme complessivo dei rating.
 
-In altri termini, si ipotizza che i rating non osservati abbiano, dal punto di vista statistico, un comportamento abbastanza simile a quelli osservati. Se fosse possibile inserirli nel calcolo dell'errore, essi non dovrebbero modificare significativamente la stima complessiva.
+\textbf{In altri termini, si ipotizza che i rating non osservati abbiano, dal punto di vista statistico, un comportamento abbastanza simile a quelli osservati. Se fosse possibile inserirli nel calcolo dell'errore, essi non dovrebbero modificare significativamente la stima complessiva}.
 
 Questa ipotesi è indicata nelle slide come \emph{missing as random assumption}.
 
@@ -1730,56 +2016,109 @@ Se la differenza tra la distribuzione dei rating osservati e quella dei rating m
 
 Se invece il processo che genera i rating mancanti introduce un bias rilevante, l'errore calcolato esclusivamente su $S$ può non rappresentare adeguatamente l'errore reale sull'intera matrice.
 
-\subsection{Regularization}
 
-La minimizzazione dell'errore sui soli rating osservati può essere interpretata come un problema di interpolazione: si cerca di adattare il prodotto
+\subsection{Regularization nei Latent Factor Models}
+
+\subsubsection{Il problema di partenza: una matrice dei rating sparsa}
+
+Nei Latent Factor Models si assume che la User Rating Matrix
+(URM) possa essere approssimata mediante il prodotto di due
+matrici di dimensionalità inferiore:
+
 \[
-XY
+R \approx XY,
 \]
-ai valori noti della matrice $R$.
 
-Se la URM è molto sparsa e il numero di fattori $K$ è sufficientemente elevato, il modello può disporre di un numero di gradi di libertà tale da adattarsi eccessivamente ai rating appartenenti a $S$.
+dove:
 
-In particolare, quando
+\begin{itemize}
+    \item $R \in \mathbb{R}^{N \times M}$ è la matrice
+    dei rating, con $N$ utenti e $M$ item;
+
+    \item $X \in \mathbb{R}^{N \times K}$ contiene
+    le rappresentazioni latenti degli utenti;
+
+    \item $Y \in \mathbb{R}^{K \times M}$ contiene
+    le rappresentazioni latenti degli item;
+
+    \item $K$ rappresenta il numero di fattori latenti
+\end{itemize}
+
+La predizione del rating dell'utente $i$ per l'item $j$
+è ottenuta attraverso il prodotto scalare dei rispettivi
+vettori latenti:
+
 \[
-|S| \ll NM,
-\]
-il rischio di \emph{overfitting} è significativo.
-
-Per contrastarlo si introducono nella funzione obiettivo dei termini di \emph{regularization}, che penalizzano soluzioni eccessivamente adattate ai dati osservati.
-
-La funzione regolarizzata riportata nelle slide è
-\begin{equation*}
-\operatorname{Err}(R,\widehat R)
+\widehat{r}_{ij}
 =
-\lVert R-XY\rVert_{S}^{2}
-+
-\lambda_{1}\lVert X\rVert_{F}^{2}
-+
-\lambda_{2}\lVert Y\rVert_{F}^{2},
-\end{equation*}
-dove la notazione
-\[
-\lVert R-XY\rVert_{S}^{2}
+\mathbf{x}_i \cdot \mathbf{y}_j
+=
+\sum_{k=1}^{K}x_{ik}y_{kj}.
 \]
-indica che l'errore di ricostruzione viene valutato esclusivamente sulle entry osservate appartenenti a $S$.
 
-Esplicitando i termini, con la convenzione del fattore $1/2$, si ottiene
-\begin{align*}
-\operatorname{Err}(R,\widehat R)
-={}&
-\frac{1}{2}
-\sum_{(i,j)\in S}e_{ij}^{2}\\
-&+
-\frac{\lambda_{1}}{2}
-\sum_{i=1}^{N}\sum_{k=1}^{K}x_{ik}^{2}\\
-&+
-\frac{\lambda_{2}}{2}
-\sum_{k=1}^{K}\sum_{j=1}^{M}y_{kj}^{2}.
-\end{align*}
+Il problema consiste nell'apprendere le matrici $X$ e $Y$
+in modo che le predizioni siano quanto più possibile
+vicine ai rating reali.
 
-Equivalentemente:
+Tuttavia, nella pratica, la matrice $R$ è generalmente
+\textbf{molto sparsa}: soltanto una piccola parte delle
+possibili coppie utente--item possiede un rating osservato.
+
+Indichiamo con
+
 \[
+S =
+\{(i,j) \mid r_{ij} \text{ è osservato}\}
+\]
+
+l'insieme delle coppie utente--item per le quali
+conosciamo il rating reale.
+
+Generalmente si verifica che
+
+\[
+|S| \ll NM.
+\]
+
+Questo significa che il numero di rating disponibili
+è molto inferiore al numero complessivo delle possibili
+valutazioni.
+
+\subsubsection{La funzione di errore senza Regularization}
+
+Per apprendere le matrici $X$ e $Y$, possiamo minimizzare
+la somma dei quadrati degli errori sui rating osservati.
+
+Definiamo l'errore relativo alla coppia $(i,j)$ come
+
+\[
+e_{ij}
+=
+r_{ij}-\widehat{r}_{ij}.
+\]
+
+Poiché
+
+\[
+\widehat{r}_{ij}
+=
+\sum_{k=1}^{K}x_{ik}y_{kj},
+\]
+
+otteniamo
+
+\[
+e_{ij}
+=
+r_{ij}
+-
+\sum_{k=1}^{K}x_{ik}y_{kj}.
+\]
+
+La funzione obiettivo è quindi
+
+\[
+\boxed{
 J(X,Y)
 =
 \frac{1}{2}
@@ -1789,34 +2128,609 @@ r_{ij}
 -
 \sum_{k=1}^{K}x_{ik}y_{kj}
 \right)^2
-+
-\frac{\lambda_1}{2}\lVert X\rVert_F^2
-+
-\frac{\lambda_2}{2}\lVert Y\rVert_F^2.
+}
 \]
 
-I coefficienti
+Il modello cerca le matrici $X$ e $Y$ che minimizzano
+questa funzione.
+
+È fondamentale osservare che l'errore viene calcolato
+\textbf{esclusivamente sui rating osservati}.
+
+Infatti, anche se il prodotto
+
 \[
-\lambda_1\geq 0,
+\widehat{R}=XY
+\]
+
+genera una matrice completa, contenente una predizione
+per ogni possibile coppia utente--item, non conosciamo
+i valori reali dei rating mancanti.
+
+Pertanto, non possiamo calcolare direttamente l'errore
+su tali entry.
+
+\paragraph{Esempio.}
+
+Consideriamo
+
+\[
+R=
+\begin{pmatrix}
+5 & ? & 3\\
+? & 4 & ?
+\end{pmatrix}.
+\]
+
+Supponiamo che il modello produca
+
+\[
+\widehat{R}
+=
+\begin{pmatrix}
+4.8 & 4.2 & 3.1\\
+2.7 & 3.9 & 4.5
+\end{pmatrix}.
+\]
+
+L'insieme dei rating osservati è
+
+\[
+S=\{(1,1),(1,3),(2,2)\}.
+\]
+
+La funzione di errore considera soltanto
+
+\[
+J=
+\frac{1}{2}
+\left[
+(5-4.8)^2+
+(3-3.1)^2+
+(4-3.9)^2
+\right].
+\]
+
+Le predizioni
+
+\[
+\widehat r_{12}=4.2,
 \qquad
-\lambda_2\geq 0
-\]
-controllano l'intensità della regolarizzazione.
-
-Quanto maggiori sono $\lambda_1$ e $\lambda_2$, tanto più vengono favorite soluzioni caratterizzate da valori piccoli degli elementi
-\[
-x_{ik}
-\qquad\text{e}\qquad
-y_{kj}.
+\widehat r_{21}=2.7,
+\qquad
+\widehat r_{23}=4.5
 \]
 
-La regularization introduce quindi un compromesso tra:
+non contribuiscono direttamente alla funzione obiettivo,
+poiché i corrispondenti rating reali sono sconosciuti.
+
+Questi valori costituiscono proprio le predizioni
+che il sistema di raccomandazione dovrà utilizzare.
+
+\subsubsection{Perché può verificarsi Overfitting?}
+
+La minimizzazione della sola funzione di errore sui rating
+osservati può generare un problema di \emph{overfitting}.
+
+In particolare, questo rischio aumenta quando:
+
 \begin{itemize}
-    \item adattamento ai rating osservati;
-    \item complessità del modello.
+    \item la matrice $R$ è molto sparsa;
+    \item il numero di fattori latenti $K$ è elevato;
+    \item il numero di parametri da apprendere è grande
+    rispetto al numero di osservazioni disponibili.
 \end{itemize}
 
-Con coefficienti di regolarizzazione piccoli, il modello è libero di adattarsi maggiormente ai dati di training. Con coefficienti più grandi viene invece penalizzata una crescita eccessiva dei parametri latenti.
+Ricordiamo che le matrici $X$ e $Y$ contengono
+complessivamente
+
+\[
+NK+KM=K(N+M)
+\]
+
+parametri.
+
+Aumentando $K$, aumenta quindi la capacità espressiva
+del modello.
+
+Questo permette di rappresentare strutture più complesse,
+ma aumenta anche la possibilità di adattarsi eccessivamente
+ai dati osservati.
+
+\paragraph{Esempio intuitivo.}
+
+Supponiamo di avere la matrice
+
+\[
+R=
+\begin{pmatrix}
+5 & ? & ?\\
+? & 1 & ?\\
+? & ? & 4
+\end{pmatrix}.
+\]
+
+Sono osservati soltanto tre rating:
+
+\[
+|S|=3,
+\]
+
+mentre il numero totale delle possibili valutazioni è
+
+\[
+NM=9.
+\]
+
+Un modello sufficientemente flessibile potrebbe trovare
+matrici $X$ e $Y$ tali da produrre
+
+\[
+\widehat R=
+\begin{pmatrix}
+5 & 27 & -18\\
+14 & 1 & 35\\
+-22 & 19 & 4
+\end{pmatrix}.
+\]
+
+Questa matrice rappresenta un esempio schematico
+di ricostruzione che riproduce perfettamente
+i rating osservati.
+
+Infatti,
+
+\[
+\widehat r_{11}=5,
+\qquad
+\widehat r_{22}=1,
+\qquad
+\widehat r_{33}=4.
+\]
+
+Di conseguenza,
+
+\[
+J(X,Y)=0.
+\]
+
+Tuttavia, le predizioni relative agli item non osservati
+sono estremamente grandi, e alcune sono addirittura
+negative, pur ipotizzando rating compresi tra $1$ e $5$.
+
+Questo esempio mostra un aspetto fondamentale:
+
+\[
+\boxed{
+\text{Errore di training nullo}
+\not\Rightarrow
+\text{buona capacità predittiva}
+}
+\]
+
+Il modello ha imparato a riprodurre perfettamente i pochi
+rating conosciuti, ma questo non garantisce che sia
+in grado di predire correttamente quelli mancanti.
+
+\textbf{Questo è precisamente il problema dell'overfitting}.
+
+\subsubsection{L'idea fondamentale della Regularization}
+
+Per contrastare l'overfitting, si introduce una tecnica
+chiamata \emph{Regularization}.
+
+L'idea consiste nel modificare la funzione obiettivo,
+aggiungendo dei termini che penalizzano soluzioni
+caratterizzate da parametri eccessivamente grandi.
+
+Nei Latent Factor Models, la funzione regolarizzata
+può essere scritta come
+
+\[
+\boxed{
+J(X,Y)
+=
+\frac{1}{2}
+\sum_{(i,j)\in S}e_{ij}^{2}
++
+\frac{\lambda_1}{2}\|X\|_F^2
++
+\frac{\lambda_2}{2}\|Y\|_F^2
+}
+\]
+
+dove:
+
+\begin{itemize}
+    \item il primo termine misura l'errore sui rating
+    osservati;
+
+    \item il secondo termine penalizza la grandezza
+    dei parametri della matrice $X$;
+
+    \item il terzo termine penalizza la grandezza
+    dei parametri della matrice $Y$;
+
+    \item $\lambda_1,\lambda_2\geq 0$ controllano
+    l'intensità della regolarizzazione.
+    Quanto maggiori sono $\lambda_1$ e $\lambda_2$, tanto più vengono favorite soluzioni caratterizzate da valori piccoli degli elementi
+    \[
+    x_{ik}
+    \qquad\text{e}\qquad
+    y_{kj}.
+    \]
+\end{itemize}
+
+La norma di Frobenius al quadrato è definita come
+
+\[
+\|X\|_F^2
+=
+\sum_{i=1}^{N}
+\sum_{k=1}^{K}
+x_{ik}^{2}
+\]
+
+e
+
+\[
+\|Y\|_F^2
+=
+\sum_{k=1}^{K}
+\sum_{j=1}^{M}
+y_{kj}^{2}.
+\]
+
+Esplicitando tutti i termini:
+
+\[
+\begin{aligned}
+J(X,Y)
+={}&
+\frac{1}{2}
+\sum_{(i,j)\in S}
+\left(
+r_{ij}
+-
+\sum_{k=1}^{K}x_{ik}y_{kj}
+\right)^2\\
+&+
+\frac{\lambda_1}{2}
+\sum_{i=1}^{N}
+\sum_{k=1}^{K}x_{ik}^{2}\\
+&+
+\frac{\lambda_2}{2}
+\sum_{k=1}^{K}
+\sum_{j=1}^{M}y_{kj}^{2}.
+\end{aligned}
+\]
+
+Il modello deve quindi soddisfare contemporaneamente
+due esigenze:
+
+\begin{enumerate}
+    \item riprodurre adeguatamente i rating osservati;
+    \item evitare valori eccessivamente grandi nei parametri
+    latenti.
+\end{enumerate}
+
+In altre parole, non si cerca più semplicemente
+la soluzione che minimizza l'errore sui dati osservati,
+ma una soluzione che realizzi un compromesso tra
+\textbf{accuratezza e complessità}.
+
+\subsubsection{Perché la Regularization favorisce parametri piccoli?}
+
+Consideriamo il caso più semplice possibile,
+con un solo fattore latente:
+
+\[
+K=1.
+\]
+
+Il rating previsto diventa
+
+\[
+\widehat r_{ij}=x_i y_j.
+\]
+
+Supponiamo di voler riprodurre un rating osservato
+pari a
+
+\[
+r_{ij}=5.
+\]
+
+Esistono infinite coppie $(x_i,y_j)$ che producono
+una predizione esatta:
+
+\[
+x_i=1,
+\qquad
+y_j=5,
+\]
+
+oppure
+
+\[
+x_i=5,
+\qquad
+y_j=1,
+\]
+
+oppure
+
+\[
+x_i=100,
+\qquad
+y_j=0.05.
+\]
+
+In tutti e tre i casi,
+
+\[
+x_i y_j=5.
+\]
+
+Senza regolarizzazione, tutte queste soluzioni
+hanno errore di ricostruzione nullo:
+
+\[
+(r_{ij}-x_i y_j)^2=0.
+\]
+
+La funzione di errore non è quindi in grado di preferire
+una soluzione rispetto alle altre.
+
+Introducendo la regolarizzazione, con
+$\lambda_1=\lambda_2=\lambda$, otteniamo
+
+\[
+J(x_i,y_j)
+=
+\frac{1}{2}(5-x_i y_j)^2
++
+\frac{\lambda}{2}(x_i^2+y_j^2).
+\]
+
+Supponiamo, per semplicità, di scegliere
+
+\[
+\lambda=1.
+\]
+
+Confrontiamo le tre soluzioni.
+
+\paragraph{Prima soluzione.}
+
+\[
+x_i=1,
+\qquad
+y_j=5.
+\]
+
+L'errore di ricostruzione è nullo.
+
+La penalizzazione vale
+
+\[
+x_i^2+y_j^2
+=
+1^2+5^2
+=
+26.
+\]
+
+Pertanto,
+
+\[
+J=\frac{26}{2}=13.
+\]
+
+\paragraph{Seconda soluzione.}
+
+\[
+x_i=100,
+\qquad
+y_j=0.05.
+\]
+
+Anche in questo caso l'errore di ricostruzione è nullo.
+
+La penalizzazione è
+
+\[
+x_i^2+y_j^2
+=
+100^2+0.05^2
+=
+10000.0025.
+\]
+
+Quindi,
+
+\[
+J=5000.00125.
+\]
+
+\paragraph{Terza soluzione.}
+
+Consideriamo
+
+\[
+x_i=y_j=\sqrt{5}.
+\]
+
+Allora
+
+\[
+x_i y_j=5,
+\]
+
+quindi la ricostruzione è ancora perfetta.
+
+La penalizzazione vale
+
+\[
+x_i^2+y_j^2=5+5=10.
+\]
+
+Di conseguenza,
+
+\[
+J=5.
+\]
+
+Confrontando le tre soluzioni:
+
+\[
+\begin{array}{c|c}
+(x_i,y_j) & J\\
+\hline
+(1,5) & 13\\
+(100,0.05) & 5000.00125\\
+(\sqrt{5},\sqrt{5}) & 5
+\end{array}
+\]
+
+La soluzione con coefficienti più bilanciati
+e norma minore presenta il costo inferiore.
+
+Questo avviene anche se tutte le soluzioni
+riproducono esattamente il rating osservato.
+
+\subsubsection{Perché desideriamo parametri meno estremi?}
+
+Abbiamo visto che la regolarizzazione favorisce
+coefficienti più piccoli.
+
+Rimane però da comprendere il motivo per cui
+questa proprietà possa migliorare il comportamento
+del modello.
+
+La risposta è legata alla
+\textbf{capacità di generalizzazione}.
+
+Nei Latent Factor Models, lo stesso vettore latente
+di un utente viene utilizzato per prevedere
+i suoi rating su tutti gli item.
+
+Analogamente, lo stesso vettore latente di un item
+viene utilizzato per effettuare predizioni
+relative a tutti gli utenti.
+
+\textbf{Di conseguenza, un parametro appreso per adattarsi
+a un particolare rating osservato può influenzare
+anche molte altre predizioni.}
+
+\textbf{
+Se alcuni coefficienti sono estremamente grandi,
+piccole variazioni nelle altre componenti del modello
+possono produrre cambiamenti considerevoli
+nelle predizioni.}
+
+\paragraph{Esempio con un parametro latente molto grande.}
+
+Supponiamo, per semplicità, di considerare un solo
+fattore latente.
+
+Un utente possiede il coefficiente
+
+\[
+x_i=100.
+\]
+
+Per un item $j$, il modello ha appreso
+
+\[
+y_j=0.05.
+\]
+
+La predizione è
+
+\[
+\widehat r_{ij}
+=
+100\cdot 0.05
+=
+5.
+\]
+
+Il rating osservato viene quindi ricostruito
+perfettamente.
+
+Ora consideriamo un altro item $h$,
+per il quale
+
+\[
+y_h=0.2.
+\]
+
+La predizione diventa
+
+\[
+\widehat r_{ih}
+=
+100\cdot0.2
+=
+20.
+\]
+
+Se i rating appartengono alla scala $1$--$5$,
+questo valore è chiaramente incompatibile
+con la scala delle valutazioni.
+
+Il problema è che il coefficiente molto grande
+
+\[
+x_i=100
+\]
+
+amplifica notevolmente il contributo del fattore latente
+nelle predizioni relative agli altri item.
+
+\paragraph{Confronto con coefficienti più moderati.}
+
+Supponiamo invece di rappresentare lo stesso rating
+osservato mediante
+
+\[
+x_i=2,
+\qquad
+y_j=2.5.
+\]
+
+Otteniamo ancora
+
+\[
+\widehat r_{ij}=2\cdot2.5=5.
+\]
+
+Se consideriamo un item con coefficiente
+
+\[
+y_h=0.2,
+\]
+
+la nuova predizione è
+
+\[
+\widehat r_{ih}=2\cdot0.2=0.4.
+\]
+
+\textbf{Questo secondo esempio illustra che un coefficiente
+utente più contenuto produce una minore amplificazione
+delle variazioni del corrispondente coefficiente item.}
+
+È importante osservare che i due esempi non
+garantiscono automaticamente una migliore accuratezza
+del secondo modello: una predizione pari a $0.4$
+potrebbe essere anch'essa inadeguata.
+
+Essi mostrano però il meccanismo attraverso cui
+coefficienti di grande modulo possono amplificare
+le variazioni nei fattori latenti.
+
 
 \subsection{Minimizzazione mediante Gradient Descent}
 
@@ -1853,52 +2767,62 @@ J
 \frac{1}{2}
 \sum_{(i,j)\in S}e_{ij}^{2}.
 \]
+Derivando rispetto a $x_{i,q}$ e cambiando l'indice della sommatoria per non confondersi:
 
-Soltanto i rating che coinvolgono l'utente $i$ dipendono da $x_{iq}$. Per tali termini:
 \[
-e_{ij}
-=
-r_{ij}
--
-\sum_{k=1}^{K}x_{ik}y_{kj}.
-\]
-
-La derivata dell'errore rispetto a $x_{iq}$ è
-\[
-\frac{\partial e_{ij}}{\partial x_{iq}}
-=
--y_{qj}.
-\]
-
-Applicando la regola della catena:
-\begin{align*}
-\frac{\partial}{\partial x_{iq}}
-\left(
-\frac{1}{2}e_{ij}^{2}
-\right)
-&=
-e_{ij}
-\frac{\partial e_{ij}}{\partial x_{iq}}\\
-&=
--y_{qj}e_{ij}.
-\end{align*}
-
-Sommando su tutti gli item $j$ valutati dall'utente $i$:
-\begin{equation*}
 \frac{\partial J}{\partial x_{iq}}
 =
--
-\sum_{j:(i,j)\in S}
-y_{qj}e_{ij}.
-\end{equation*}
-
-Introducendo il termine di regularization:
-\[
-\frac{\lambda_1}{2}\sum_{i,k}x_{ik}^{2},
+\frac12\sum_{(u,j)\in S}
+\frac{\partial e_{uj}^{2}}{\partial x_{iq}}
 \]
-la sua derivata rispetto a $x_{iq}$ è
+Ora ricordando che:
 \[
-\lambda_1x_{iq}.
+e_{uj}=r_{uj}-\sum_{k=1}^{K}x_{uk}y_{kj}
+\]
+Il parametro \(x_{iq}\) appartiene al vettore latente dell'utente \(i\).
+
+Di conseguenza:
+\begin{itemize}
+    \item Se \(u=i\), il termine \(e_{uj}\) dipende da \(x_{iq}\), perchè apparirà dentro la sommatoria e quindi dipenderà e la sua derivata non sarà 0, quindi si tiene.
+    \item Se \(u\neq i\), il termine \(e_{uj}\) non dipende da \(x_{iq}\), quindi la sua derivata è zero.
+\end{itemize}.
+Possiamo pertanto eliminare dalla sommatoria tutti i termini la cui derivata è zero:
+\[
+\boxed{
+\frac{\partial J}{\partial x_{iq}}
+=
+\sum_{j:(i,j)\in S}
+\frac{\partial}{\partial x_{iq}}\left(\frac{1}{2}e_{ij}^{2}\right)
+}
+\]
+\textbf{La sommatoria scorre solo su $j$ perchè l'indice $i$ è fissato all'indice sull'argomento della derivata che è uno solo}\\
+Ora concentriamoci sul termine all'interno:
+\[
+\frac{\partial}{\partial x_{iq}}(\frac{1}{2} e_{i,j} ^ 2) = \frac{\partial}{\partial x_{iq}}(\frac{1}{2}(r_{i,j} - \sum_{k = 1}^{K}x_{i,k} y_{k,j})^2) = 
+\frac{1}{2} 2 (e_{i,j}) * \frac{\partial e_{i,j}}{\partial x_{i,q}}
+\]
+Ora ricordando che:
+\[
+e_{ij}=r_{ij}-\sum_{k=1}^{K}x_{ik}y_{kj} \implies \frac{\partial e_{i,j}}{\partial x_{i,q}} = -y_{q,j} \footnote{Questo perchè y viene trattato come costante, come ad esempio quando si deriva rispetto a x, in 2x}
+\implies \frac{\partial}{\partial x_{iq}}(\frac{1}{2} e_{i,j} ^ 2) = - e_{i,j} y_{q,j}
+\]
+
+Aggiungendo ora il termine di regolarizzazione $\lambda_1$ si ha:
+\[
+\begin{aligned}
+\frac{\partial}{\partial x_{iq}}
+\left(
+\frac{\lambda_1}{2}\sum_{u,k}x_{uk}^{2}
+\right)
+&=
+\frac{\lambda_1}{2}\cdot
+\frac{\partial x_{iq}^{2}}{\partial x_{iq}}
+\\[8pt]
+&=
+\frac{\lambda_1}{2}\cdot 2x_{iq}
+\\[8pt]
+&=\boxed{\lambda_1x_{iq}}
+\end{aligned}
 \]
 
 Pertanto:
@@ -2008,7 +2932,27 @@ j\in\{1,\ldots,M\}.
 Queste due matrici descrivono la direzione di massima crescita della funzione $J$ nello spazio dei parametri. Per minimizzare $J$ occorre pertanto muoversi nella direzione opposta al gradiente.
 
 \subsection{Procedura generale di Gradient Descent}
-
+Nei seguenti ci sarà un uso di notazione che ci farà comodo, però ricorda che il gradinente è un vettore di derivate parziali della funzione $J$, e quindi $J$ è funzione di tutti i parametri delle matrici che prendono in ingresso
+\[
+J:\mathbb{R}^{NK+KM}\rightarrow\mathbb{R}
+\]
+perché abbiamo \(NK\) parametri nella matrice \(X\) e \(KM\) parametri nella matrice \(Y\).
+Il vettore derivata gradiente quindi dovrebbe essere un vettore:
+\[
+\boxed{
+\nabla J
+\in\mathbb{R}^{NK+KM}
+}
+\]
+Noi invece utilizziamo una notazione matriciale:
+\[
+\nabla_X J\in\mathbb{R}^{N\times K}
+\]
+\[
+\nabla_Y J\in\mathbb{R}^{K\times M}
+\]
+Queste due matrici contengono esattamente le stesse derivate parziali che comparirebbero nel gradiente completo.
+Solo che sono organizzate per matrice, il che rende piu pratico l'aggiornamento.
 In linea generale, l'apprendimento mediante gradiente discendente segue i seguenti passaggi.
 
 \begin{enumerate}
@@ -2170,89 +3114,3 @@ Y\ \text{fissata}
 \]
 
 L'aspetto caratterizzante è dunque l'alternanza: anziché modificare contemporaneamente entrambe le matrici, si ottimizza una matrice mantenendo temporaneamente costante l'altra.
-
-\subsection{Sintesi del modello}
-
-Un Latent Factor Model costruisce una rappresentazione a bassa dimensionalità della User Rating Matrix:
-\[
-R\approx XY,
-\]
-con
-\[
-X\in\mathbb{R}^{N\times K},
-\qquad
-Y\in\mathbb{R}^{K\times M},
-\qquad
-K\ll\min\{N,M\}.
-\]
-
-La predizione di un rating è
-\[
-\widehat r_{ij}
-=
-\sum_{k=1}^{K}x_{ik}y_{kj}
-=
-\mathbf{x}_i\cdot\mathbf{y}_j.
-\]
-
-L'apprendimento consiste nel determinare $X$ e $Y$ minimizzando una funzione obiettivo definita sui rating osservati:
-\[
-J(X,Y)
-=
-\frac{1}{2}
-\sum_{(i,j)\in S}
-\left(
-r_{ij}
--
-\sum_{k=1}^{K}x_{ik}y_{kj}
-\right)^2,
-\]
-eventualmente aggiungendo termini di regularization:
-\[
-J(X,Y)
-=
-\frac{1}{2}
-\sum_{(i,j)\in S}e_{ij}^{2}
-+
-\frac{\lambda_1}{2}\lVert X\rVert_F^2
-+
-\frac{\lambda_2}{2}\lVert Y\rVert_F^2.
-\]
-
-I gradienti fondamentali sono
-\[
-\frac{\partial J}{\partial x_{iq}}
-=
--
-\sum_{j:(i,j)\in S}
-y_{qj}e_{ij}
-+
-\lambda_1x_{iq},
-\]
-e
-\[
-\frac{\partial J}{\partial y_{qj}}
-=
--
-\sum_{i:(i,j)\in S}
-x_{iq}e_{ij}
-+
-\lambda_2y_{qj}.
-\]
-
-L'aggiornamento mediante Gradient Descent assume quindi la forma
-\begin{align*}
-X &\leftarrow X-\alpha\nabla J_X,\\
-Y &\leftarrow Y-\alpha\nabla J_Y.
-\end{align*}
-
-Le principali scelte progettuali riguardano:
-\begin{itemize}
-    \item il numero di fattori latenti $K$;
-    \item la funzione di errore;
-    \item l'intensità della regularization;
-    \item gli eventuali vincoli su $X$ e $Y$;
-    \item la strategia di minimizzazione, ad esempio Batch, Stochastic Gradient Descent o ALS.
-\end{itemize}
-
-L'idea complessiva è che una matrice di rating apparentemente enorme e sparsa possa possedere una struttura intrinseca molto più semplice: le preferenze degli utenti e le caratteristiche degli item vengono rappresentate nello stesso spazio latente di dimensione $K$, e la loro compatibilità viene stimata attraverso il prodotto scalare dei rispettivi vettori.
