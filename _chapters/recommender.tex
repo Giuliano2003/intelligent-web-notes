@@ -3114,3 +3114,626 @@ Y\ \text{fissata}
 \]
 
 L'aspetto caratterizzante è dunque l'alternanza: anziché modificare contemporaneamente entrambe le matrici, si ottimizza una matrice mantenendo temporaneamente costante l'altra.
+
+
+\section{Content/Knowledge-based recommender systems}
+
+\subsection{Dai modelli collaborativi ai modelli basati sul contenuto}
+
+I sistemi di raccomandazione fondati sul \emph{collaborative filtering} e sui \emph{latent factor models} utilizzano principalmente la \emph{User Rating Matrix} (URM): l'informazione su un item è rappresentata dalle interazioni e valutazioni degli utenti, senza che sia necessariamente disponibile una descrizione esplicita delle sue proprietà. In molti domini applicativi, tuttavia, gli item possiedono caratteristiche descrivibili direttamente. Un computer portatile, ad esempio, può essere rappresentato tramite componenti hardware, prestazioni e altri attributi, eventualmente organizzati in un'ontologia.
+
+Le rappresentazioni degli item impiegate dai \emph{Content-Based Recommender Systems} (CBRS) possono includere:
+\begin{itemize}
+    \item \textbf{keyword}: termini che identificano caratteristiche salienti dell'item;
+    \item \textbf{descrizioni testuali}: testi in linguaggio naturale contenenti informazioni sull'item;
+    \item \textbf{attributi strutturati}: coppie attributo--valore, quali RAM, marca o prezzo;
+    \item \textbf{knowledge graph e ontologie}: rappresentazioni esplicite di entità, concetti, proprietà e relazioni del dominio.
+\end{itemize}
+Un CBRS \textbf{sfrutta questa rappresentazione per rispondere a richieste espresse dall'utente oppure per individuare item simili ad altri item che l'utente ha già apprezzato. Il confronto avviene quindi attraverso il \emph{contenuto} o le proprietà degli item (come possono essere keyword, descrizioni testuali), e non soltanto attraverso i pattern di valutazione della comunità}.
+
+\subsection{Limiti delle prime rappresentazioni testuali}
+I primi CBRS utilizzavano essenzialmente le keyword e il conteggio delle loro occorrenze (cioè delle keyword). Il numero di volte in cui compare un termine fornisce una semplice indicazione del contenuto, ma non descrive il suo significato né le relazioni semantiche con gli altri termini. Le principali difficoltà sono le seguenti.
+\begin{itemize}
+    \item \textbf{Polisemia}: una medesima parola può denotare significati differenti, che devono essere distinti mediante il contesto.
+    \item \textbf{Sinonimia}: parole differenti possono denotare uno stesso concetto; un confronto strettamente lessicale potrebbe perciò non riconoscerne la corrispondenza.
+    \item \textbf{Espressioni multi-parola}: il significato di una sequenza di parole può non essere ricostruibile analizzando separatamente i singoli termini.
+    \item \textbf{Identificazione delle entità}: occorre individuare le porzioni di testo che menzionano entità e classificarle, ad esempio come persone, luoghi o organizzazioni.
+    \item \textbf{Disambiguazione delle entità nominate}: una volta riconosciuta una menzione, occorre determinare quale entità concreta essa designi.
+\end{itemize}
+Queste limitazioni hanno motivato lo sviluppo dei \emph{semantic-aware CBRS}, nei quali la rappresentazione non è puramente lessicale ma considera informazioni sul significato dei contenuti.
+
+Quindi i primi CBRS,rappresentano gli item in base alle parole utilizzate per descriverli.
+Nei Semantic-Aware CBRS si rappresentano gli item cercando di catturarne anche il significato, attraverso tecniche endogene (Machine Learning) oppure esogene (Knowledge Graph e ontologie).
+
+
+\subsection{Semantic-aware Content-Based Recommender Systems}
+
+\subsubsection{Approcci endogeni ed esogeni}
+\begin{example}{}
+Ricordarti il punto di partenza in questi particolari tipi di sistemi è:
+Supponiamo di voler costruire un Semantic-Aware Content-Based Recommender System per raccomandare film. \\
+Inizialmente abbiamo un insieme di film, ciascuno associato a una descrizione testuale. \\
+Ad esempio : 
+\begin{itemize}
+    \item Film A: "Un astronauta viaggia nello spazio alla ricerca di un pianeta abitabile."
+    \item Film B: "Un cosmonauta esplora l'universo per trovare un nuovo mondo."
+    \item Film C: "Due giovani si innamorano durante una vacanza estiva."
+\end{itemize}
+\end{example}
+L'obiettivo generale di un \emph{semantic-aware CBRS} consiste nell'arricchire semanticamente tanto la descrizione degli item quanto il profilo delle preferenze dell'utente. La distinzione principale riguarda \emph{l'origine della conoscenza semantica}.
+\begin{itemize}
+    \item \textbf{Metodologie endogene}: ottengono la semantica direttamente dai dati, spesso non strutturati, associati agli item o agli utenti, come descrizioni e recensioni. Impiegano principalmente modelli linguistici e tecniche di \emph{machine learning}.
+    \item \textbf{Metodologie esogene}: recuperano la semantica da fonti di conoscenza esterne già codificate, come database lessicali, ontologie e \emph{knowledge graph}.
+\end{itemize}
+La contrapposizione non riguarda dunque la presenza o l'assenza di semantica, ma il modo in cui essa viene prodotta: appresa dai dati disponibili oppure acquisita da una base di conoscenza esterna.
+
+\subsubsection{Architettura di un semantic-aware CBRS}
+L'architettura presentata nelle slide distingue tre componenti funzionali.
+\begin{enumerate}
+    \item \textbf{Content analyzer}. Riceve dati originariamente non strutturati, quali descrizioni di prodotti e documenti, e li converte in una rappresentazione utilizzabile dal sistema, ad esempio un insieme di keyword, concetti o altre caratteristiche. Il risultato è una descrizione strutturata degli item.
+    Quindi ad esempio prende una descrizione non strutturata dei film, come può essere quello visto prima.
+    \item \textbf{User profiler}. Raccoglie le informazioni disponibili sull'utente, come item apprezzati e feedback, per produrre un \emph{user profile}: un modello delle preferenze che generalizza oltre le singole osservazioni. Il profilo non si limita quindi a memorizzare lo storico, ma sintetizza caratteristiche potenzialmente rilevanti per altri item.
+    \item \textbf{Filtering component}. Confronta il profilo dell'utente con le rappresentazioni degli item e costruisce una graduatoria di item potenzialmente interessanti.
+\end{enumerate}
+
+Questa schematizzazione esplicita il flusso raffigurato, senza imporre una particolare implementazione dei tre moduli.
+
+\subsection{Metodologie endogene}
+
+\subsubsection{Word2Vec e semantica distribuzionale}
+\emph{Word2Vec} è introdotto nelle slide in relazione ai \emph{distributional semantic models}, basati sull'intuizione secondo cui elementi semanticamente affini tendono a comparire in contesti simili. Per esempio, «il cane è un animale domestico» e «il gatto è un animale domestico» mostrano che le parole «cane» e «gatto» possono essere associate a contesti analoghi.
+
+L'informazione testuale può essere utilizzata per costruire un \emph{embedding}, cioè una rappresentazione vettoriale in cui le relazioni tra parole o descrizioni possono essere riflesse in relazioni tra vettori. In un sistema di raccomandazione tali rappresentazioni possono contribuire a descrivere sia gli item sia i profili utente. L'idea è confrontare caratteristiche semantiche ricavate dai testi anziché limitarsi all'identità esatta delle keyword.
+
+
+Quindi quando sopra, si dice "ottenere la semantica", significa (nel caso del Word2Vec),ricavare una rappresentazione che catturi informazioni sul significato dell'item.
+Questa rappresentazione può essere un vettore numerico (embedding), ma non necessariamente.
+
+\begin{example}{}
+Supponiamo di avere:
+
+Film A: "Un astronauta esplora lo spazio alla ricerca di nuovi pianeti."
+
+Inizialmente abbiamo soltanto una descrizione testuale, cioè un dato non strutturato.
+Utilizziamo una tecnica di Machine Learning per elaborare la descrizione e ottenere una rappresentazione semantica del film.
+
+Per esempio, potremmo ottenere:
+\[
+\mathbf{x}_A=(0.85,\ 0.72,\ 0.13,\ 0.91)
+\]
+Questo vettore è un embedding del film A.
+
+Le sue componenti sono valori appresi che, considerate nel loro insieme, rappresentano caratteristiche semantiche del contenuto.
+\end{example}
+\subsubsection{Recurrent Neural Networks}
+Le \emph{Recurrent Neural Networks} (RNN) sono reti adatte all'elaborazione di sequenze, comprese le sequenze di parole presenti in un testo. Nei CBRS possono apprendere una rappresentazione degli item a partire dalle rispettive descrizioni testuali. In particolare, due film con descrizioni affini possono ottenere rappresentazioni simili anche quando il testo non contiene esattamente le stesse parole.
+
+Le slide osservano inoltre che rappresentazioni apprese dai testi possono essere integrate con informazioni strutturate provenienti dal \emph{Linked Open Data}, quali il genere cinematografico, il regista e gli attori. Il punto è l'integrazione tra conoscenza estratta da dati non strutturati e caratteristiche esplicite del dominio.
+
+\subsubsection{Deep Cooperative Neural Networks}
+Le \emph{Deep Cooperative Neural Networks} illustrate nelle slide sono costituite da due reti neurali parallele, collegate negli ultimi due layer:
+\begin{itemize}
+    \item una rete apprende caratteristiche del comportamento dell'utente dalle recensioni scritte dall'utente stesso;
+    \item l'altra rete apprende le proprietà dell'item dalle recensioni relative a quell'item.
+\end{itemize}
+Il collegamento tra le reti consente di combinare due fonti informative complementari, una orientata all'utente e una orientata all'item. Nelle slide non sono specificati una particolare \emph{loss function}, le dimensioni degli strati o le equazioni dell'addestramento: il contenuto presentato riguarda la struttura generale del modello.
+
+\subsection{Metodologie esogene}
+
+\subsubsection{Fonti di conoscenza e misure semantiche}
+Nelle metodologie esogene, invece, non dobbiamo necessariamente apprendere la semantica dalle descrizioni: possiamo recuperare informazioni già organizzate in basi di conoscenza esterne.
+\begin{itemize}
+    \item \textbf{WordNet e BabelNet}: risorse lessicali che organizzano informazioni quali sinonimi, antonimi e meronimi; la meronimia esprime una relazione parte--tutto;
+    \item \textbf{Wikidata e DBpedia}: esempi di \emph{knowledge graph} utilizzabili nell'ambito dei \emph{Linked Open Data};
+    \item \textbf{ontologie}: modelli espliciti delle proprietà, delle classi e delle relazioni rilevanti per un dominio.
+\end{itemize}
+La similarità tra due item può essere stimata sulla base di una distanza o somiglianza semantica: ad esempio mediante il numero delle proprietà in comune, una somma pesata di proprietà comuni oppure, quando gli item sono descritti da vettori, la \emph{cosine similarity}.
+
+Per rendere esplicita l'idea di \emph{conteggio delle proprietà}, siano $F(a)$ e $F(b)$ gli insiemi delle proprietà associate a due item. Un possibile criterio elementare è
+\[
+ s(a,b)=|F(a)\cap F(b)|.
+\]
+Se alcune proprietà sono ritenute più informative di altre, si può considerare, in modo schematico,
+\[
+ s_w(a,b)=\sum_{f\in F(a)\cap F(b)}w_f,
+\]
+dove $w_f$ è l'importanza attribuita alla proprietà $f$. Queste espressioni esplicitano i due criteri descritti verbalmente nelle slide; non costituiscono un nuovo algoritmo specificato dal materiale.
+
+\subsubsection{Caso applicativo: raccomandazione di brani musicali}
+Si consideri un CBRS che raccomanda brani musicali conoscendo una lista di artisti apprezzati da un utente. Indichiamo tale lista con $L_A$. Essa può essere ottenuta attraverso un questionario iniziale oppure importando informazioni associate a un profilo esterno, come nell'esempio riportato nelle slide.
+
+Il procedimento è costituito da tre passaggi:
+\begin{enumerate}
+    \item per ogni artista $a\in L_A$, ricavare una lista $L_{A_a}$ di artisti simili ad $a$, che include lo stesso artista $a$;
+    \item costruire una lista \emph{arricchita} mediante l'unione
+    \[
+       EL_A=\bigcup_{a\in L_A} L_{A_a};
+    \]
+    \item selezionare brani degli artisti in $EL_A$ e ordinarli secondo una misura di popolarità, ad esempio il numero di ascolti disponibile su piattaforme quali Last.fm.
+\end{enumerate}
+La questione tecnica fondamentale consiste quindi nel determinare come costruire $L_{A_a}$. Le slide presentano due soluzioni: confronto di attributi semantici mediante un knowledge graph e confronto di descrizioni vettoriali ottenute da tag.
+
+\subsubsection{Ricerca di artisti simili mediante DBpedia}
+Una prima soluzione interroga un knowledge graph per cercare artisti che condividano proprietà con un artista di partenza. L'esempio delle slide utilizza i Coldplay e due proprietà:
+\begin{itemize}
+    \item \texttt{dbpedia-owl:genre}, che indica un genere musicale;
+    \item \texttt{dcterms:subject}, che indica una categoria tematica.
+\end{itemize}
+Le triple esemplificative riportate sono:
+\begin{verbatim}
+(<ColdplayIRI> dbpedia-owl:genre dbpedia:Alternative_Rock)
+(<ColdplayIRI> dcterms:subject category:English_singer-songwriters)
+\end{verbatim}
+Una query che ricerca risorse con entrambi i valori è:
+\begin{verbatim}
+SELECT DISTINCT ?artist WHERE {
+  ?artist dbpedia-owl:genre dbpedia:Alternative_Rock .
+  ?artist dcterms:subject category:English_singer-songwriters .
+}
+\end{verbatim}
+La variabile \texttt{?artist} indica una risorsa candidata; le due condizioni esigono che entrambe le triple siano presenti. \texttt{DISTINCT} evita duplicati nei risultati. La query esprime quindi un criterio di corrispondenza \emph{congiuntivo}: vengono selezionati gli artisti che condividono entrambe le proprietà considerate.
+
+Le slide segnalano una possibile estensione: selezionare un insieme più ampio di attributi e ordinare gli artisti in funzione del numero di attributi concordanti, invece di utilizzare soltanto un filtro binario.
+
+\subsubsection{Similarità tra artisti tramite tag e coseno}
+Un'alternativa consiste nell'utilizzare tag associati agli artisti, come quelli recuperabili attraverso Last.fm. Si definisce un vocabolario globale
+\[
+T=\{\mathrm{tag}_1,\ldots,\mathrm{tag}_n\}.
+\]
+Ogni artista $a$ è rappresentato da un vettore binario
+\[
+\mathbf{x}_a=(x_{1a},\ldots,x_{na})\in\{0,1\}^{n},
+\qquad
+x_{ia}=\begin{cases}
+1,&\text{se il tag $i$ è associato ad $a$},\\
+0,&\text{altrimenti}.
+\end{cases}
+\]
+Per due artisti $a,b$ si utilizza la \emph{cosine similarity}:
+\[
+\operatorname{sim}(a,b)
+=\cos(\mathbf{x}_a,\mathbf{x}_b)
+=\frac{\mathbf{x}_a^{\mathsf T}\mathbf{x}_b}
+{\|\mathbf{x}_a\|_2\,\|\mathbf{x}_b\|_2}
+=\frac{\sum_{i=1}^{n}x_{ia}x_{ib}}
+{\sqrt{\sum_{i=1}^{n}x_{ia}^{2}}\sqrt{\sum_{i=1}^{n}x_{ib}^{2}}},
+\]
+quando entrambi i vettori sono non nulli. Il numeratore conta i tag comuni; i denominatori normalizzano rispetto alla numerosità dei tag assegnati a ciascun artista. Ne consegue che il confronto non dipende soltanto dal numero assoluto di caratteristiche condivise.
+
+\paragraph{Esempio.} Con quattro tag, si considerino
+\[
+\mathbf{x}_a=(1,1,0,0),\qquad \mathbf{x}_b=(1,0,1,0).
+\]
+I due artisti condividono un tag e ciascuno ne possiede due: pertanto
+\[
+\operatorname{sim}(a,b)=\frac{1}{\sqrt{2}\sqrt{2}}=\frac12.
+\]
+L'esempio illustra il calcolo della misura indicata nelle slide, senza introdurre un diverso criterio di raccomandazione.
+
+Gli artisti simili ai Coldplay possono poi essere selezionati in due modi:
+\begin{itemize}
+    \item scegliendo tutti quelli la cui similarità supera una soglia fissata;
+    \item selezionando i $k$ artisti con similarità più elevata.
+\end{itemize}
+Le slide ricordano anche un'ulteriore fonte informativa: descrizioni e recensioni in linguaggio naturale, come trame di film, recensioni di libri e album o critiche a eventi e mostre. Da tali testi possono essere estratte keyword, la cui similarità semantica può essere stimata con tecniche affini a Word2Vec.
+
+\subsection{Post hoc content-based explanations}
+
+\subsubsection{Motivazione e differenza rispetto al modello di raccomandazione}
+Una \emph{post hoc explanation} è una spiegazione prodotta \emph{dopo} che il recommender system ha selezionato l'item. Il procedimento esplicativo può essere indipendente dall'algoritmo che ha generato il suggerimento e può utilizzare dati e tecniche differenti.
+
+Questa distinzione risponde a un problema di \emph{explainability}. I modelli a fattori latenti non attribuiscono necessariamente un significato esplicito alle dimensioni latenti; i metodi di \emph{neighborhood collaborative filtering} (NCF) basano le decisioni su calcoli statistici derivati dalla URM. In entrambi i casi può essere difficile formulare direttamente una motivazione comprensibile. I modelli content/knowledge-based, al contrario, possiedono descrizioni esplicite di caratteristiche e relazioni, che possono essere trasformate più facilmente in spiegazioni in linguaggio naturale.
+
+\subsubsection{Spiegazioni tramite proprietà condivise in un knowledge graph}
+Le slide illustrano un approccio nel quale gli item precedentemente apprezzati e l'item raccomandato vengono rappresentati in un knowledge graph. Tra essi si cercano collegamenti basati su proprietà comuni presenti, ad esempio, in DBpedia. Una volta ricavate tali corrispondenze, il sistema:
+\begin{enumerate}
+    \item identifica le proprietà condivise che mettono in relazione la raccomandazione con le preferenze pregresse dell'utente;
+    \item ordina le proprietà secondo una priorità;
+    \item sceglie le $K$ proprietà più importanti;
+    \item inserisce tali informazioni in \emph{template} linguistici per produrre una spiegazione leggibile.
+\end{enumerate}
+Nell'esempio della slide 70, la raccomandazione del film \emph{The Ring} è motivata da caratteristiche quali la presenza di Naomi Watts e l'appartenenza all'ambito dei film psicologici, richiamando anche \emph{The Sixth Sense} come film precedentemente apprezzato. Il senso della spiegazione è collegare l'item suggerito a caratteristiche riconoscibili dall'utente, non necessariamente ricostruire l'esatto calcolo interno del recommender system originale.
+
+\subsection{Valutazione dei sistemi di raccomandazione}
+
+\subsubsection{Valutazione online e offline}
+Le slide distinguono due impostazioni.
+\begin{itemize}
+    \item \textbf{Valutazione online}: il sistema viene misurato durante l'utilizzo da parte di utenti reali. È più vicina al contesto operativo, ma difficile da effettuare durante la sperimentazione e può produrre effetti concreti sull'attività del servizio.
+    \item \textbf{Valutazione offline}: viene utilizzato un dataset storico di interazioni e valutazioni, sul quale si simulano apprendimento e verifica delle predizioni. È adatta al confronto sperimentale di modelli senza coinvolgere direttamente gli utenti in tempo reale.
+\end{itemize}
+Tra le dimensioni che possono essere valutate figurano \emph{accuracy}, \emph{novelty}, \emph{coverage} e \emph{serendipity}. L'\emph{accuracy} è descritta nelle slide come la dimensione meglio formalizzata: le altre possono richiedere giudizi soggettivi e i loro effetti emergono spesso nel lungo periodo.
+
+L'accuratezza può riguardare due problemi differenti:
+\begin{enumerate}
+    \item \textbf{Rating prediction}: verificare la vicinanza della previsione $\hat r_{ij}$ al rating osservato $r_{ij}$.
+    \item \textbf{Top-$k$ recommendation}: verificare quanto la lista dei $k$ item preferiti dal modello corrisponda alla lista dei $k$ item effettivamente preferiti dall'utente.
+\end{enumerate}
+Le metriche numeriche successivamente presentate nelle slide riguardano in particolare il primo problema.
+
+\subsubsection{Training set, validation set e test set}
+Sia
+\[
+S=\{(i,j):r_{ij}\text{ è osservato}\}
+\]
+l'insieme degli indici dei rating disponibili. La valutazione richiede di separare le osservazioni utilizzate per costruire il modello da quelle utilizzate per verificare la sua capacità predittiva.
+
+Una prima suddivisione è
+\[
+S=S_{\mathrm{train}}\,\dot\cup\,S_{\mathrm{test}},
+\]
+dove $\dot\cup$ indica unione di insiemi disgiunti. Il \emph{training set} serve a costruire il sistema, ad esempio per apprendere le matrici dei fattori latenti $X$ e $Y$. Il \emph{test set}, di norma più piccolo, è mantenuto separato e usato soltanto nella valutazione finale.
+
+Per scegliere gli \emph{iperparametri} (come il numero dei fattori o altre impostazioni progettuali), il training set viene ulteriormente diviso:
+\[
+S_{\mathrm{train}}=S_{\mathrm{build}}\,\dot\cup\,S_{\mathrm{val}}.
+\]
+Il \emph{model building set} $S_{\mathrm{build}}$ consente di costruire modelli con differenti configurazioni; il \emph{validation set} $S_{\mathrm{val}}$ permette di confrontarle e scegliere quella più promettente. L'ultimo giudizio sull'accuratezza deve però derivare dal test set, che non è stato impiegato per tale scelta. Anche $S_{\mathrm{val}}$ è in genere sensibilmente più piccolo di $S_{\mathrm{build}}$.
+
+\subsubsection{Errori individuali, MAE e RMSE}
+Sia $E\subseteq S$ l'insieme dei rating riservati al test. Per ogni $(u,j)\in E$ siano $r_{uj}$ il valore effettivo e $\hat r_{uj}$ il valore predetto. L'\emph{entry error} è definito nelle slide come
+\[
+e_{uj}=\hat r_{uj}-r_{uj}.
+\]
+Il segno dell'errore distingue sovrastima e sottostima; entrambe le metriche che seguono ne misurano la grandezza, senza lasciar annullare errori positivi e negativi.
+
+Il \emph{Mean Absolute Error} (MAE) è
+\[
+\operatorname{MAE}(E)=\frac{1}{|E|}\sum_{(u,j)\in E}|e_{uj}|.
+\]
+Esso rappresenta la media dei valori assoluti degli scarti: ogni errore contribuisce linearmente in funzione della propria ampiezza.
+
+Il \emph{Root Mean Square Error} (RMSE) è
+\[
+\operatorname{RMSE}(E)=
+\sqrt{\frac{1}{|E|}\sum_{(u,j)\in E}e_{uj}^{2}}.
+\]
+Il quadrato rende più incisivi gli errori grandi, mentre la radice riporta il risultato alla scala dei rating. Per questa ragione, nelle slide RMSE è utilizzato come indicatore particolarmente sensibile agli errori predittivi elevati e alla robustezza del modello.
+
+\paragraph{Esempio numerico delle slide.} Si confrontino le due sequenze di errori
+\[
+E_1=(0.4,0.4,0.4),\qquad E_2=(0.2,0.2,0.8).
+\]
+I valori di MAE sono identici:
+\[
+\operatorname{MAE}(E_1)=\frac{0.4+0.4+0.4}{3}=0.4,
+\qquad
+\operatorname{MAE}(E_2)=\frac{0.2+0.2+0.8}{3}=0.4.
+\]
+Per RMSE si ha invece
+\begin{align*}
+\operatorname{RMSE}(E_1)
+&=\sqrt{\frac{0.16+0.16+0.16}{3}}=0.4,\\
+\operatorname{RMSE}(E_2)
+&=\sqrt{\frac{0.04+0.04+0.64}{3}}
+=\sqrt{0.24}\simeq 0.49.
+\end{align*}
+La slide 74 riporta l'ultimo valore come $0.48$; il calcolo della radice conduce più precisamente a circa $0.49$. L'esempio mostra che due modelli possono ottenere la stessa media degli errori assoluti, ma quello con un errore molto elevato ottiene un RMSE peggiore.
+
+\subsubsection{Hold-out e cross-validation}
+Con \emph{hold-out} si sceglie una porzione dei dati da nascondere durante l'addestramento, utilizzandola successivamente per il test. Il procedimento è semplice ma può introdurre distorsioni:
+\begin{itemize}
+    \item alcuni rating disponibili non partecipano all'addestramento, con il rischio di ottenere una stima pessimistica delle prestazioni di un sistema allenato su più dati;
+    \item il campione estratto per il test potrebbe avere caratteristiche statistiche differenti dal dataset complessivo, ad esempio un rating medio più alto o più basso, e quindi non essere rappresentativo.
+\end{itemize}
+La \emph{cross-validation} cerca di mitigare la dipendenza da una singola ripartizione. Si suddivide $S$ in $q$ sottoinsiemi disgiunti, approssimativamente della stessa cardinalità:
+\[
+S=S_1\,\dot\cup\cdots\dot\cup\,S_q.
+\]
+Per ogni $t\in\{1,\ldots,q\}$ si esegue una prova nella quale $S_t$ è il set di test e l'unione degli altri segmenti costituisce il set di addestramento. Se $A_t$ denota il valore della metrica ottenuto nella prova $t$, la stima complessiva riportata dalle slide è la media
+\[
+\overline A=\frac{1}{q}\sum_{t=1}^{q}A_t.
+\]
+La ripetizione su differenti insiemi di test riduce la dipendenza dalla singola scelta casuale; richiede però la costruzione e la valutazione di più modelli. Le slide indicano come scelta tipica $q\simeq10$ e sottolineano il compromesso tra attendibilità della stima e costo computazionale.
+
+\subsubsection{Case study: Netflix Prize Data Set}
+Le slide descrivono il dataset della competizione Netflix Prize attraverso le seguenti porzioni, espresse come percentuali del totale:
+\begin{itemize}
+    \item \textbf{Model building set}: $95.91\%$, destinato alla costruzione dei modelli;
+    \item \textbf{Probe set}: $1.36\%$, utilizzato per la scelta degli iperparametri e dei modelli;
+    \item \textbf{Qualifying set}: $2.73\%$, mantenuto nascosto ai concorrenti per la verifica delle prestazioni.
+\end{itemize}
+Pertanto la parte fornita ai partecipanti ammonta a
+\[
+95.91\%+1.36\%=97.27\%,
+\]
+mentre la quota rimanente è $2.73\%$.
+
+Il \emph{qualifying set} viene ulteriormente distinto in:
+\begin{itemize}
+    \item \textbf{Quiz set}, utilizzato per comunicare privatamente ai concorrenti il valore RMSE raggiunto durante lo sviluppo;
+    \item \textbf{Test set}, impiegato per la competizione finale.
+\end{itemize}
+La distinzione è importante anche perché le slide osservano che i rating del training set e quelli del qualifying set non seguono distribuzioni statistiche identiche: i primi sono mediamente più datati. La valutazione deve quindi affrontare anche differenze tra i dati su cui il modello apprende e quelli sui quali sarà giudicato.
+
+\subsection{Bayesian Preference Elicitation}
+
+\subsubsection{Apprendimento attivo delle preferenze}
+La \emph{Bayesian Preference Elicitation} (BPE) differisce dai metodi che deducono passivamente le preferenze dallo storico di rating o interazioni: il sistema pone \emph{esplicitamente} domande all'utente, utilizzando le risposte per apprendere ciò che l'utente preferisce. Si tratta quindi di un processo di \emph{active learning} delle preferenze.
+
+BPE richiede inoltre una descrizione strutturata degli item e una rappresentazione delle preferenze mediante una \emph{funzione di utilità}. Il contesto tipico citato nelle slide è l'e-commerce per decisioni poco frequenti, come acquistare uno smartphone o prenotare un albergo. In questi scenari lo storico può essere insufficiente e il sistema deve ricavare rapidamente le preferenze utili alla decisione corrente.
+
+I principali vantaggi e problemi indicati sono:
+\begin{itemize}
+    \item \textbf{Vantaggio}: BPE può essere impiegata anche per utenti nuovi, affrontando il \emph{new user cold-start problem};
+    \item \textbf{Svantaggio}: rispondere a un questionario può essere noioso e richiede un impegno esplicito;
+    \item \textbf{Sfida}: formulare poche domande ma sufficientemente informative per ottenere raccomandazioni valide.
+\end{itemize}
+
+\subsubsection{Questionari statici e dinamici}
+Un questionario \textbf{statico} contiene una sequenza di domande stabilita in anticipo, uguale per tutti gli utenti. La scelta delle domande può essere effettuata a \emph{design-time}. In un questionario \textbf{dinamico}, invece, la domanda successiva dipende dalle risposte date dall'utente fino a quel momento: la scelta avviene tipicamente a \emph{runtime} e richiede calcolo durante l'interazione.
+
+Entrambe le strategie generano raccomandazioni personalizzate perché il risultato finale dipende dalle risposte individuali. La strategia dinamica aggiunge un secondo livello di personalizzazione: è personalizzata anche la \emph{sequenza delle domande}. A parità di numero di domande, le slide considerano il metodo dinamico generalmente più efficace nello stimare l'utilità dell'utente, ma anche computazionalmente più impegnativo.
+
+\subsection{Inferenza bayesiana: probabilità e aggiornamento delle credenze}
+
+\subsubsection{Prior, likelihood e posterior}
+Nel quadro bayesiano, una distribuzione di probabilità esprime una conoscenza incerta, o \emph{belief}, su un'ipotesi. Una nuova osservazione modifica questa conoscenza attraverso il \emph{belief update}. Indicando con $A$ un'ipotesi e con $B$ l'evidenza osservata, il teorema di Bayes è
+\[
+P(A\mid B)=\frac{P(B\mid A)P(A)}{P(B)},\qquad P(B)>0.
+\]
+I termini sono:
+\begin{itemize}
+    \item $P(A)$: \emph{prior probability}, probabilità dell'ipotesi prima di osservare $B$;
+    \item $P(B\mid A)$: \emph{likelihood}, probabilità dell'osservazione se $A$ è vera;
+    \item $P(B)$: probabilità dell'evidenza, che normalizza il risultato;
+    \item $P(A\mid B)$: \emph{posterior probability}, probabilità dell'ipotesi dopo aver incorporato $B$.
+\end{itemize}
+La relazione fondamentale è che il \emph{posterior} è proporzionale al prodotto tra \emph{prior} e \emph{likelihood}, e la normalizzazione produce nuovamente una distribuzione di probabilità.
+
+\subsection{Esempio didattico: Height elicitation}
+
+\subsubsection{Due domande per stimare un'altezza}
+Le slide introducono un problema semplificato, indipendente dal dominio commerciale, per distinguere due operazioni: \emph{inference} ed \emph{experiment design}. L'obiettivo è stimare l'altezza ignota $H$ di una persona osservando se riesce a passare sotto ostacoli di altezza prefissata. Sono disponibili due interrogazioni con soglie $h_1$ e $h_2$, con $h_1>h_2$.
+
+\textbf{Problema di inferenza:} dopo avere fissato le soglie e osservato il comportamento della persona, quali informazioni sono disponibili su $H$?
+
+Assumendo che «superare un ostacolo» significhi \emph{passare sotto} di esso e ignorando le convenzioni nei casi di uguaglianza, si distinguono tre eventi:
+\begin{align*}
+B_1&=\{H>h_1\} &&\text{(non passa sotto l'ostacolo più alto)},\\
+B_2&=\{h_2<H<h_1\} &&\text{(passa sotto $h_1$, ma non sotto $h_2$)},\\
+B_3&=\{H<h_2\} &&\text{(passa sotto entrambi gli ostacoli)}.
+\end{align*}
+\textbf{Nota sulla slide 81 (ripetuta nella 82).} Nell'ultimo caso, il materiale riporta $H>h_2$. Questa disuguaglianza contraddice la situazione descritta: se l'altezza della persona consente di passare sotto entrambi gli ostacoli, si deduce $H<h_2$. Il ragionamento qui esplicita la correzione, mantenendo il significato fisico dell'esempio originale.
+
+Le osservazioni forniscono quindi \emph{intervalli} ammissibili per $H$, ma non necessariamente un singolo valore. Nasce una nuova domanda: \emph{quale valore numerico stimare per $H$?}
+
+\subsubsection{Prior gaussiano sulle altezze}
+Per produrre una stima occorre partire da una distribuzione a priori. Le slide assumono, per semplicità, che la persona appartenga alla popolazione femminile e rappresentano l'altezza mediante una distribuzione approssimativamente gaussiana:
+\[
+H\sim\mathcal N(\mu,\sigma^2),\qquad
+\mu=164.7\,\mathrm{cm},\qquad \sigma=7.1\,\mathrm{cm}.
+\]
+Per una gaussiana non troncata, media, mediana e moda coincidono e valgono $164.7\,\mathrm{cm}$. Il prior descrive ciò che si ritiene plausibile \emph{prima} dell'osservazione dell'utente specifico.
+
+La sua densità può essere scritta come
+\[
+p_H(h)=\frac{1}{\sigma\sqrt{2\pi}}
+\exp\!\left(-\frac{(h-\mu)^2}{2\sigma^2}\right).
+\]
+Questa scrittura esplicita matematicamente la distribuzione gaussiana raffigurata nelle slide; i parametri numerici sono quelli indicati nel materiale.
+
+\subsubsection{Aggiornamento del prior in seguito a un'osservazione}
+Si consideri il primo caso, in cui si osserva che la persona non passa sotto l'ostacolo di altezza $h_1$, dunque $B_1=\{H>h_1\}$. La \emph{likelihood}, vista come funzione del possibile valore $h$ di $H$, è
+\[
+P(B_1\mid H=h)=
+\begin{cases}
+0,&h\leq h_1,\\
+1,&h>h_1.
+\end{cases}
+\]
+Si tratta di un'osservazione ideale priva di errori: se l'altezza è fissata, l'esito del passaggio è deterministico. Per Bayes,
+\[
+p_H(h\mid B_1)
+=\frac{P(B_1\mid H=h)p_H(h)}{P(B_1)}.
+\]
+Il denominatore è la probabilità a priori dell'osservazione:
+\[
+P(B_1)=P(H>h_1)=\int_{h_1}^{+\infty}p_H(t)\,dt.
+\]
+Ne segue l'espressione della \textbf{gaussiana troncata}:
+\[
+p_H(h\mid H>h_1)=
+\begin{cases}
+\displaystyle\frac{p_H(h)}{P(H>h_1)},&h>h_1,\\[6pt]
+0,&h\leq h_1.
+\end{cases}
+\]
+Il grafico della slide 85 illustra precisamente queste operazioni: \emph{prior}, \emph{likelihood}, prodotto non normalizzato (\emph{joint}) e successiva normalizzazione che genera il \emph{posterior}. La probabilità originariamente assegnata ad altezze incompatibili viene eliminata, e la massa residua è rinormalizzata a uno.
+
+\subsubsection{Come ottenere una stima puntuale}
+Conoscere il posterior non equivale a scegliere una stima puntuale. Le slide confrontano \emph{moda} e \emph{media} della distribuzione troncata. Nel caso illustrato, in cui la soglia $h_1$ è sulla destra del massimo della gaussiana, la moda del posterior si trova al limite $h_1$: questa stima ripete sostanzialmente la soglia già conosciuta e risulta poco informativa. Una scelta alternativa è la media della distribuzione a posteriori,
+\[
+\hat H=\mathbb E[H\mid H>h_1]
+=\frac{\displaystyle\int_{h_1}^{+\infty}h\,p_H(h)\,dh}
+{\displaystyle\int_{h_1}^{+\infty}p_H(h)\,dh}.
+\]
+La distribuzione troncata non è più simmetrica, dunque in generale media e mediana non coincidono. La scelta della statistica usata come stima dipende dal criterio considerato, ma le slide sottolineano in particolare l'utilità di ragionare sulla media del posterior.
+
+\subsection{Experiment design: scegliere domande informative}
+
+\subsubsection{Dall'inferenza alla progettazione delle osservazioni}
+Il secondo problema dell'esempio riguarda la scelta delle soglie $h_1$ e $h_2$ \emph{prima} di osservare la persona. Non si domanda più che cosa concludere dopo un test; si domanda quali test convenga proporre. Questa è la differenza tra \emph{inference} e \emph{experiment design}.
+
+Ogni coppia $h_1>h_2$ determina tre possibili regioni per l'altezza:
+\[
+(-\infty,h_2),\qquad (h_2,h_1),\qquad (h_1,+\infty).
+\]
+Il diagramma delle slide 88--90 rappresenta una struttura ad albero con tre foglie. Ciascuna foglia corrisponde a un possibile esito delle osservazioni e contiene una diversa distribuzione a posteriori, indicata nel diagramma come $Q_1,Q_2,Q_3$. L'obiettivo è confrontare alberi ottenuti da coppie differenti di soglie per stabilire quali riducano maggiormente l'incertezza su $H$.
+
+\subsubsection{Guadagno informativo e divergenza di Kullback--Leibler}
+Le slide propongono di quantificare la variazione tra la distribuzione a priori $P$ e una distribuzione a posteriori $Q$ attraverso il \emph{guadagno di informazione}; una possibile misura è la \emph{Kullback--Leibler divergence}.
+
+Per distribuzioni continue con densità $p$ e $q$, tale divergenza si scrive
+\[
+D_{\mathrm{KL}}(Q\|P)
+=\int q(h)\log\frac{q(h)}{p(h)}\,dh,
+\]
+quando l'espressione è definita. La misura quantifica in quale misura la distribuzione aggiornata $Q$ differisce dalla conoscenza iniziale $P$. Non è in generale simmetrica: $D_{\mathrm{KL}}(Q\|P)$ non coincide necessariamente con $D_{\mathrm{KL}}(P\|Q)$.
+
+Poiché la risposta all'interrogazione non è conosciuta in anticipo, il confronto delle possibili scelte di $(h_1,h_2)$ richiede di considerare gli esiti alternativi. Esplicitando l'idea di \emph{guadagno informativo atteso} indicata nelle slide, si può scrivere
+\[
+G(h_1,h_2)=\sum_{m=1}^{3}P(B_m)\,
+D_{\mathrm{KL}}\!\left(P(H\mid B_m)\|P(H)\right).
+\]
+La probabilità $P(B_m)$ pesa quanto è verosimile ogni esito prima del test; il termine di divergenza misura la differenza tra prior e posterior qualora quell'esito sia osservato. La scelta è cercare soglie che rendano elevato il guadagno informativo atteso. Le slide enunciano tale obiettivo, senza sviluppare un algoritmo numerico generale di ottimizzazione.
+
+\subsubsection{Tripartizione bilanciata della gaussiana}
+La slide 91 presenta una \emph{balanced tripartition of a Gaussian}: le soglie sono scelte in modo da suddividere il prior in tre parti di probabilità uguale. Quindi
+\[
+P(H<h_2)=\frac13,\qquad
+P(h_2<H<h_1)=\frac13,\qquad
+P(H>h_1)=\frac13.
+\]
+Con $H\sim\mathcal N(164.7,7.1^2)$, i valori approssimati riportati sono
+\[
+\boxed{h_2\simeq161.6\,\mathrm{cm},\qquad h_1\simeq167.8\,\mathrm{cm}.}
+\]
+Queste soglie corrispondono approssimativamente al $33.33$-esimo e al $66.67$-esimo percentile della distribuzione. La scelta rende equiprobabili i tre possibili esiti, offrendo una motivazione intuitiva per ottenere osservazioni informative nel modello deterministico presentato.
+
+\subsection{Processo iterativo di elicitazione delle preferenze}
+
+\subsubsection{Il ciclo di interazione}
+Il diagramma della slide 92 riassume la struttura del processo BPE:
+\begin{enumerate}
+    \item si definisce un \emph{prior belief}, cioè una distribuzione di probabilità sui possibili tipi di utente;
+    \item un modulo di \emph{query selection} sceglie una domanda $q$;
+    \item il sistema presenta $q$ all'utente e riceve una risposta $r$;
+    \item l'informazione osservata, indicata con $q:r$, viene impiegata per aggiornare il belief;
+    \item si verifica una condizione di terminazione: se essa è soddisfatta, si produce una raccomandazione; altrimenti si seleziona un'altra domanda usando il belief aggiornato.
+\end{enumerate}
+Il questionario è quindi \emph{adattivo}: le risposte precedenti influenzano le distribuzioni di probabilità e, per questa via, anche le domande successive. Le slide fino alla numero 97 introducono la rappresentazione necessaria per formalizzare questo ciclo, senza sviluppare ancora le successive formule operative di aggiornamento e di selezione.
+
+\subsection{Rappresentazione strutturata degli item}
+Gli item vengono descritti mediante uno schema di attributi. Per uno smartphone, le slide citano per esempio RAM, dimensione dello schermo (\emph{screen size}), megapixel della fotocamera, marca (\emph{brand}) e prezzo. Un singolo item è quindi rappresentato mediante il vettore
+\[
+\mathbf a=(a_1,\ldots,a_n),
+\]
+dove $n$ è il numero degli attributi e $a_i$ è il valore assunto dall'attributo $i$ per l'item considerato.
+
+\textbf{Assunzione di semplificazione delle slide}: da questo punto in avanti si considerano soltanto attributi numerici. Questa restrizione rende naturale utilizzare funzioni numeriche per assegnare un valore soggettivo alle possibili caratteristiche di un prodotto; non implica che, nelle applicazioni reali, tutti gli attributi debbano necessariamente essere quantitativi.
+
+\subsection{Funzioni di utilità e modelli delle preferenze}
+
+\subsubsection{Funzione di utilità come combinazione convessa}
+Le preferenze dell'utente sono rappresentate da una funzione di utilità $u(\mathbf a)$, che assegna un valore ai possibili item. Le slide assumono una forma additiva:
+\[
+\boxed{
+u(\mathbf a)=\sum_{i=1}^{n}\lambda_i v_i(a_i)
+=\lambda_1v_1(a_1)+\cdots+\lambda_nv_n(a_n).}
+\]
+Qui il simbolo $\nu$ è adottato per la \emph{funzione} di utilità, così da non confonderlo con il vettore $\mathbf u$ che nelle slide successive descrive il \emph{tipo di utente}; le slide indicano entrambi con $u$.
+
+I termini dell'espressione hanno ruoli distinti:
+\begin{itemize}
+    \item $a_i$ è la caratteristica numerica dell'item relativa all'attributo $i$;
+    \item $v_i(a_i)$ è il valore soggettivo che l'utente attribuisce a quella caratteristica, indipendentemente dalla sua importanza relativa;
+    \item $\lambda_i$ esprime quanto conta l'attributo $i$ rispetto agli altri;
+    \item $\nu(\mathbf a)$ aggrega le valutazioni dei singoli attributi in un giudizio complessivo dell'item.
+\end{itemize}
+Le slide definiscono la combinazione \emph{convessa}; ciò richiede
+\[
+\lambda_i\geq0\quad(i=1,\ldots,n),
+\qquad\sum_{i=1}^{n}\lambda_i=1.
+\]
+La somma unitaria dei pesi è mostrata esplicitamente nella slide 94; la non negatività è implicita nel termine matematico «combinazione convessa». L'effetto della normalizzazione è rendere i coefficienti interpretabili come pesi relativi: aumentare l'importanza di un attributo, a somma costante, richiede diminuire quella assegnata ad almeno un altro.
+
+\paragraph{Esempio illustrativo.} Si considerino soltanto RAM e prezzo, con
+\[
+\lambda_{\mathrm{RAM}}=0.7,\qquad
+\lambda_{\mathrm{prezzo}}=0.3.
+\]
+Se le funzioni di valore attribuiscono, per un dato smartphone, $v_{\mathrm{RAM}}=0.8$ e $v_{\mathrm{prezzo}}=0.4$, si ha
+\[
+\nu(\mathbf a)=0.7\cdot0.8+0.3\cdot0.4=0.68.
+\]
+Questo esempio serve a rendere trasparente il ruolo di pesi e funzioni di valore; i numeri sono esemplificativi e non derivano da un dataset delle slide.
+
+\subsubsection{Funzioni di valore parametrizzate}
+Per ogni attributo le slide assumono una famiglia di funzioni $v_i$, che può essere, ad esempio, \emph{parabolica}, \emph{sigmoidale}, \emph{polinomiale} o \emph{triangolare}. Il tipo di funzione definisce la forma generale con cui un attributo viene valutato, mentre parametri specifici ne determinano l'andamento per un particolare utente.
+
+I due esempi riportati sono:
+\begin{itemize}
+    \item \textbf{RAM di uno smartphone}: può essere valutata attraverso una funzione sigmoidale. Un parametro può determinare il \emph{punto di flesso}, cioè la posizione nella quale cambia il comportamento della curvatura. Il modello permette così di rappresentare valutazioni differenti della medesima quantità di RAM.
+    \item \textbf{Dimensione dello schermo}: può essere rappresentata da una funzione triangolare. Il parametro ne definisce la dimensione dello schermo \emph{ottimale}, intorno alla quale si ha il valore maggiore. Questa forma è appropriata quando un attributo non è automaticamente tanto migliore quanto più grande è il suo valore.
+\end{itemize}
+Il punto centrale è che due utenti possono assegnare un'importanza simile a un attributo (stesso $\lambda_i$), ma preferire valori diversi di quell'attributo (diversi parametri nella funzione $v_i$). È dunque necessario rappresentare \emph{sia} le importanze relative \emph{sia} il modo in cui ciascuna caratteristica è valutata.
+
+\subsection{User types e distribuzione sui profili utente}
+
+\subsubsection{Vettore dei parametri delle preferenze}
+Le slide assumono, per semplicità, che ciascuna funzione di valore $v_i$ abbia un solo parametro di forma $p_i$. L'utente è allora rappresentato dal \emph{user type}
+\[
+\boxed{\mathbf u=(\lambda_1,\ldots,\lambda_n,p_1,\ldots,p_n).}
+\]
+Il vettore contiene due gruppi di componenti:
+\begin{enumerate}
+    \item gli $n$ pesi $\lambda_i$, che esprimono l'importanza relativa dei diversi attributi e soddisfano i vincoli della combinazione convessa;
+    \item gli $n$ parametri $p_i$, che caratterizzano la forma della funzione di valore di ciascun attributo.
+\end{enumerate}
+Esso ha dunque $2n$ componenti nella parametrizzazione semplificata delle slide, benché i $\lambda_i$ non siano tutti indipendenti a causa del vincolo $\sum_i\lambda_i=1$. Il corrispondente modello di utilità può essere reso esplicito come
+\[
+\nu_{\mathbf u}(\mathbf a)=
+\sum_{i=1}^{n}\lambda_i\,v_i(a_i;p_i),
+\]
+dove la notazione $v_i(a_i;p_i)$ indica che la valutazione dell'attributo dipende sia dal valore osservato $a_i$ sia dal parametro di preferenza $p_i$.
+
+\subsubsection{Belief sullo spazio degli user types}
+Il sistema non conosce necessariamente il tipo effettivo dell'utente prima del questionario. La sua incertezza è rappresentata mediante una distribuzione di probabilità
+\[
+P(\mathbf u),
+\]
+definita sullo spazio dei tipi ammissibili. Questa è la distribuzione chiamata \emph{belief} nelle slide: assegna plausibilità a diverse combinazioni di pesi e parametri di forma.
+
+La funzione $\nu_{\mathbf u}(\mathbf a)$ descrive l'utilità \emph{se il tipo fosse noto}; la distribuzione $P(\mathbf u)$ rappresenta invece ciò che il sistema \emph{sa o non sa} sulle preferenze dell'utente. L'elicitazione mira a modificare progressivamente questa distribuzione mediante l'acquisizione delle risposte. Nella struttura della slide 92, $P(\mathbf u)$ costituisce il prior iniziale e il modulo di aggiornamento produce belief successivi.
+
+\subsection{Query e reply}
+
+\subsubsection{Interrogazioni come confronti a coppie}
+La modalità tipica di interrogazione della BPE, nelle slide, consiste nel presentare due item e chiedere:
+\begin{quote}
+\emph{«Preferisci l'item $a$ oppure l'item $b$?»}
+\end{quote}
+Queste \emph{pairwise comparison queries} hanno due proprietà rilevanti:
+\begin{itemize}
+    \item la domanda può essere formulata direttamente mostrando due alternative, senza richiedere che l'utente comprenda la rappresentazione interna del \emph{domain model};
+    \item il confronto relativo risulta meno ambiguo e meno soggetto a differenze di scala individuali rispetto alla richiesta di attribuire un punteggio assoluto a un singolo item.
+\end{itemize}
+L'indipendenza dal domain model riguarda quindi la \emph{formulazione della domanda} all'utente: il modello strutturato delle caratteristiche rimane necessario, nel metodo BPE illustrato, per rappresentare le preferenze e valutare gli item.
+
+\subsubsection{Numero di query possibili}
+Se il catalogo contiene $m$ item distinti e ogni domanda confronta una coppia \emph{non ordinata} di item differenti, le possibili domande sono
+\[
+\boxed{|\mathcal Q|=\binom{m}{2}=\frac{m(m-1)}{2}.}
+\]
+Per capire il risultato, ciascun item potrebbe essere confrontato con gli altri $m-1$, dando $m(m-1)$ coppie ordinate. Poiché confrontare $a$ con $b$ è la stessa scelta di coppia che confrontare $b$ con $a$, dividiamo per due.
+
+Ad esempio, con $m=5$ item sono possibili
+\[
+\frac{5\cdot4}{2}=10
+\]
+interrogazioni distinte. Con $m=100$ si sale a
+\[
+\frac{100\cdot99}{2}=4950.
+\]
+Il numero di domande candidate cresce quindi \emph{quadraticamente} nel numero di item. Nella slide 97 lo stesso numero è espresso tramite $n(n-1)/2$; qui si usa $m$ per non confondere il numero di item con $n$, precedentemente impiegato per il numero degli attributi.
+
+\subsubsection{Spazio delle possibili risposte}
+Per una domanda che confronta gli item $a$ e $b$, le slide considerano tre risposte:
+\begin{itemize}
+    \item \texttt{a}: l'utente ritiene che $a$ sia \emph{strettamente preferibile} a $b$;
+    \item \texttt{b}: l'utente ritiene che $b$ sia \emph{strettamente preferibile} ad $a$;
+    \item \texttt{dunno}: nessuno dei due item domina in maniera distinta l'altro, cioè l'utente non esprime una preferenza netta.
+\end{itemize}
+Nel linguaggio della funzione di utilità, quando il tipo di utente $\mathbf u$ fosse noto, le prime due risposte corrisponderebbero intuitivamente a
+\[
+\nu_{\mathbf u}(\mathbf a)>\nu_{\mathbf u}(\mathbf b)
+\quad\text{oppure}\quad
+\nu_{\mathbf u}(\mathbf b)>\nu_{\mathbf u}(\mathbf a).
+\]
+La risposta \texttt{dunno} non deve essere interpretata automaticamente come un'uguaglianza matematica esatta: nella formulazione della slide significa piuttosto che non si manifesta una dominanza \emph{distinta}. Le slide 60--97 non introducono ancora un modello probabilistico specifico della risposta o una soglia numerica per stabilire quando due utilità siano indistinguibili.
+
+\subsubsection{Collegamento tra le interrogazioni e il ciclo bayesiano}
+Una query $q$ è dunque una scelta di due item da confrontare e il relativo \emph{reply} $r$ appartiene all'insieme $\{\texttt{a},\texttt{b},\texttt{dunno}\}$. Nel processo illustrato dalla slide 92, l'osservazione della coppia domanda--risposta $q:r$ alimenta il modulo di aggiornamento del belief $P(\mathbf u)$.
+
+Si conclude così il percorso delle slide 60--97: dalle rappresentazioni semantiche degli item e dalle tecniche content-based, passando per la valutazione dell'accuratezza dei recommender systems, fino all'introduzione di un modello bayesiano delle preferenze e di domande comparative con cui acquisire attivamente informazione sull'utente.
