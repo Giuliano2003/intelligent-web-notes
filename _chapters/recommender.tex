@@ -3369,13 +3369,118 @@ Per scegliere gli \emph{iperparametri} (come il numero dei fattori o altre impos
 S_{\mathrm{train}}=S_{\mathrm{build}}\,\dot\cup\,S_{\mathrm{val}}.
 \]
 Il \emph{model building set} $S_{\mathrm{build}}$ consente di costruire modelli con differenti configurazioni; il \emph{validation set} $S_{\mathrm{val}}$ permette di confrontarle e scegliere quella più promettente. L'ultimo giudizio sull'accuratezza deve però derivare dal test set, che non è stato impiegato per tale scelta. Anche $S_{\mathrm{val}}$ è in genere sensibilmente più piccolo di $S_{\mathrm{build}}$.
+\\
+Ricordati che definivamo l'insieme:
+\[
+S=\{(i,j):r_{ij}\text{ è osservato}\}
+\]
+
+La funzione obiettivo, trascurando per semplicità la regolarizzazione, era:
+\[
+J(X,Y)=\sum_{(i,j)\in S}(r_{ij}-\hat r_{ij})^2
+\]
+\textbf{Quindi, minimizzavamo l'errore considerando tutti i rating osservati.}
+Ma questo approccio presenta un problema: se valutiamo il modello sugli stessi rating utilizzati per apprendere \(X\) e \(Y\), non possiamo sapere quanto bene il modello generalizzi a rating mai osservati durante l'addestramento.
+L'insieme \(S\) continua a rappresentare tutti i rating osservati, ma lo dividiamo:
+\[
+S=S_{\text{train}}\;\dot\cup\;S_{\text{test}}
+\]
+
+E successivamente:
+\[
+S_{\text{train}}=S_{\text{build}}\;\dot\cup\;S_{\text{val}}
+\]
+
+Quindi, complessivamente:
+\[
+\boxed{S=S_{\text{build}}\;\dot\cup\;S_{\text{val}}\;\dot\cup\;S_{\text{test}}}
+\]
+
+Dove:
+\begin{itemize}
+    \item \textbf{$S_{build}$} : Apprendere le matrici \(X\) e \(Y\) minimizzando \(J\).
+    \item \textbf{$S_{val}$} : Valutare diverse configurazioni e scegliere gli iperparametri.
+    \item \textbf{$S_{test}$} : Valutare le prestazioni finali del modello su rating non utilizzati nelle fasi precedenti.
+\end{itemize}
+Durante l'addestramento, non minimizziamo più la funzione di errore su tutto \(S\), ma soltanto su \(S_{\text{build}}\).
+
+Quindi:
+\[
+\boxed{
+J_{\text{build}}(X,Y)=
+\sum_{(i,j)\in S_{\text{build}}}
+(r_{ij}-(XY)_{ij})^2
+}
+\]
+Il modello apprende le matrici \(X\) e \(Y\) utilizzando esclusivamente questi rating.
+
+Successivamente, possiamo calcolare l'errore di validazione:
+
+\[
+J_{\text{val}}(X,Y)=
+\sum_{(i,j)\in S_{\text{val}}}
+(r_{ij}-(XY)_{ij})^2
+\]
+
+Questo errore \textbf{non viene utilizzato direttamente per aggiornare
+i parametri del modello}, ossia le matrici $X$ e $Y$, ma per
+monitorare la capacità di generalizzazione del modello e
+selezionare la configurazione di iperparametri più appropriata.
+
+In particolare, il \textbf{validation set} può essere utilizzato
+in due modi:
+
+\begin{enumerate}
+    \item \textbf{Al termine di ogni epoca:}
+    dopo aver aggiornato le matrici $X$ e $Y$ utilizzando
+    esclusivamente $S_{\text{build}}$, si calcola l'errore
+    di validazione su $S_{\text{val}}$, mantenendo fissi
+    i parametri appresi.
+
+    Questo permette di monitorare l'andamento dell'errore
+    di validazione durante l'addestramento e di applicare
+    tecniche di \textit{Early Stopping}, interrompendo
+    l'addestramento quando le prestazioni di validazione
+    smettono di migliorare, secondo un criterio prestabilito.
+
+    \item \textbf{Al termine dell'addestramento:}
+    il modello viene addestrato per un numero prestabilito
+    di epoche, dopodiché si calcola l'errore di validazione.
+
+    In questo caso, non è possibile applicare direttamente
+    l'Early Stopping durante la singola esecuzione,
+    poiché l'errore di validazione non viene monitorato
+    nel corso delle epoche.
+\end{enumerate}
+
+In entrambi i casi, possiamo addestrare diversi modelli,
+ciascuno caratterizzato da una differente
+\textbf{configurazione degli iperparametri}, ad esempio
+il numero di fattori latenti $k$ oppure il coefficiente
+di regolarizzazione $\lambda$.
+
+Confrontando gli errori ottenuti sul validation set,
+possiamo selezionare la configurazione che presenta
+l'errore di validazione minore.
+
+Pertanto, il validation set consente sia di
+\textbf{monitorare l'addestramento}, quando viene utilizzato
+a ogni epoca, sia di \textbf{selezionare gli iperparametri}
+del modello.
+
+Una volta selezionata la configurazione migliore,
+il modello può essere riaddestrato sull'intero
+training set $S_{\text{train}}$ (quindi insieme train e validation, invece di solo train) e successivamente
+valutato sul test set $S_{\text{test}}$, mantenuto
+separato durante tutte le precedenti fasi.
+
 
 \subsubsection{Errori individuali, MAE e RMSE}
 Sia $E\subseteq S$ l'insieme dei rating riservati al test. Per ogni $(u,j)\in E$ siano $r_{uj}$ il valore effettivo e $\hat r_{uj}$ il valore predetto. L'\emph{entry error} è definito nelle slide come
 \[
 e_{uj}=\hat r_{uj}-r_{uj}.
 \]
-Il segno dell'errore distingue sovrastima e sottostima; entrambe le metriche che seguono ne misurano la grandezza, senza lasciar annullare errori positivi e negativi.
+Se vedi questa differenza di notazione cioè che viene prima $\hat r_{uj}$, è perchè nelle metriche che usiamo, non ci importa il segno, perchè se vedi usano tutti valori assoluti o elevamenti al quadrato.
 
 Il \emph{Mean Absolute Error} (MAE) è
 \[
@@ -3410,6 +3515,8 @@ Per RMSE si ha invece
 \end{align*}
 La slide 74 riporta l'ultimo valore come $0.48$; il calcolo della radice conduce più precisamente a circa $0.49$. L'esempio mostra che due modelli possono ottenere la stessa media degli errori assoluti, ma quello con un errore molto elevato ottiene un RMSE peggiore.
 
+
+\newpage
 \subsubsection{Hold-out e cross-validation}
 Con \emph{hold-out} si sceglie una porzione dei dati da nascondere durante l'addestramento, utilizzandola successivamente per il test. Il procedimento è semplice ma può introdurre distorsioni:
 \begin{itemize}
@@ -3420,7 +3527,7 @@ La \emph{cross-validation} cerca di mitigare la dipendenza da una singola ripart
 \[
 S=S_1\,\dot\cup\cdots\dot\cup\,S_q.
 \]
-Per ogni $t\in\{1,\ldots,q\}$ si esegue una prova nella quale $S_t$ è il set di test e l'unione degli altri segmenti costituisce il set di addestramento. Se $A_t$ denota il valore della metrica ottenuto nella prova $t$, la stima complessiva riportata dalle slide è la media
+Per ogni $t\in\{1,\ldots,q\}$ si esegue una prova nella quale $S_t$ è il set di test e l'unione degli altri segmenti costituisce il set di addestramento. Se $A_t$ denota il valore della metrica ottenuto nella prova $t$ (ad esempio $A_t$ può essere la metrica RMSE), la stima complessiva riportata dalle slide è la media
 \[
 \overline A=\frac{1}{q}\sum_{t=1}^{q}A_t.
 \]
@@ -3449,13 +3556,17 @@ La distinzione è importante anche perché le slide osservano che i rating del t
 \subsection{Bayesian Preference Elicitation}
 
 \subsubsection{Apprendimento attivo delle preferenze}
-La \emph{Bayesian Preference Elicitation} (BPE) differisce dai metodi che deducono passivamente le preferenze dallo storico di rating o interazioni: il sistema pone \emph{esplicitamente} domande all'utente, utilizzando le risposte per apprendere ciò che l'utente preferisce. Si tratta quindi di un processo di \emph{active learning} delle preferenze.
-
-BPE richiede inoltre una descrizione strutturata degli item e una rappresentazione delle preferenze mediante una \emph{funzione di utilità}. Il contesto tipico citato nelle slide è l'e-commerce per decisioni poco frequenti, come acquistare uno smartphone o prenotare un albergo. In questi scenari lo storico può essere insufficiente e il sistema deve ricavare rapidamente le preferenze utili alla decisione corrente.
-
+La Bayesian Preference Elicitation è una tecnica utilizzata nei Recommender Systems per scoprire e comprendere le preferenze di un utente, anche quando abbiamo poche informazioni su di lui.
+Invece di chiedergli di valutare esplicitamente molti item (ad esempio, assegnando rating da 1 a 5 a diversi film), possiamo:
+\begin{enumerate}
+    \item Porre delle domande all'utente, ad esempio: «Preferisci i film d'azione o quelli romantici?».
+    \item Aggiorna le proprie conoscenze sulle preferenze dell'utente utilizzando un approccio probabilistico bayesiano.
+    \item Sceglie nuove domande informative (questo si può fare in modo statico o dinamico), per ridurre ulteriormente l'incertezza sulle preferenze.
+    \item Produce raccomandazioni personalizzate sulla base delle preferenze apprese.
+\end{enumerate}
 I principali vantaggi e problemi indicati sono:
 \begin{itemize}
-    \item \textbf{Vantaggio}: BPE può essere impiegata anche per utenti nuovi, affrontando il \emph{new user cold-start problem};
+    \item \textbf{Vantaggio}: BPE può essere impiegata anche per utenti nuovi, affrontando il \emph{new user cold-start problem}, cioè quando l'utente non ha ancora fornito abbastanza informazioni sulle sue preferenze.
     \item \textbf{Svantaggio}: rispondere a un questionario può essere noioso e richiede un impegno esplicito;
     \item \textbf{Sfida}: formulare poche domande ma sufficientemente informative per ottenere raccomandazioni valide.
 \end{itemize}
@@ -3463,10 +3574,23 @@ I principali vantaggi e problemi indicati sono:
 \subsubsection{Questionari statici e dinamici}
 Un questionario \textbf{statico} contiene una sequenza di domande stabilita in anticipo, uguale per tutti gli utenti. La scelta delle domande può essere effettuata a \emph{design-time}. In un questionario \textbf{dinamico}, invece, la domanda successiva dipende dalle risposte date dall'utente fino a quel momento: la scelta avviene tipicamente a \emph{runtime} e richiede calcolo durante l'interazione.
 
-Entrambe le strategie generano raccomandazioni personalizzate perché il risultato finale dipende dalle risposte individuali. La strategia dinamica aggiunge un secondo livello di personalizzazione: è personalizzata anche la \emph{sequenza delle domande}. A parità di numero di domande, le slide considerano il metodo dinamico generalmente più efficace nello stimare l'utilità dell'utente, ma anche computazionalmente più impegnativo.
+Entrambe le strategie generano raccomandazioni personalizzate perché il risultato finale dipende dalle risposte individuali. La strategia dinamica aggiunge un secondo livello di personalizzazione: è personalizzata anche la \emph{sequenza delle domande}. \textbf{A parità di numero di domande, le slide considerano il metodo dinamico generalmente più efficace nello stimare l'utilità dell'utente, ma anche computazionalmente più impegnativo}.
+
+\newpage
 
 \subsection{Inferenza bayesiana: probabilità e aggiornamento delle credenze}
-
+Supponiamo di essere in uno spazio 
+\[
+(\Omega,\mathcal{F},P)
+\]
+E gli eventi che vedremo appartengono a $\mathcal{F}$ \\
+Inoltre distingui:
+\begin{enumerate}
+    \item \(\Omega\) è lo spazio campionario, ovvero l'insieme di tutti i possibili risultati dell'esperimento
+    \item Un singolo risultato \(\omega \in \Omega\) è detto evento elementare.
+    \item Un evento \(A\) è un sottoinsieme di \(\Omega\), cioè \(A \subseteq \Omega\), appartenente alla \(\sigma\)-algebra \(\mathcal{F}\).
+    Questo perchè, $P$ è definita dall'insieme $\mathcal{F}$ a $[0,1]$, cosi $P$ prende in ingresso eventi.
+\end{enumerate}
 \subsubsection{Prior, likelihood e posterior}
 Nel quadro bayesiano, una distribuzione di probabilità esprime una conoscenza incerta, o \emph{belief}, su un'ipotesi. Una nuova osservazione modifica questa conoscenza attraverso il \emph{belief update}. Indicando con $A$ un'ipotesi e con $B$ l'evidenza osservata, il teorema di Bayes è
 \[
@@ -3479,25 +3603,28 @@ I termini sono:
     \item $P(B)$: probabilità dell'evidenza, che normalizza il risultato;
     \item $P(A\mid B)$: \emph{posterior probability}, probabilità dell'ipotesi dopo aver incorporato $B$.
 \end{itemize}
-La relazione fondamentale è che il \emph{posterior} è proporzionale al prodotto tra \emph{prior} e \emph{likelihood}, e la normalizzazione produce nuovamente una distribuzione di probabilità.
 
 \subsection{Esempio didattico: Height elicitation}
 
 \subsubsection{Due domande per stimare un'altezza}
 Le slide introducono un problema semplificato, indipendente dal dominio commerciale, per distinguere due operazioni: \emph{inference} ed \emph{experiment design}. L'obiettivo è stimare l'altezza ignota $H$ di una persona osservando se riesce a passare sotto ostacoli di altezza prefissata. Sono disponibili due interrogazioni con soglie $h_1$ e $h_2$, con $h_1>h_2$.
 
-\textbf{Problema di inferenza:} dopo avere fissato le soglie e osservato il comportamento della persona, quali informazioni sono disponibili su $H$?
+\textbf{Problema di inferenza:} \textbf{dopo avere fissato le soglie (h1 e h2) quindi aver dato dei valori e osservato il comportamento della persona (quindi come passa), quali informazioni sono disponibili su $H$?}
 
-Assumendo che «superare un ostacolo» significhi \emph{passare sotto} di esso e ignorando le convenzioni nei casi di uguaglianza, si distinguono tre eventi:
+Assumendo che «superare un ostacolo» significhi \emph{passare sotto} di esso e ignorando le convenzioni nei casi di uguaglianza, si distinguono tre eventi, quindi abbiamo queste informazioni:
 \begin{align*}
 B_1&=\{H>h_1\} &&\text{(non passa sotto l'ostacolo più alto)},\\
 B_2&=\{h_2<H<h_1\} &&\text{(passa sotto $h_1$, ma non sotto $h_2$)},\\
 B_3&=\{H<h_2\} &&\text{(passa sotto entrambi gli ostacoli)}.
 \end{align*}
-\textbf{Nota sulla slide 81 (ripetuta nella 82).} Nell'ultimo caso, il materiale riporta $H>h_2$. Questa disuguaglianza contraddice la situazione descritta: se l'altezza della persona consente di passare sotto entrambi gli ostacoli, si deduce $H<h_2$. Il ragionamento qui esplicita la correzione, mantenendo il significato fisico dell'esempio originale.
 
 Le osservazioni forniscono quindi \emph{intervalli} ammissibili per $H$, ma non necessariamente un singolo valore. Nasce una nuova domanda: \emph{quale valore numerico stimare per $H$?}
-
+Quindi sostanzialmente anche osservato il comportamento, non so dire, l'altezza precisa, ma devo stimarla, questo è quindi un problema di inferenza, ed è distinto dal secondo problema che vedremo piu avanti.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{_files/_images/stima1.png}
+    \label{fig:etichetta}
+\end{figure}
 \subsubsection{Prior gaussiano sulle altezze}
 Per produrre una stima occorre partire da una distribuzione a priori. Le slide assumono, per semplicità, che la persona appartenga alla popolazione femminile e rappresentano l'altezza mediante una distribuzione approssimativamente gaussiana:
 \[
@@ -3511,7 +3638,8 @@ La sua densità può essere scritta come
 p_H(h)=\frac{1}{\sigma\sqrt{2\pi}}
 \exp\!\left(-\frac{(h-\mu)^2}{2\sigma^2}\right).
 \]
-Questa scrittura esplicita matematicamente la distribuzione gaussiana raffigurata nelle slide; i parametri numerici sono quelli indicati nel materiale.
+
+Quindi noi usiamo questa distribuzione a priori per stimare $H$, per ora è il meglio che possiamo fare, ma adesso vedremo qualcosa di piu preciso.
 
 \subsubsection{Aggiornamento del prior in seguito a un'osservazione}
 Si consideri il primo caso, in cui si osserva che la persona non passa sotto l'ostacolo di altezza $h_1$, dunque $B_1=\{H>h_1\}$. La \emph{likelihood}, vista come funzione del possibile valore $h$ di $H$, è
@@ -3527,11 +3655,41 @@ Si tratta di un'osservazione ideale priva di errori: se l'altezza è fissata, l'
 p_H(h\mid B_1)
 =\frac{P(B_1\mid H=h)p_H(h)}{P(B_1)}.
 \]
+\begin{observation}{ }
+    Qui stiamo applicando il teorema di Bayes, abbiamo:
+    :
+    \[
+    \boxed{A_h=\{H=h\}}
+    \]
+
+    \[
+    \boxed{B_1=\{H>h_1\}}
+    \]
+    Partiamo dalla formula generale:
+\[
+P(A\mid B)=\frac{P(B\mid A)P(A)}{P(B)}
+\]
+
+Nel nostro caso, concettualmente vogliamo calcolare:
+\[
+P(H=h\mid H>h_1)
+\]
+Poiché \(H\) è continua, l'evento \(A_h=\{H=h\}\) ha probabilità zero. Per questo si utilizza la versione di Bayes per le densità.
+Questa formula quindi è utile,perchè mi dice come varia la PDF, data un'osservazione, a differenza di quella a priori.
+\begin{center}
+    Quindi mi sta descrivendo la distribuzione dell'altezza, una volta che io ho osservato che $H > h1$
+\end{center}
+\end{observation}
 Il denominatore è la probabilità a priori dell'osservazione:
 \[
 P(B_1)=P(H>h_1)=\int_{h_1}^{+\infty}p_H(t)\,dt.
 \]
-Ne segue l'espressione della \textbf{gaussiana troncata}:
+Ne segue quindi che da:
+\[
+p_H(h\mid B_1)
+=\frac{P(B_1\mid H=h)p_H(h)}{P(B_1)}.
+\]
+Viene fuori l'espressione della \textbf{gaussiana troncata}:
 \[
 p_H(h\mid H>h_1)=
 \begin{cases}
@@ -3539,16 +3697,208 @@ p_H(h\mid H>h_1)=
 0,&h\leq h_1.
 \end{cases}
 \]
-Il grafico della slide 85 illustra precisamente queste operazioni: \emph{prior}, \emph{likelihood}, prodotto non normalizzato (\emph{joint}) e successiva normalizzazione che genera il \emph{posterior}. La probabilità originariamente assegnata ad altezze incompatibili viene eliminata, e la massa residua è rinormalizzata a uno.
-
-\subsubsection{Come ottenere una stima puntuale}
-Conoscere il posterior non equivale a scegliere una stima puntuale. Le slide confrontano \emph{moda} e \emph{media} della distribuzione troncata. Nel caso illustrato, in cui la soglia $h_1$ è sulla destra del massimo della gaussiana, la moda del posterior si trova al limite $h_1$: questa stima ripete sostanzialmente la soglia già conosciuta e risulta poco informativa. Una scelta alternativa è la media della distribuzione a posteriori,
+Per spiegare questo, devi vedere il termine a destra di $p_H(h\mid B_1)$ e devi vedere come varia quando cambia $h$, ed esce questo sistema, grazie anche a:
 \[
-\hat H=\mathbb E[H\mid H>h_1]
-=\frac{\displaystyle\int_{h_1}^{+\infty}h\,p_H(h)\,dh}
-{\displaystyle\int_{h_1}^{+\infty}p_H(h)\,dh}.
+P(B_1\mid H=h)=
+\begin{cases}
+0,&h\leq h_1,\\
+1,&h>h_1.
+\end{cases}
 \]
-La distribuzione troncata non è più simmetrica, dunque in generale media e mediana non coincidono. La scelta della statistica usata come stima dipende dal criterio considerato, ma le slide sottolineano in particolare l'utilità di ragionare sulla media del posterior.
+
+
+
+E quindi questa PDF condizionata che ci troviamo alla fine di questi passaggi, ci descrive una gaussiana troncata, dicendoci, come varia la distribuzione, sapendo che l'altezza $H$ è maggiore di h1.
+\textbf{Dato che prima avevamo usato una distribuzione a priori per stimare l'altezza $H$, ora usiamo una distribuzione "piu precisa"!!!!!.}
+
+\subsubsection{Dobbiamo concludere una stima puntuale per $H$}
+
+Finora abbiamo visto come, attraverso il teorema di Bayes, sia possibile aggiornare la distribuzione di probabilità della variabile aleatoria continua $H$, che rappresenta l'altezza di una persona, sulla base di una nuova osservazione.
+
+Inizialmente, la nostra conoscenza sull'altezza è descritta da una distribuzione \textbf{prior}, che assumiamo essere gaussiana:
+
+\begin{equation*}
+    H \sim \mathcal{N}(\mu,\sigma^2)
+\end{equation*}
+
+dove, nell'esempio considerato:
+
+\begin{equation*}
+    \mu = 164.7 \text{ cm},
+    \qquad
+    \sigma = 7.1 \text{ cm}.
+\end{equation*}
+
+Successivamente, osserviamo che la persona non riesce a passare sotto un ostacolo di altezza $h_1$. Questa osservazione corrisponde all'evento:
+
+\begin{equation*}
+    B_1 = \{H > h_1\}.
+\end{equation*}
+
+Applicando il teorema di Bayes per le densità, otteniamo la distribuzione \textbf{posterior}:
+
+\begin{equation*}
+    p_H(h \mid B_1)
+    =
+    \frac{P(B_1 \mid H=h)\,p_H(h)}{P(B_1)}.
+\end{equation*}
+
+Poiché l'osservazione è deterministica, la likelihood assume la forma:
+
+\begin{equation*}
+    P(B_1 \mid H=h)
+    =
+    \begin{cases}
+        0, & h \leq h_1,\\
+        1, & h > h_1.
+    \end{cases}
+\end{equation*}
+
+Di conseguenza, la densità posterior diventa:
+
+\begin{equation*}
+    \boxed{
+    p_H(h \mid H>h_1)
+    =
+    \begin{cases}
+        0, & h \leq h_1,\\[6pt]
+        \displaystyle\frac{p_H(h)}{P(H>h_1)}, & h>h_1.
+    \end{cases}
+    }
+\end{equation*}
+
+Questa distribuzione prende il nome di \textbf{gaussiana troncata}, poiché la parte della distribuzione prior incompatibile con l'osservazione viene eliminata, mentre la parte rimanente viene rinormalizzata affinché l'integrale della densità sia uguale a $1$.
+
+\paragraph{Dalla distribuzione posterior a una stima puntuale}
+
+Il teorema di Bayes ci ha permesso di aggiornare la nostra conoscenza sull'altezza della persona, ottenendo una nuova distribuzione di probabilità.
+
+Tuttavia, \textbf{conoscere la distribuzione posterior non equivale ad avere una stima puntuale dell'altezza}.
+
+Infatti, la distribuzione posterior descrive come la probabilità è distribuita tra tutte le altezze compatibili con l'osservazione, ma non restituisce direttamente un singolo valore numerico.
+
+Il nostro obiettivo è quindi ricavare dalla distribuzione posterior un valore $\hat{H}$ che possa rappresentare una stima dell'altezza effettiva della persona.
+
+\paragraph{Stima mediante la media della distribuzione posterior}
+
+Un approccio consiste nel calcolare la \textbf{media della distribuzione gaussiana troncata}, ossia il valore atteso della variabile aleatoria $H$ condizionato all'osservazione $H>h_1$.
+
+Formalmente, definiamo la nostra stima come:
+
+\begin{equation*}
+    \boxed{
+    \hat{H}
+    =
+    \mathbb{E}[H\mid H>h_1]
+    }
+\end{equation*}
+
+Ricordiamo che, per una variabile aleatoria continua $H$ con funzione di densità $p_H(h)$, il valore atteso è definito come:
+
+\begin{equation*}
+    \mathbb{E}[H]
+    =
+    \int_{-\infty}^{+\infty}
+    h\,p_H(h)\,dh.
+\end{equation*}
+
+Questa espressione rappresenta una media pesata dei possibili valori di $H$, dove il peso è determinato dalla funzione di densità.
+
+Nel nostro caso, però, non vogliamo calcolare la media della distribuzione iniziale, bensì quella della distribuzione posterior.
+
+Dobbiamo quindi utilizzare la densità condizionata:
+
+\begin{equation*}
+    p_H(h\mid H>h_1).
+\end{equation*}
+
+Poiché questa densità è nulla per tutti i valori $h\leq h_1$, il valore atteso condizionato può essere scritto come:
+
+\begin{equation*}
+    \boxed{
+    \hat{H}
+    =
+    \int_{h_1}^{+\infty}
+    h\,p_H(h\mid H>h_1)\,dh
+    }
+\end{equation*}
+
+Questa formula rappresenta precisamente la \textbf{media della gaussiana troncata}.
+
+\paragraph{Esplicitazione del calcolo mediante Bayes}
+
+Vediamo ora come ottenere una formula che dipenda direttamente dalla densità prior.
+
+Partiamo dalla definizione:
+
+\begin{equation*}
+    \hat{H}
+    =
+    \int_{h_1}^{+\infty}
+    h\,p_H(h\mid H>h_1)\,dh.
+\end{equation*}
+
+Attraverso il teorema di Bayes, sappiamo che per $h>h_1$:
+
+\begin{equation*}
+    p_H(h\mid H>h_1)
+    =
+    \frac{p_H(h)}{P(H>h_1)}.
+\end{equation*}
+
+Sostituendo questa espressione nell'integrale, otteniamo:
+
+\begin{equation*}
+    \hat{H}
+    =
+    \int_{h_1}^{+\infty}
+    h\,
+    \frac{p_H(h)}{P(H>h_1)}
+    \,dh.
+\end{equation*}
+
+Osserviamo che $P(H>h_1)$ è una probabilità che non dipende dalla variabile di integrazione $h$.
+
+Possiamo quindi portare questo termine fuori dall'integrale:
+
+\begin{equation*}
+    \hat{H}
+    =
+    \frac{1}{P(H>h_1)}
+    \int_{h_1}^{+\infty}
+    h\,p_H(h)\,dh.
+\end{equation*}
+
+Ricordiamo inoltre che, per una variabile aleatoria continua, la probabilità di appartenere a un intervallo si ottiene integrando la sua funzione di densità.
+
+Pertanto:
+
+\begin{equation*}
+    P(H>h_1)
+    =
+    \int_{h_1}^{+\infty}
+    p_H(h)\,dh.
+\end{equation*}
+
+Sostituendo anche questa espressione, otteniamo:
+
+\begin{equation*}
+    \boxed{
+    \hat{H}
+    =
+    \mathbb{E}[H\mid H>h_1]
+    =
+    \frac{
+        \displaystyle\int_{h_1}^{+\infty}
+        h\,p_H(h)\,dh
+    }{
+        \displaystyle\int_{h_1}^{+\infty}
+        p_H(h)\,dh
+    }
+    }
+\end{equation*}
+
+Questa è la formula che consente di calcolare la \textbf{media della distribuzione gaussiana troncata}, utilizzando direttamente la densità prior.
 
 \subsection{Experiment design: scegliere domande informative}
 
