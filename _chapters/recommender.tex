@@ -3611,7 +3611,7 @@ Le slide introducono un problema semplificato, indipendente dal dominio commerci
 
 \textbf{Problema di inferenza:} \textbf{dopo avere fissato le soglie (h1 e h2) quindi aver dato dei valori e osservato il comportamento della persona (quindi come passa), quali informazioni sono disponibili su $H$?}
 
-Assumendo che «superare un ostacolo» significhi \emph{passare sotto} di esso e ignorando le convenzioni nei casi di uguaglianza, si distinguono tre eventi, quindi abbiamo queste informazioni:
+Assumendo che «superare un ostacolo» significhi \emph{passare sotto} di esso e ignorando le convenzioni nei casi di uguaglianza, si distinguono tre eventi che ci possono verificare in modo mutualmente esclusivo:
 \begin{align*}
 B_1&=\{H>h_1\} &&\text{(non passa sotto l'ostacolo più alto)},\\
 B_2&=\{h_2<H<h_1\} &&\text{(passa sotto $h_1$, ma non sotto $h_2$)},\\
@@ -3619,7 +3619,7 @@ B_3&=\{H<h_2\} &&\text{(passa sotto entrambi gli ostacoli)}.
 \end{align*}
 
 Le osservazioni forniscono quindi \emph{intervalli} ammissibili per $H$, ma non necessariamente un singolo valore. Nasce una nuova domanda: \emph{quale valore numerico stimare per $H$?}
-Quindi sostanzialmente anche osservato il comportamento, non so dire, l'altezza precisa, ma devo stimarla, questo è quindi un problema di inferenza, ed è distinto dal secondo problema che vedremo piu avanti.
+Quindi sostanzialmente anche osservato il comportamento, non so dire, l'altezza precisa, ma devo stimarla, questo è quindi un problema di inferenza, ed è distinto dal secondo problema che vedremo piu avanti, che è un problema di experiment design.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.7\textwidth]{_files/_images/stima1.png}
@@ -3904,42 +3904,408 @@ Questa è la formula che consente di calcolare la \textbf{media della distribuzi
 
 \subsubsection{Dall'inferenza alla progettazione delle osservazioni}
 Il secondo problema dell'esempio riguarda la scelta delle soglie $h_1$ e $h_2$ \emph{prima} di osservare la persona. Non si domanda più che cosa concludere dopo un test; si domanda quali test convenga proporre. Questa è la differenza tra \emph{inference} e \emph{experiment design}.
+La differenza principale è:
+\begin{enumerate}
+    \item Prima domanda (Inference) (a cui abbiamo risposto sopra): fissate le altezze \(h_1\) e \(h_2\), cosa possiamo dedurre sull'altezza \(H\) della persona dopo aver osservato se supera gli ostacoli?
+    \item Seconda domanda (Experiment Design): come dobbiamo scegliere \(h_1\) e \(h_2\) affinché le osservazioni ci forniscano più informazioni possibili sull'altezza \(H\)?
+\end{enumerate}
 
 Ogni coppia $h_1>h_2$ determina tre possibili regioni per l'altezza:
 \[
 (-\infty,h_2),\qquad (h_2,h_1),\qquad (h_1,+\infty).
 \]
-Il diagramma delle slide 88--90 rappresenta una struttura ad albero con tre foglie. Ciascuna foglia corrisponde a un possibile esito delle osservazioni e contiene una diversa distribuzione a posteriori, indicata nel diagramma come $Q_1,Q_2,Q_3$. L'obiettivo è confrontare alberi ottenuti da coppie differenti di soglie per stabilire quali riducano maggiormente l'incertezza su $H$.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{_files/_images/area.png}
+    \label{fig:etichetta}
+\end{figure}
 
-\subsubsection{Guadagno informativo e divergenza di Kullback--Leibler}
-Le slide propongono di quantificare la variazione tra la distribuzione a priori $P$ e una distribuzione a posteriori $Q$ attraverso il \emph{guadagno di informazione}; una possibile misura è la \emph{Kullback--Leibler divergence}.
+\subsubsection{Experiment Design: Guadagno Informativo e scelta ottimale delle soglie}
 
-Per distribuzioni continue con densità $p$ e $q$, tale divergenza si scrive
-\[
-D_{\mathrm{KL}}(Q\|P)
-=\int q(h)\log\frac{q(h)}{p(h)}\,dh,
-\]
-quando l'espressione è definita. La misura quantifica in quale misura la distribuzione aggiornata $Q$ differisce dalla conoscenza iniziale $P$. Non è in generale simmetrica: $D_{\mathrm{KL}}(Q\|P)$ non coincide necessariamente con $D_{\mathrm{KL}}(P\|Q)$.
+L'obiettivo dell'\textbf{Experiment Design} è progettare un esperimento che consenta di acquisire quanta più informazione possibile su una quantità incognita.
 
-Poiché la risposta all'interrogazione non è conosciuta in anticipo, il confronto delle possibili scelte di $(h_1,h_2)$ richiede di considerare gli esiti alternativi. Esplicitando l'idea di \emph{guadagno informativo atteso} indicata nelle slide, si può scrivere
-\[
-G(h_1,h_2)=\sum_{m=1}^{3}P(B_m)\,
-D_{\mathrm{KL}}\!\left(P(H\mid B_m)\|P(H)\right).
-\]
-La probabilità $P(B_m)$ pesa quanto è verosimile ogni esito prima del test; il termine di divergenza misura la differenza tra prior e posterior qualora quell'esito sia osservato. La scelta è cercare soglie che rendano elevato il guadagno informativo atteso. Le slide enunciano tale obiettivo, senza sviluppare un algoritmo numerico generale di ottimizzazione.
+Nel nostro esempio, vogliamo determinare le altezze $h_1$ e $h_2$ di due ostacoli, in modo che le osservazioni effettuate sulla persona ci permettano di \textbf{ridurre il più possibile l'incertezza sulla sua altezza $H$}.
 
-\subsubsection{Tripartizione bilanciata della gaussiana}
-La slide 91 presenta una \emph{balanced tripartition of a Gaussian}: le soglie sono scelte in modo da suddividere il prior in tre parti di probabilità uguale. Quindi
+In particolare, vogliamo scegliere le soglie che massimizzano il \textbf{guadagno informativo atteso} (\textit{Expected Information Gain}).
+
+\paragraph{1. Distribuzione prior e possibili osservazioni}
+
+Ricordiamo che l'altezza della persona è rappresentata dalla variabile aleatoria continua:
+
+\begin{equation*}
+    H \sim \mathcal{N}(164.7,7.1^2).
+\end{equation*}
+
+Questa distribuzione rappresenta la nostra conoscenza iniziale sull'altezza della persona, ossia la distribuzione \textbf{prior}.
+
+Supponiamo di scegliere due soglie $h_1$ e $h_2$, con:
+
+\begin{equation*}
+    h_2 < h_1.
+\end{equation*}
+
+Queste soglie suddividono i possibili valori dell'altezza in tre regioni:
+
+\begin{align*}
+    B_1 &= \{H < h_2\},\\
+    B_2 &= \{h_2 < H < h_1\},\\
+    B_3 &= \{H > h_1\}.
+\end{align*}
+
+Ogni regione corrisponde a un possibile risultato dell'esperimento:
+
+\begin{itemize}
+    \item \textbf{$B_1$:} la persona passa sotto entrambi gli ostacoli.
+    \item \textbf{$B_2$:} la persona passa sotto l'ostacolo di altezza $h_1$, ma non sotto quello di altezza $h_2$.
+    \item \textbf{$B_3$:} la persona non passa sotto nessuno dei due ostacoli.
+\end{itemize}
+
+Le uguaglianze ai valori $h_1$ e $h_2$ possono essere trascurate, poiché $H$ è una variabile aleatoria continua e la probabilità di assumere un valore esatto è nulla.
+
+Una volta effettuato l'esperimento, osserveremo uno dei tre risultati e potremo aggiornare la nostra distribuzione prior mediante il teorema di Bayes.
+
+Otterremo quindi una delle tre possibili distribuzioni posterior:
+
+\begin{equation*}
+    p_H(h\mid B_1),
+    \qquad
+    p_H(h\mid B_2),
+    \qquad
+    p_H(h\mid B_3).
+\end{equation*}
+
+La domanda fondamentale diventa:
+
+\begin{quote}
+    Come possiamo misurare quanta informazione abbiamo acquisito passando dalla distribuzione prior alla distribuzione posterior?
+\end{quote}
+
+\paragraph{2. Il guadagno informativo e la divergenza di Kullback--Leibler}
+
+Per misurare il cambiamento della nostra conoscenza dopo un'osservazione, possiamo utilizzare la \textbf{divergenza di Kullback--Leibler} (\textit{Kullback--Leibler Divergence}, KL).
+
+Supponiamo di avere due funzioni di densità di probabilità:
+
+\begin{itemize}
+    \item $p(h)$: la distribuzione prior dell'altezza;
+    \item $q(h)$: la distribuzione posterior dell'altezza, ottenuta dopo aver effettuato un'osservazione.
+\end{itemize}
+
+La divergenza di Kullback--Leibler è definita come:
+
+\begin{equation*}
+    \boxed{
+    D_{\mathrm{KL}}(q\|p)
+    =
+    \int_{-\infty}^{+\infty}
+    q(h)
+    \log\left(
+        \frac{q(h)}{p(h)}
+    \right)dh
+    }
+\end{equation*}
+
+dove si assume che $q$ sia assolutamente continua rispetto a $p$.
+
+Questa quantità misura quanto la distribuzione posterior $q$ differisca dalla distribuzione prior $p$.
+
+In particolare:
+
+\begin{itemize}
+    \item Se
+    \begin{equation*}
+        D_{\mathrm{KL}}(q\|p)=0,
+    \end{equation*}
+    allora le due distribuzioni coincidono quasi ovunque. L'osservazione non ha modificato la distribuzione delle nostre conoscenze.
+
+    \item Se
+    \begin{equation*}
+        D_{\mathrm{KL}}(q\|p)>0,
+    \end{equation*}
+    allora la distribuzione posterior differisce dalla prior: l'osservazione ha prodotto un aggiornamento della nostra conoscenza.
+
+    \item Quanto maggiore è la divergenza, tanto maggiore è il cambiamento della distribuzione secondo questa misura.
+\end{itemize}
+
+Nel nostro contesto, interpretiamo la divergenza KL tra posterior e prior come una misura del \textbf{guadagno informativo ottenuto attraverso l'osservazione}.
+
+È importante osservare che la divergenza KL non costituisce una distanza matematica in senso stretto, poiché, in generale, non è simmetrica:
+
+\begin{equation*}
+    D_{\mathrm{KL}}(q\|p)
+    \neq
+    D_{\mathrm{KL}}(p\|q).
+\end{equation*}
+
+Pertanto, l'ordine delle due distribuzioni è importante.
+
+\paragraph{3. Applicazione della KL al nostro esperimento}
+
+Supponiamo di aver fissato una coppia candidata di soglie $(h_1,h_2)$.
+
+Questa scelta determina tre possibili osservazioni, ciascuna associata a una diversa distribuzione posterior.
+
+Consideriamo il primo risultato:
+
+\begin{equation*}
+    B_1=\{H<h_2\}.
+\end{equation*}
+
+Se osservassimo $B_1$, potremmo utilizzare il teorema di Bayes per ottenere la densità posterior:
+
+\begin{equation*}
+    p_H(h\mid B_1).
+\end{equation*}
+
+Il guadagno informativo associato a questa osservazione sarebbe:
+
+\begin{equation*}
+    G_1
+    =
+    D_{\mathrm{KL}}
+    \left(
+        p_H(h \mid B_1)
+        \|
+        p_H(h)
+    \right).
+\end{equation*}
+
+Analogamente, per gli altri due risultati avremmo:
+
+\begin{equation*}
+    G_2
+    =
+    D_{\mathrm{KL}}
+    \left(
+        p_H(h \mid B_2)
+        \|
+        p_H(h)
+    \right)
+\end{equation*}
+
+e
+
+\begin{equation*}
+    G_3
+    =
+    D_{\mathrm{KL}}
+    \left(
+        p_H(h \mid B_3)
+        \|
+        p_H(h)
+    \right).
+\end{equation*}
+
+Quindi, fissata una determinata coppia di soglie, possiamo associare un guadagno informativo a ciascuno dei tre possibili risultati dell'esperimento.
+
+\textbf{Tuttavia, prima di effettuare le osservazioni, non sappiamo quale risultato si verificherà.}
+
+Questo significa che non possiamo scegliere le soglie basandoci esclusivamente sul guadagno informativo di una singola osservazione.
+
+Dobbiamo considerare tutti i possibili risultati, tenendo conto della probabilità che ciascuno si verifichi.
+
+\paragraph{4. Guadagno informativo atteso: Expected Information Gain}
+
+Introduciamo il \textbf{guadagno informativo atteso} (\textit{Expected Information Gain}, EIG).
+
+Data una coppia di soglie $(h_1,h_2)$, definiamo:
+
+\begin{equation*}
+    \boxed{
+    G(h_1,h_2)
+    =
+    \sum_{m=1}^{3}
+    P(B_m)
+    D_{\mathrm{KL}}
+    \left(
+        p_H(h \mid B_m)
+        \|
+        p_H(h)
+    \right)
+    }
+\end{equation*}
+
+dove:
+
+\begin{itemize}
+    \item $G(h_1,h_2)$ rappresenta il guadagno informativo atteso associato alla scelta delle soglie $h_1$ e $h_2$;
+
+    \item $B_m$ rappresenta l'$m$-esimo possibile risultato dell'esperimento;
+
+    \item $P(B_m)$ è la probabilità che si verifichi il risultato $B_m$, calcolata utilizzando la distribuzione prior;
+
+    \item $p_H(h\mid B_m)$ rappresenta la densità posterior che otterremmo se osservassimo $B_m$;
+
+    \item $D_{\mathrm{KL}}$ misura quanto quella posterior differisca dalla prior.
+\end{itemize}
+
+Esplicitando la sommatoria:
+
+\begin{align*}
+    G(h_1,h_2)
+    ={}&
+    P(B_1)
+    D_{\mathrm{KL}}
+    \left(
+        p_H(h \mid B_1)\|p_H(h)
+    \right)
+    \\
+    &+
+    P(B_2)
+    D_{\mathrm{KL}}
+    \left(
+        p_H(h \mid B_2)\|p_H(h)
+    \right)
+    \\
+    &+
+    P(B_3)
+    D_{\mathrm{KL}}
+    \left(
+        p_H(h\mid B_3)\|p_H(h)
+    \right).
+\end{align*}
+
+Questa formula rappresenta una \textbf{media pesata dei tre possibili guadagni informativi}, dove ciascun peso corrisponde alla probabilità che si verifichi la relativa osservazione.
+
+
+Il \textbf{guadagno informativo atteso} permette quindi di valutare
+quanto una determinata scelta delle soglie sia informativa
+\textbf{prima ancora di effettuare l'esperimento}.
+
+Ricordiamo che il nostro obiettivo è massimizzare il guadagno
+informativo, definito come:
 \[
-P(H<h_2)=\frac13,\qquad
-P(h_2<H<h_1)=\frac13,\qquad
-P(H>h_1)=\frac13.
+\boxed{
+G(h_1,h_2)=IG(H;B)
+=\mathcal{H}(H)-\mathcal{H}(H\mid B)
+}
 \]
-Con $H\sim\mathcal N(164.7,7.1^2)$, i valori approssimati riportati sono
+dove:
+\begin{enumerate}
+    \item $\mathcal{H}(H)$ rappresenta l'incertezza iniziale
+    sull'altezza della persona.
+    \item $\mathcal{H}(H\mid B)$ rappresenta l'incertezza residua
+    attesa sull'altezza dopo aver osservato il risultato
+    dell'esperimento.
+    \item $IG(H;B)$ rappresenta la riduzione attesa
+    dell'incertezza grazie all'esperimento.
+\end{enumerate}
+
+Nel nostro caso, il risultato $B$ dell'esperimento è
+\textbf{completamente determinato dall'altezza $H$}:
+conoscendo l'altezza della persona, sappiamo con certezza
+a quale delle tre regioni appartiene.
+
+Pertanto:
 \[
-\boxed{h_2\simeq161.6\,\mathrm{cm},\qquad h_1\simeq167.8\,\mathrm{cm}.}
+\mathcal{H}(B\mid H)=0.
 \]
-Queste soglie corrispondono approssimativamente al $33.33$-esimo e al $66.67$-esimo percentile della distribuzione. La scelta rende equiprobabili i tre possibili esiti, offrendo una motivazione intuitiva per ottenere osservazioni informative nel modello deterministico presentato.
+
+Utilizzando la proprietà dell'informazione mutua:
+\[
+IG(H;B)
+=\mathcal{H}(B)-\mathcal{H}(B\mid H),
+\]
+otteniamo:
+\[
+\boxed{
+G(h_1,h_2)=\mathcal{H}(B)
+}
+\]
+
+Quindi, \textbf{massimizzare il guadagno informativo atteso
+equivale a massimizzare l'entropia del risultato
+dell'esperimento}:
+\[
+\boxed{
+\max_{h_1,h_2}G(h_1,h_2)
+=
+\max_{h_1,h_2}\mathcal{H}(B)
+}
+\]
+
+Poiché $B$ può assumere tre possibili risultati, la sua
+entropia è massima quando le tre regioni sono equiprobabili:
+\[
+\boxed{
+P(B_1)=P(B_2)=P(B_3)=\frac{1}{3}
+}
+\]
+
+In conclusione, \textbf{scegliere soglie che producono tre
+regioni equiprobabili permette di massimizzare
+l'informazione acquisita sull'altezza della persona},
+riducendo il più possibile l'incertezza residua attesa.
+
+\newpage
+
+
+\begin{observation}{Scelta ottimale delle soglie}
+
+Consideriamo due possibili configurazioni delle soglie $(h_1,h_2)$.
+
+\textbf{Prima configurazione: regioni sbilanciate.}
+Supponiamo che:
+\[
+P(B_1)=0.90,\qquad P(B_2)=P(B_3)=0.05.
+\]
+In questo caso, il risultato dell'esperimento è largamente
+prevedibile: con probabilità $0.90$ osserveremo $B_1$.
+Il guadagno informativo atteso è quindi relativamente basso.
+
+\textbf{Seconda configurazione: regioni equiprobabili.}
+Supponiamo invece che:
+\[
+P(B_1)=P(B_2)=P(B_3)=\frac13.
+\]
+Nessun risultato è più probabile degli altri. Ogni osservazione
+individua una regione ed esclude le altre due, massimizzando
+il guadagno informativo atteso.
+
+Infatti, poiché nel nostro esperimento $G(h_1,h_2)=\mathcal H(B)$,
+il guadagno è massimo quando le tre regioni sono equiprobabili.
+
+\medskip
+\textbf{Formalizzazione dell'Experiment Design.}
+
+Cerchiamo la coppia di soglie ottimali:
+\[
+\boxed{
+(h_1^*,h_2^*)
+=\underset{h_1>h_2}{\operatorname{arg\,max}}
+\;G(h_1,h_2)
+}
+\]
+dove $G(h_1,h_2)$ è il guadagno informativo atteso
+e $h_1>h_2$ garantisce il corretto ordinamento delle soglie.
+
+Poiché il massimo si ottiene con tre regioni equiprobabili,
+imponiamo:
+\[
+P(H<h_2)=P(h_2<H<h_1)=P(H>h_1)=\frac13.
+\]
+
+Data la distribuzione prior:
+\[
+H\sim\mathcal N(164.7,7.1^2),
+\]
+otteniamo le soglie ottimali:
+\[
+\boxed{
+h_2\approx161.6\text{ cm},
+\qquad
+h_1\approx167.8\text{ cm}
+}
+\]
+
+Questa suddivisione prende il nome di
+\textbf{Balanced Tripartition of a Gaussian}:
+la distribuzione prior viene divisa in tre regioni
+con uguale massa di probabilità, massimizzando
+l'informazione acquisita in media dall'esperimento.
+
+\end{observation}
+
 
 \subsection{Processo iterativo di elicitazione delle preferenze}
 
@@ -3973,6 +4339,9 @@ u(\mathbf a)=\sum_{i=1}^{n}\lambda_i v_i(a_i)
 =\lambda_1v_1(a_1)+\cdots+\lambda_nv_n(a_n).}
 \]
 Qui il simbolo $\nu$ è adottato per la \emph{funzione} di utilità, così da non confonderlo con il vettore $\mathbf u$ che nelle slide successive descrive il \emph{tipo di utente}; le slide indicano entrambi con $u$.
+\begin{center}
+    Quindi ora le funzioni di utilità sono rappresentati con $\nu$
+\end{center}
 
 I termini dell'espressione hanno ruoli distinti:
 \begin{itemize}
@@ -4016,6 +4385,7 @@ Le slide assumono, per semplicità, che ciascuna funzione di valore $v_i$ abbia 
 \[
 \boxed{\mathbf u=(\lambda_1,\ldots,\lambda_n,p_1,\ldots,p_n).}
 \]
+\textbf{L'utente quindi è rappresentato da questo vettore}
 Il vettore contiene due gruppi di componenti:
 \begin{enumerate}
     \item gli $n$ pesi $\lambda_i$, che esprimono l'importanza relativa dei diversi attributi e soddisfano i vincoli della combinazione convessa;
@@ -4026,8 +4396,8 @@ Esso ha dunque $2n$ componenti nella parametrizzazione semplificata delle slide,
 \nu_{\mathbf u}(\mathbf a)=
 \sum_{i=1}^{n}\lambda_i\,v_i(a_i;p_i),
 \]
-dove la notazione $v_i(a_i;p_i)$ indica che la valutazione dell'attributo dipende sia dal valore osservato $a_i$ sia dal parametro di preferenza $p_i$.
-
+dove la notazione $v_i(a_i;p_i)$ indica che la valutazione dell'attributo dipende sia dal valore osservato $a_i$ sia dal parametro di preferenza $p_i$, \textbf{quindi si può vedere come una funzione a due variabili}
+e quindi $\nu_{\mathbf u}(\mathbf a)$ rappresenta l'utilità che l'utente \(\mathbf{u}\) attribuisce all'item \(\mathbf{a}\).
 \subsubsection{Belief sullo spazio degli user types}
 Il sistema non conosce necessariamente il tipo effettivo dell'utente prima del questionario. La sua incertezza è rappresentata mediante una distribuzione di probabilità
 \[
