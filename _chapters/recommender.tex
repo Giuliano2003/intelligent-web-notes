@@ -4307,19 +4307,7 @@ l'informazione acquisita in media dall'esperimento.
 \end{observation}
 
 
-\subsection{Processo iterativo di elicitazione delle preferenze}
-
-\subsubsection{Il ciclo di interazione}
-Il diagramma della slide 92 riassume la struttura del processo BPE:
-\begin{enumerate}
-    \item si definisce un \emph{prior belief}, cioè una distribuzione di probabilità sui possibili tipi di utente;
-    \item un modulo di \emph{query selection} sceglie una domanda $q$;
-    \item il sistema presenta $q$ all'utente e riceve una risposta $r$;
-    \item l'informazione osservata, indicata con $q:r$, viene impiegata per aggiornare il belief;
-    \item si verifica una condizione di terminazione: se essa è soddisfatta, si produce una raccomandazione; altrimenti si seleziona un'altra domanda usando il belief aggiornato.
-\end{enumerate}
-Il questionario è quindi \emph{adattivo}: le risposte precedenti influenzano le distribuzioni di probabilità e, per questa via, anche le domande successive. Le slide fino alla numero 97 introducono la rappresentazione necessaria per formalizzare questo ciclo, senza sviluppare ancora le successive formule operative di aggiornamento e di selezione.
-
+\subsection{Bayesian Preference Elicitation}
 \subsection{Rappresentazione strutturata degli item}
 Gli item vengono descritti mediante uno schema di attributi. Per uno smartphone, le slide citano per esempio RAM, dimensione dello schermo (\emph{screen size}), megapixel della fotocamera, marca (\emph{brand}) e prezzo. Un singolo item è quindi rappresentato mediante il vettore
 \[
@@ -4338,6 +4326,7 @@ Le preferenze dell'utente sono rappresentate da una funzione di utilità $u(\mat
 u(\mathbf a)=\sum_{i=1}^{n}\lambda_i v_i(a_i)
 =\lambda_1v_1(a_1)+\cdots+\lambda_nv_n(a_n).}
 \]
+In questa caso l'utilità significa quanto un determinato item soddisfa le preferenze di un utente, cioè desiderabile / interessante per un determinato utente.
 Qui il simbolo $\nu$ è adottato per la \emph{funzione} di utilità, così da non confonderlo con il vettore $\mathbf u$ che nelle slide successive descrive il \emph{tipo di utente}; le slide indicano entrambi con $u$.
 \begin{center}
     Quindi ora le funzioni di utilità sono rappresentati con $\nu$
@@ -4397,7 +4386,7 @@ Esso ha dunque $2n$ componenti nella parametrizzazione semplificata delle slide,
 \sum_{i=1}^{n}\lambda_i\,v_i(a_i;p_i),
 \]
 dove la notazione $v_i(a_i;p_i)$ indica che la valutazione dell'attributo dipende sia dal valore osservato $a_i$ sia dal parametro di preferenza $p_i$, \textbf{quindi si può vedere come una funzione a due variabili}
-e quindi $\nu_{\mathbf u}(\mathbf a)$ rappresenta l'utilità che l'utente \(\mathbf{u}\) attribuisce all'item \(\mathbf{a}\).
+e quindi $\nu_{\mathbf u}(\mathbf a)$ rappresenta l'utilità / giudizio che l'utente \(\mathbf{u}\) attribuisce all'item \(\mathbf{a}\).
 \subsubsection{Belief sullo spazio degli user types}
 Il sistema non conosce necessariamente il tipo effettivo dell'utente prima del questionario. La sua incertezza è rappresentata mediante una distribuzione di probabilità
 \[
@@ -4422,7 +4411,7 @@ Queste \emph{pairwise comparison queries} hanno due proprietà rilevanti:
 L'indipendenza dal domain model riguarda quindi la \emph{formulazione della domanda} all'utente: il modello strutturato delle caratteristiche rimane necessario, nel metodo BPE illustrato, per rappresentare le preferenze e valutare gli item.
 
 \subsubsection{Numero di query possibili}
-Se il catalogo contiene $m$ item distinti e ogni domanda confronta una coppia \emph{non ordinata} di item differenti, le possibili domande sono
+Se il catalogo contiene $m$ item distinti e ogni domanda confronta una coppia \emph{non ordinata} (cioè non conta l'ordine delle coppie, è irrilevante, quindi $(a,b) = (b,a)$)di item differenti, le possibili domande sono
 \[
 \boxed{|\mathcal Q|=\binom{m}{2}=\frac{m(m-1)}{2}.}
 \]
