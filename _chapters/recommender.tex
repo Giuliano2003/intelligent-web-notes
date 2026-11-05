@@ -4388,13 +4388,35 @@ Esso ha dunque $2n$ componenti nella parametrizzazione semplificata delle slide,
 dove la notazione $v_i(a_i;p_i)$ indica che la valutazione dell'attributo dipende sia dal valore osservato $a_i$ sia dal parametro di preferenza $p_i$, \textbf{quindi si può vedere come una funzione a due variabili}
 e quindi $\nu_{\mathbf u}(\mathbf a)$ rappresenta l'utilità / giudizio che l'utente \(\mathbf{u}\) attribuisce all'item \(\mathbf{a}\).
 \subsubsection{Belief sullo spazio degli user types}
-Il sistema non conosce necessariamente il tipo effettivo dell'utente prima del questionario. La sua incertezza è rappresentata mediante una distribuzione di probabilità
-\[
-P(\mathbf u),
-\]
-definita sullo spazio dei tipi ammissibili. Questa è la distribuzione chiamata \emph{belief} nelle slide: assegna plausibilità a diverse combinazioni di pesi e parametri di forma.
+Il sistema non conosce necessariamente il tipo effettivo dell'utente prima del questionario. La sua incertezza è rappresentata mediante una distribuzione di probabilità.
+Voglio formalizzare questo, e si fa diversamente da come abbiamo visto nelle varie volte.
+L'interpretazione bayesiana (o epistemica) della probabilità. In questo paradigma, l'incertezza non deriva da un esperimento fisico ripetibile (come "estrarre un utente a caso"), ma riflette puramente uno stato di informazione incompleta, quindi 
+non si pensa ad un "esperimento", come ci siamo abituati a fare.
 
-La funzione $\nu_{\mathbf u}(\mathbf a)$ descrive l'utilità \emph{se il tipo fosse noto}; la distribuzione $P(\mathbf u)$ rappresenta invece ciò che il sistema \emph{sa o non sa} sulle preferenze dell'utente. L'elicitazione mira a modificare progressivamente questa distribuzione mediante l'acquisizione delle risposte. Nella struttura della slide 92, $P(\mathbf u)$ costituisce il prior iniziale e il modulo di aggiornamento produce belief successivi.
+
+Supponiamo che il vero parametro dell'utente con cui il sistema sta interagendo è $u^*$ (es. 0.7). Questo valore è fisso e deterministico, ma è nascosto al sistema. Poiché il sistema non lo conosce prima del questionario, utilizza una variabile aleatoria per modellare la propria ignoranza riguardo a quel valore.
+\begin{enumerate}
+    \item \textbf{Dominio o Spazio campionario ($\Omega$)} : Non è più "l'insieme degli utenti fisici". Nel framework bayesiano, lo spazio campionario è l'insieme di tutti i possibili stati del mondo (o spazio delle ipotesi).
+Un singolo elemento $\omega \in \Omega$ rappresenta uno specifico "scenario ipotetico" o "universo alternativo". Per esempio:
+    \begin{itemize}
+        \item $\omega_1$: "Lo scenario in cui il vero peso dell'utente è 0.3"
+        \item $\omega_2$: "Lo scenario in cui il vero peso dell'utente è 0.7 (quello reale, ma ignoto)"
+    \end{itemize}
+    \item \textbf{Codominio o Spazio dei tipi ($\mathcal{U}$)} : Rimane l'insieme dei valori numerici ammissibili per il peso. Trattandosi di un singolo parametro continuo, è un sottoinsieme dei numeri reali, ad esempio $\mathcal{U} = [0, 1]$.
+    \item \textbf{La variabile aleatoria ($U$)} : La variabile aleatoria è la funzione misurabile $U: \Omega \to \mathcal{U}$ che mappa lo "stato del mondo" astratto al valore numerico del parametro in quello specifico scenario.
+Se avviene l'evento $\omega$ (ovvero, ci troviamo nello scenario in cui il peso è $x$), la funzione restituisce quel numero: $U(\omega) = x$.
+\end{enumerate}
+Molto spesso, in statistica bayesiana, per evitare l'inutile livello di astrazione degli "stati del mondo", si fa coincidere direttamente lo spazio campionario $\Omega$ con lo spazio dei parametri $\mathcal{U}$.
+Se $\Omega = \mathcal{U}$, allora la variabile aleatoria $U$ diventa semplicemente la funzione identità:
+\begin{enumerate}
+    \item $U(u) = u$ per ogni $u \in \mathcal{U}$
+\end{enumerate}
+In questo modo, la distribuzione $P(\mathbf{u})$ chiamata belief è una PDF definita direttamente sullo spazio dei tipi ammissibili. Essa non assegna probabilità all'estrazione di un individuo, ma assegna "plausibilità a diverse combinazioni di pesi" per rappresentare matematicamente l'intensità della convinzione del sistema su dove possa trovarsi il valore fisso $u^* = 0.7$. 
+Un modo per descrivere sarebbe che $U$ segue una gaussiana, L'unica limitazione tecnica nel definire la variabile aleatoria in questo modo riguarda il codominio $\mathcal{U}$. Poiché una gaussiana standard ha un dominio infinito $(-\infty, +\infty)$, se il tuo parametro del peso deve essere strettamente confinato in un intervallo matematico (ad esempio tra 0 e 1), si utilizza tipicamente una gaussiana troncata agli estremi.
+\begin{observation}{}
+    Nota che quando mettiamo in mezzo il parametro $u^*$, stiamo pensando al vettore di parametri di parametri dell'utente che abbiamo visto prima di $2n$ componenti, nel nostro caso supponiamo per semplicità che ci sia un componente.
+\end{observation}
+
 
 \subsection{Query e reply}
 
@@ -4445,4 +4467,894 @@ La risposta \texttt{dunno} non deve essere interpretata automaticamente come un'
 \subsubsection{Collegamento tra le interrogazioni e il ciclo bayesiano}
 Una query $q$ è dunque una scelta di due item da confrontare e il relativo \emph{reply} $r$ appartiene all'insieme $\{\texttt{a},\texttt{b},\texttt{dunno}\}$. Nel processo illustrato dalla slide 92, l'osservazione della coppia domanda--risposta $q:r$ alimenta il modulo di aggiornamento del belief $P(\mathbf u)$.
 
-Si conclude così il percorso delle slide 60--97: dalle rappresentazioni semantiche degli item e dalle tecniche content-based, passando per la valutazione dell'accuratezza dei recommender systems, fino all'introduzione di un modello bayesiano delle preferenze e di domande comparative con cui acquisire attivamente informazione sull'utente.
+
+\paragraph{Formalizzazione delle query e delle risposte.}
+
+Nella BPE, una query consiste tipicamente nel confronto tra due item.
+
+Consideriamo quindi due item $\mathbf{a}$ e $\mathbf{b}$ e definiamo:
+
+\[
+q=(\mathbf{a},\mathbf{b}).
+\]
+
+La query corrisponde alla domanda (nota che $q$ non è una variabile aleatoria):
+
+\begin{quote}
+Quale dei due item preferisci, $\mathbf{a}$ oppure $\mathbf{b}$?
+\end{quote}
+
+Indichiamo con $\mathcal{Q}$ l'insieme delle query ammissibili.
+
+È importante distinguere la domanda dalla risposta:
+
+\begin{itemize}
+    \item $q\in\mathcal{Q}$ rappresenta la domanda selezionata dal sistema;
+    \item $r$ rappresenta la risposta effettivamente osservata;
+    \item $q:r$ rappresenta l'osservazione della risposta $r$ alla domanda $q$.
+\end{itemize}
+
+Per una query che confronta due item, il possibile insieme delle risposte è:
+
+\[
+\mathcal{R}=\{a,b,\text{dunno}\},
+\]
+
+dove:
+
+\begin{itemize}
+    \item $a$: l'utente preferisce strettamente l'item $\mathbf{a}$;
+    \item $b$: l'utente preferisce strettamente l'item $\mathbf{b}$;
+    \item $\text{dunno}$: nessuno dei due item viene preferito in maniera sufficientemente distinta.
+\end{itemize}
+
+\paragraph{La risposta come variabile aleatoria.}
+
+Prima di interrogare l'utente, il sistema non conosce quale risposta verrà fornita.
+
+Pertanto, fissata una query $q$, possiamo definire una variabile aleatoria discreta:
+
+\[
+R_q:\Omega\longrightarrow\mathcal{R}.
+\]
+
+La variabile aleatoria $R_q$ rappresenta la risposta che si otterrebbe sottoponendo la domanda $q$ all'utente.
+
+Per esempio:
+
+\[
+P(R_q=a)=0.6,
+\qquad
+P(R_q=b)=0.3,
+\qquad
+P(R_q=\text{dunno})=0.1.
+\]
+
+Queste probabilità indicano quanto il sistema ritenga probabili i diversi esiti della domanda prima di osservare la risposta.
+
+Quando l'utente risponde effettivamente, osserviamo una realizzazione della variabile aleatoria:
+
+\[
+R_q=r.
+\]
+
+Di conseguenza, l'espressione $q:r$ utilizzata nelle slide indica l'osservazione associata all'evento:
+
+\[
+\{R_q=r\}.
+\]
+
+La distinzione fondamentale è quindi la seguente:
+
+\begin{itemize}
+    \item $\mathbf{U}$ è una variabile aleatoria che rappresenta il tipo di utente sconosciuto, generalmente continuo;
+    \item $R_q$ è una variabile aleatoria discreta che rappresenta la risposta alla query $q$;
+    \item $q$ è la domanda scelta dal sistema e viene considerata fissata durante l'aggiornamento bayesiano.
+\end{itemize}
+
+Le due variabili aleatorie sono collegate: la probabilità di ricevere una determinata risposta dipende dal tipo di utente.
+
+\paragraph{Response model.}
+
+La relazione tra lo user type e la risposta viene descritta dal \textit{response model}:
+
+\[
+P(q:r\mid\mathbf{u}).
+\]
+
+Più esplicitamente, questa quantità rappresenta:
+
+\[
+P(R_q=r\mid\mathbf{U}=\mathbf{u}).
+\]
+
+Essa esprime la probabilità che un utente caratterizzato dal vettore di preferenze $\mathbf{u}$ fornisca la risposta $r$ alla domanda $q$.
+
+Per esempio, se una query confronta due smartphone, un utente che attribuisce grande importanza alla RAM potrebbe avere un'elevata probabilità di scegliere quello che presenta una quantità maggiore di memoria.
+
+Il \textit{response model} permette quindi di collegare le preferenze, rappresentate dal vettore $\mathbf{u}$, alle risposte osservabili.
+
+\paragraph{Applicazione della regola di Bayes.}
+
+Supponiamo che il sistema abbia una distribuzione prior descritta dalla densità:
+\[
+p_U(u)
+\]
+e sottoponga all'utente una query $q$.
+
+Supponiamo che l'utente risponda:
+\[
+R_q=a
+\]
+
+Il sistema utilizza la regola di Bayes:
+\[
+\boxed{
+p_{U\mid R_q}(u\mid a)
+=
+\frac{
+P(R_q=a\mid U=u)\,p_U(u)
+}{
+P(R_q=a)
+}
+}
+\]
+
+Dove:
+\begin{itemize}
+    \item \(p_U(u)\) è la densità prior delle preferenze dell'utente.
+    \item \(P(R_q=a\mid U=u)\) è la likelihood, ottenuta dal response model.
+    \item \(P(R_q=a)\) è la probabilità marginale della risposta osservata, che normalizza la distribuzione.
+    \item \(p_{U\mid R_q}(u\mid a)\) è la densità posterior aggiornata delle preferenze dell'utente.
+\end{itemize}
+
+\newpage
+
+
+
+\subsubsection{Recommendation function}
+
+Una volta ottenuta una distribuzione di probabilità sulle preferenze
+dell'utente, detta \textit{belief}, il sistema di raccomandazione deve
+stabilire quale item suggerire all'utente.
+
+Indichiamo con:
+\begin{itemize}
+    \item $\mathcal I$ l'insieme degli item disponibili;
+    \item $\mathcal U$ lo spazio dei possibili vettori di preferenze degli utenti;
+    \item $\mathbf u\in\mathcal U$ un determinato vettore di preferenze;
+    \item $U:\Omega\rightarrow\mathcal U$ la variabile aleatoria che rappresenta
+    il vettore di preferenze sconosciuto dell'utente;
+    \item $P(\mathbf u)$ la densità di probabilità associata alla variabile
+    aleatoria $U$, che rappresenta il belief corrente del sistema.
+\end{itemize}
+Supponiamo per semplicità che $\mathcal{U}$ sia [0,1], e quindi $\mathbf u \in \mathcal{U}$
+
+
+\paragraph{Funzione di utilità e variabile aleatoria.}
+
+Per valutare quanto un determinato item sia adatto a un utente,
+introduciamo la \textbf{funzione di utilità} (vista anche in precedenza):
+
+\[
+\nu_{\mathbf u}(i),
+\]
+
+che restituisce l'utilità dell'item $i\in\mathcal I$ per un utente
+caratterizzato dal vettore di preferenze $\mathbf u$.
+
+È importante osservare che, fissati sia il vettore $\mathbf u$ sia
+l'item $i$, il valore restituito dalla funzione di utilità è un
+\textbf{numero reale deterministico}.
+
+Formalmente, per un item fissato $i$, possiamo considerare la funzione:
+
+\[
+f_i:\mathcal U\longrightarrow\mathbb R,
+\qquad
+f_i(\mathbf u)=\nu_{\mathbf u}(i).
+\]
+
+Questa funzione associa a ogni possibile vettore di preferenze
+$\mathbf u$ un valore reale che rappresenta l'utilità dell'item $i$.
+
+Tuttavia, nella Bayesian Preference Elicitation, il sistema non conosce
+il vero vettore di preferenze dell'utente.
+
+Per rappresentare questa incertezza, viene introdotta la variabile
+aleatoria:
+
+\[
+U:\Omega\longrightarrow\mathcal U.
+\]
+
+La variabile aleatoria $U$ rappresenta quindi il vettore di preferenze
+sconosciuto dell'utente, mentre la sua distribuzione di probabilità
+descrive quanto il sistema ritenga plausibili i diversi vettori
+di preferenze.
+
+A questo punto, anziché valutare la funzione di utilità in un vettore
+di preferenze fissato $\mathbf u$, possiamo valutarla nella variabile
+aleatoria $U$.
+
+Otteniamo così:
+
+\[
+\boxed{
+\nu_U(i)=f_i(U)
+}
+\]
+
+Questa espressione, assumendo che $f_i$ sia misurabile, rappresenta
+una \textbf{variabile aleatoria reale}, poiché è ottenuta applicando
+una funzione deterministica a una variabile aleatoria.
+
+Formalmente:
+
+\[
+\nu_U(i):\Omega\longrightarrow\mathbb R,
+\]
+
+dove, per ogni $\omega\in\Omega$:
+
+\[
+\nu_U(i)(\omega)=\nu_{U(\omega)}(i) \in \mathbb{R}.
+\]
+
+Pertanto, mentre $\nu_{\mathbf u}(i)$ rappresenta un valore deterministico
+di utilità associato a preferenze fissate, $\nu_U(i)$ rappresenta
+una variabile aleatoria, il cui valore dipende dalle preferenze
+sconosciute dell'utente.
+
+\begin{example}{Funzione di utilità come variabile aleatoria}
+
+Supponiamo, per semplicità, che le preferenze dell'utente siano
+rappresentate da un unico parametro reale $\mathbf u$.
+
+Consideriamo un item $i$ e definiamo la seguente funzione di utilità:
+
+\[
+\nu_{\mathbf u}(i)=2\mathbf u+5.
+\]
+
+Se conoscessimo il valore delle preferenze dell'utente, ad esempio
+$\mathbf u=0.8$, potremmo calcolare direttamente:
+
+\[
+\nu_{0.8}(i)=2(0.8)+5=6.6.
+\]
+
+Il risultato è un numero reale deterministico.
+
+Supponiamo, invece, che il sistema non conosca il valore delle
+preferenze e le rappresenti mediante una variabile aleatoria continua:
+
+\[
+U\sim\mathcal N(0,1).
+\]
+
+Sostituendo la variabile aleatoria $U$ nella funzione di utilità,
+otteniamo:
+
+\[
+\nu_U(i)=2U+5.
+\]
+
+Poiché $U$ è una variabile aleatoria, anche $\nu_U(i)$ è una variabile
+aleatoria.
+
+Di conseguenza, possiamo calcolarne il valore atteso:
+
+\begin{align*}
+\mathbb E[\nu_U(i)]
+&=\mathbb E[2U+5]\\
+&=2\mathbb E[U]+5\\
+&=2\cdot 0+5\\
+&=5.
+\end{align*}
+
+Il valore ottenuto rappresenta l'utilità media dell'item $i$
+rispetto alla distribuzione di probabilità che descrive
+le preferenze sconosciute dell'utente.
+
+\end{example}
+
+\begin{observation}{Distinzione tra funzione di utilità e utilità attesa}
+
+È fondamentale distinguere le seguenti tre quantità:
+
+\begin{itemize}
+    \item $\nu_{\mathbf u}(i)$: rappresenta l'utilità dell'item $i$
+    per un vettore di preferenze fissato $\mathbf u$.
+    È un numero reale deterministico.
+
+    \item $\nu_U(i)$: rappresenta l'utilità dell'item $i$
+    quando il vettore di preferenze è descritto dalla variabile
+    aleatoria $U$. È quindi una variabile aleatoria reale.
+
+    \item $\mathbb E_P[\nu_U(i)]$: rappresenta il valore atteso
+    della variabile aleatoria $u_U(i)$ rispetto alla distribuzione
+    corrente $P$ delle preferenze. È un numero reale deterministico,
+    purché il valore atteso esista.
+\end{itemize}
+
+Pertanto, non stiamo calcolando il valore atteso di una funzione
+deterministica valutata in un punto fissato, ma il valore atteso
+di una variabile aleatoria ottenuta applicando una funzione
+deterministica alla variabile aleatoria $U$.
+
+\end{observation}
+
+\paragraph{Utility-based recommendation function.}
+
+La \textit{Utility-based recommendation function} è una funzione
+di raccomandazione che seleziona l'item avente la maggiore
+\textbf{utilità attesa} rispetto al belief corrente del sistema.
+
+Poiché il vero vettore di preferenze dell'utente non è noto,
+il sistema non può determinare con certezza quale item possieda
+la maggiore utilità per quell'utente.
+
+Tuttavia, disponendo di una distribuzione di probabilità
+sulle possibili preferenze, può calcolare l'utilità attesa
+di ciascun item.
+
+Per un item $i\in\mathcal I$, l'utilità attesa è definita come:
+
+\[
+\boxed{
+\mathbb E[\nu_U(i)]
+=
+\int_{\mathcal U}
+P(\mathbf u)\,\nu_{\mathbf u}(i)\,d\mathbf u
+}
+\]
+
+dove:
+\begin{itemize}
+    \item $P(\mathbf u)$ rappresenta la densità di probabilità
+    del vettore aleatorio $U$, secondo il belief corrente;
+
+    \item $u_{\mathbf u}(i)$ rappresenta l'utilità dell'item $i$
+    per un utente caratterizzato dal vettore di preferenze
+    $\mathbf u$;
+
+    \item $\mathcal U$ rappresenta lo spazio dei possibili
+    vettori di preferenze.
+\end{itemize}
+
+L'integrale viene utilizzato perché, nel modello considerato,
+$U$ è una variabile aleatoria continua.
+
+Il calcolo consiste nel considerare tutti i possibili vettori
+di preferenze $\mathbf u$, valutare l'utilità dell'item $i$
+per ciascuno di essi e pesare tale utilità mediante la
+densità di probabilità associata a quel vettore.
+
+Integrando questi contributi, otteniamo un singolo valore reale:
+
+\[
+\mathbb E_P[\nu_U(i)]\in\mathbb R,
+\]
+
+che rappresenta l'utilità media dell'item $i$ rispetto
+all'incertezza corrente sulle preferenze dell'utente.
+
+Una volta calcolata l'utilità attesa per ciascun item,
+il sistema seleziona quello che la massimizza.
+
+Formalmente, la funzione di raccomandazione è definita come:
+
+\[
+\boxed{
+\operatorname{rec}(P)
+=
+\arg\max_{i\in\mathcal I}
+\mathbb E_P[\nu_U(i)]
+}
+\]
+
+Equivalentemente:
+
+\[
+\boxed{
+\operatorname{rec}(P)
+=
+\arg\max_{i\in\mathcal I}
+\int_{\mathcal U}
+P(\mathbf u)\,\nu_{\mathbf u}(i)\,d\mathbf u
+}
+\]
+
+È importante distinguere il ruolo degli operatori:
+
+\begin{itemize}
+    \item L'operatore $\mathbb E_P$ calcola l'utilità attesa
+    di un determinato item rispetto alla distribuzione
+    corrente delle preferenze.
+
+    \item L'operatore $\arg\max$ individua l'item, o l'insieme
+    degli item in caso di parità, che massimizza tale utilità attesa.
+\end{itemize}
+
+Pertanto, la funzione $\operatorname{rec}(P)$ non restituisce
+il valore massimo dell'utilità attesa, ma l'item che realizza
+tale massimo, assumendo che esso esista e che venga adottata
+una regola di selezione in caso di parità.
+
+\begin{example}{Selezione dell'item con maggiore utilità attesa}
+
+Supponiamo che il sistema debba scegliere quale smartphone
+raccomandare tra due possibili item:
+
+\[
+\mathcal I=\{a,b\}.
+\]
+
+Consideriamo, a scopo illustrativo, due possibili vettori
+di preferenze:
+
+\[
+\mathbf u_1,\qquad \mathbf u_2.
+\]
+
+Supponiamo che il belief corrente assegni:
+
+\[
+P(U=\mathbf u_1)=0.7,
+\qquad
+P(U=\mathbf u_2)=0.3.
+\]
+
+Le funzioni di utilità assumono i seguenti valori:
+
+\[
+\begin{array}{c|cc}
+ & a & b\\
+\hline
+\mathbf u_1 & 10 & 4\\
+\mathbf u_2 & 2 & 9
+\end{array}
+\]
+
+In questo esempio, a differenza del modello continuo
+precedentemente considerato, $U$ è una variabile aleatoria
+discreta. Pertanto, il valore atteso viene calcolato mediante
+una sommatoria.
+
+Per l'item $a$:
+
+\begin{align*}
+\mathbb E_P[u_U(a)]
+&=0.7\cdot 10+0.3\cdot 2\\
+&=7.6.
+\end{align*}
+
+Per l'item $b$:
+
+\begin{align*}
+\mathbb E_P[u_U(b)]
+&=0.7\cdot 4+0.3\cdot 9\\
+&=5.5.
+\end{align*}
+
+Poiché:
+
+\[
+7.6>5.5,
+\]
+
+il sistema raccomanda:
+
+\[
+\boxed{
+\operatorname{rec}(P)=a
+}
+\]
+
+Il sistema non sta affermando che l'item $a$ sia necessariamente
+il migliore per l'utente reale, poiché le sue preferenze
+non sono note con certezza.
+
+Sta invece selezionando l'item che presenta la maggiore
+utilità attesa rispetto alla distribuzione corrente
+delle preferenze.
+
+\end{example}
+
+\begin{observation}{Ruolo del belief nella raccomandazione}
+
+La funzione di raccomandazione dipende dal belief corrente $P$.
+
+Nella Bayesian Preference Elicitation, ogni risposta osservata
+alle query può modificare tale distribuzione attraverso
+l'aggiornamento bayesiano.
+
+Di conseguenza, anche le utilità attese degli item possono
+cambiare:
+
+\[
+P_{\text{prior}}
+\longrightarrow
+P_{\text{posterior}}
+\longrightarrow
+\mathbb E_{P_{\text{posterior}}}[u_U(i)].
+\]
+
+Pertanto, una nuova osservazione può portare il sistema
+a selezionare un item differente rispetto a quello
+che avrebbe raccomandato prima dell'aggiornamento.
+
+Questo evidenzia il collegamento tra il processo
+di \textit{preference elicitation} e la fase di raccomandazione:
+le query permettono di aggiornare la conoscenza
+delle preferenze dell'utente, mentre la recommendation
+function utilizza tale conoscenza per individuare
+l'item con la maggiore utilità attesa.
+
+\end{observation}
+
+\paragraph{Regret-based recommendation function.}
+
+Un approccio alternativo consiste nel considerare il \textit{regret}, ovvero il rimpianto associato alla scelta di un item.
+
+Per un dato user type $\mathbf{u}$, definiamo l'item ottimale come:
+
+\[
+\operatorname{best\_item}_{\mathbf{u}}
+=
+\underset{j\in\mathcal{I}}{\arg\max}
+\nu_{\mathbf{u}}(j).
+\]
+
+Questo è l'item che massimizzerebbe l'utilità se conoscessimo esattamente le preferenze dell'utente, cioè se conoscessimo $\mathbf{u}$.
+
+Il regret associato alla raccomandazione dell'item $i$ è:
+
+\[
+\operatorname{Regret}(\mathbf{u},i)
+=
+\nu_{\mathbf{u}}
+(\operatorname{best\_item}_{\mathbf{u}})
+-
+\nu_{\mathbf{u}}(i).
+\]
+
+Tale differenza misura quanta utilità viene persa raccomandando $i$ anziché l'item migliore per quello specifico utente.
+
+Poiché il vero user type è sconosciuto, consideriamo l'expected regret:
+
+\[
+\mathbb{E}_P[
+\operatorname{Regret}(\mathbf{U},i)
+].
+\]
+
+La funzione di raccomandazione diventa:
+
+\[
+\boxed{
+\operatorname{rec}(P)
+=
+\underset{i\in\mathcal{I}}{\arg\min}
+\mathbb{E}_P
+\left[
+\nu_{\mathbf{U}}
+(\operatorname{best\_item}_{\mathbf{U}})
+-
+\nu_{\mathbf{U}}(i)
+\right]
+}
+\]
+
+L'obiettivo è dunque scegliere l'item che minimizza la perdita di utilità attesa rispetto alla scelta ideale.
+
+\newpage
+
+\subsubsection{Query selection: selezione della domanda ottimale}
+
+La fase di \textit{query selection} determina quale domanda sottoporre all'utente durante il processo di elicitazione.
+
+L'obiettivo non è selezionare una domanda qualsiasi, ma individuare quella che dovrebbe produrre il maggiore miglioramento della conoscenza sulle preferenze dell'utente.
+
+Supponiamo di avere:
+
+\begin{itemize}
+    \item Un belief corrente $P$.
+    \item Un insieme $\mathcal{Q}$ di query ammissibili.
+    \item Un insieme $\mathcal{R}$ delle possibili risposte.
+\end{itemize}
+
+Per ogni query $q$, il sistema considera tutte le risposte che l'utente potrebbe fornire.
+
+\paragraph{Belief improvement.}
+
+Indichiamo con:
+
+\[
+BI(P,q:r)
+\]
+
+il \textit{belief improvement}, ovvero una misura del miglioramento ottenuto passando dal belief corrente $P$ al belief aggiornato $P_{q:r}$.
+
+Il valore dipende dalla risposta effettivamente osservata.
+
+Per esempio, una determinata risposta potrebbe modificare notevolmente il belief, mentre un'altra potrebbe produrre un aggiornamento meno significativo.
+
+Tuttavia, quando il sistema seleziona la domanda, \textbf{non conosce ancora quale risposta verrà fornita}.
+
+Questo perchè dobbiamo intepretare questa misura, come se facessimo una misura "predittiva", cioè sto valutando le varie domande, prima di selezionarla una e dirla all'utentes
+
+Per questo motivo deve considerare il miglioramento atteso.
+
+\paragraph{Expected Belief Improvement.}
+
+L'\textit{Expected Belief Improvement} (EBI) è definito come:
+
+\[
+\boxed{
+EBI(P,q)
+=
+\sum_{r\in\mathcal{R}}
+P(R_q = r)\,BI(P,q:r)
+}
+\]
+
+Questa espressione è proprio un valore atteso rispetto alla variabile aleatoria discreta \(R_q\)
+Infatti, fissati \(P\) e \(q\), possiamo definire la variabile aleatoria:
+\[
+X=BI(P,q:R_q)
+\]
+Il suo valore dipende dalla risposta aleatoria \(R_q\).
+
+Quindi:
+\[
+\boxed{
+EBI(P,q)=\mathbb E[BI(P,q:R_q)]
+}
+\]
+
+
+Per comprenderla, consideriamo separatamente i termini:
+
+\begin{itemize}
+    \item $P(q:r)$ è la probabilità di ottenere la risposta $r$ alla query $q$.
+    \item $BI(P,q:r)$ misura il miglioramento che si avrebbe osservando proprio quella risposta.
+    \item La sommatoria considera tutte le possibili risposte, pesando ciascun miglioramento per la probabilità che si verifichi.
+\end{itemize}
+
+Il query selector sceglie quindi:
+
+\[
+\boxed{
+\hat q
+=
+\underset{q\in\mathcal{Q}}{\arg\max}
+EBI(P,q)
+}
+\]
+
+In altri termini, il sistema seleziona la domanda che, mediamente, dovrebbe produrre il maggiore miglioramento del belief.
+
+
+\subsubsection{Query filter: riduzione dello spazio delle domande}
+
+Un problema importante della Bayesian Preference Elicitation riguarda il costo computazionale della selezione delle query.
+
+Quando le domande consistono in confronti tra coppie di item, il numero totale delle query cresce quadraticamente rispetto al numero di item.
+
+Dato un insieme di $N$ item, il numero di possibili confronti non ordinati tra due item distinti è:
+
+\[
+|\mathcal{Q}|
+=
+\binom{N}{2}
+=
+\frac{N(N-1)}{2}.
+\]
+
+Di conseguenza, quando il numero di item diventa elevato, valutare l'Expected Belief Improvement di tutte le query può risultare computazionalmente molto costoso.
+
+Per affrontare questo problema vengono introdotti dei \textit{query filters}, ovvero meccanismi che riducono l'insieme delle query candidate, eliminando quelle ritenute meno promettenti.
+
+\paragraph{Ordinamento degli item.}
+
+Dato un belief corrente $P$, il sistema ordina gli item in base alla loro utilità attesa:
+
+\[
+\mathbb{E}_P[\nu_{\mathbf{U}}(i)].
+\]
+
+Supponiamo che gli item ordinati siano:
+
+\[
+i_1,i_2,\ldots,i_N,
+\]
+
+con:
+
+\[
+\mathbb{E}_P[\nu_{\mathbf{U}}(i_1)]
+\geq
+\mathbb{E}_P[\nu_{\mathbf{U}}(i_2)]
+\geq
+\cdots
+\geq
+\mathbb{E}_P[\nu_{\mathbf{U}}(i_N)].
+\]
+
+Le slide presentano tre strategie principali di filtraggio.
+
+\paragraph{TopTwo.}
+
+La strategia \textit{TopTwo} considera soltanto il confronto tra i due item che presentano la maggiore utilità attesa.
+
+Pertanto:
+
+\[
+\mathcal{Q}_{\mathrm{TopTwo}}
+=
+\{(i_1,i_2)\}.
+\]
+
+\textbf{e quindi si pone una sola domanda all'utente, cioè quale preferisce fra i due item}
+
+Il principale vantaggio è l'estrema semplicità computazionale, poiché il query selector deve valutare una sola domanda.
+
+Tuttavia, questa scelta limita notevolmente l'esplorazione delle possibili preferenze dell'utente.
+
+\paragraph{TopWithAll.}
+
+La strategia \textit{TopWithAll} considera tutti i confronti tra l'item con maggiore utilità attesa (\textbf{in questo caso è $i_1$}) e gli altri item disponibili.
+
+Formalmente:
+
+\[
+\mathcal{Q}_{\mathrm{TopWithAll}}
+=
+\{(i_1,i_j):2\leq j\leq N\}.
+\]
+
+Il numero di query candidate è:
+
+\[
+|\mathcal{Q}_{\mathrm{TopWithAll}}|=N-1.
+\]
+
+Questa strategia permette di confrontare l'item attualmente considerato migliore con tutte le alternative.
+
+Rispetto a TopTwo, offre una maggiore varietà di domande, mantenendo una complessità inferiore rispetto alla valutazione di tutte le coppie.
+
+Ma vengono poste quattro domande all'utente?
+No! Questo è il punto più importante.
+
+Le quattro query sono soltanto le query candidate.
+
+Il sistema deve ancora scegliere quale di queste sottoporre all'utente.
+
+Per farlo, può calcolare l'Expected Belief Improvement:
+\[
+EBI(P,q)=
+\sum_{r\in\mathcal R}P(q:r)\,BI(P,q:r)
+\]
+
+\paragraph{TopSquareRoot.}
+
+La strategia \textit{TopSquareRoot} limita i confronti agli item che occupano le prime posizioni del ranking, considerando approssimativamente i primi $\sqrt{N}$ item.
+
+Ponendo:
+
+\[
+m=\lceil\sqrt{N}\rceil,
+\]
+
+l'insieme considerato è:
+
+\[
+\mathcal{I}_{m}
+=
+\{i_1,\ldots,i_m\}.
+\]
+
+Le query candidate sono i confronti tra coppie di item appartenenti a questo insieme:
+
+\[
+\mathcal{Q}_{\mathrm{TopSquareRoot}}
+=
+\{(i_j,i_k):1\leq j<k\leq m\}.
+\]
+
+Il numero di query risulta:
+
+\[
+|\mathcal{Q}_{\mathrm{TopSquareRoot}}|
+=
+\frac{m(m-1)}{2}.
+\]
+
+Poiché $m$ è dell'ordine di $\sqrt{N}$, il numero di query candidate è dell'ordine di $N$, anziché di $N^2$.
+
+Questa strategia concentra quindi la ricerca sugli item più promettenti, evitando di considerare tutte le alternative disponibili.
+
+\paragraph{Confronto tra i filtri.}
+
+Le tre strategie rappresentano compromessi differenti tra costo computazionale e capacità di individuare query informative:
+
+\begin{itemize}
+    \item \textbf{TopTwo}: valuta una sola query, risultando estremamente veloce.
+    \item \textbf{TopWithAll}: confronta il miglior item con tutte le alternative, considerando $N-1$ query.
+    \item \textbf{TopSquareRoot}: considera i confronti tra gli item collocati nelle prime $\sqrt{N}$ posizioni, riducendo lo spazio di ricerca.
+\end{itemize}
+
+L'introduzione dei filtri permette quindi di migliorare la scalabilità della BPE, a fronte della possibilità di escludere alcune query che avrebbero potuto risultare informative.
+
+
+\subsubsection{Sintesi del processo di Bayesian Preference Elicitation}
+
+L'intero processo può essere riassunto mediante la seguente sequenza:
+
+\begin{enumerate}
+    \item \textbf{Belief iniziale.}
+
+    Il sistema dispone di una distribuzione di probabilità sui possibili user types:
+
+    \[
+    P(\mathbf{u}).
+    \]
+
+    \item \textbf{Selezione della query.}
+
+    Il sistema seleziona la domanda che massimizza l'Expected Belief Improvement:
+
+    \[
+    \hat q
+    =
+    \underset{q\in\mathcal{Q}}{\arg\max}
+    \sum_{r\in\mathcal{R}}
+    P(q:r)BI(P,q:r).
+    \]
+
+    \item \textbf{Interazione con l'utente.}
+
+    Viene posta la query $\hat q$ e viene osservata una risposta:
+
+    \[
+    R_{\hat q}=r.
+    \]
+
+    \item \textbf{Aggiornamento bayesiano.}
+
+    Il belief viene aggiornato secondo:
+
+    \[
+    P_{\hat q:r}(\mathbf{u})
+    =
+    \frac{
+    P(\mathbf{u})
+    P(\hat q:r\mid\mathbf{u})
+    }{
+    P(\hat q:r)
+    }.
+    \]
+
+    \item \textbf{Verifica della condizione di terminazione.}
+
+    Se la condizione di terminazione non è soddisfatta, il processo viene ripetuto utilizzando il belief aggiornato.
+
+    \item \textbf{Raccomandazione finale.}
+
+    Quando il processo termina, il sistema seleziona un item sulla base del belief corrente.
+
+    Nel caso della raccomandazione basata sull'utilità attesa:
+
+    \[
+    i^*
+    =
+    \underset{i\in\mathcal{I}}{\arg\max}
+    \mathbb{E}_P[u_{\mathbf{U}}(i)].
+    \]
+\end{enumerate}
+
+La caratteristica fondamentale della Bayesian Preference Elicitation è quindi l'integrazione tra \textbf{inferenza bayesiana}, utilizzata per aggiornare la conoscenza sulle preferenze, e \textbf{selezione attiva delle query}, utilizzata per scegliere quali informazioni acquisire.
+
+Il processo non mira necessariamente a identificare con certezza tutti i parametri dello user type, ma a ottenere una conoscenza sufficiente per individuare una raccomandazione di buona qualità, utilizzando un numero limitato di interazioni con l'utente.
