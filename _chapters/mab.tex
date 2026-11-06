@@ -1,0 +1,2186 @@
+\chapter{Multiarmed Bandit Problem (MAB)}
+\section{MAB}
+
+\subsection{Il Multi-Armed Bandit Problem e il dilemma Exploration--Exploitation}
+
+Il materiale introduce il \emph{Multi-Armed Bandit Problem} (MAB), con particolare attenzione alle applicazioni Web e ai sistemi di raccomandazione (\emph{Recommender Systems}, abbreviati nel seguito come RecSys).
+
+Il problema fondamentale alla base dei MAB è il cosiddetto \emph{exploration--exploitation dilemma}, cioè il problema di stabilire quanto un agente debba:
+\begin{itemize}
+    \item sfruttare la conoscenza già acquisita, scegliendo l'opzione che al momento sembra migliore (\emph{exploitation});
+    \item esplorare opzioni differenti, anche apparentemente peggiori, allo scopo di acquisire nuova informazione (\emph{exploration}).
+\end{itemize}
+
+Il dilemma nasce perché le conseguenze delle diverse azioni non sono note a priori con certezza. L'agente deve quindi contemporaneamente \emph{imparare} quali azioni siano migliori e \emph{decidere} quali azioni eseguire.
+
+\subsubsection{Esempio motivazionale nei sistemi di raccomandazione}
+
+Si consideri un utente che utilizza per la prima volta un'applicazione di food delivery. L'utente seleziona un ristorante messicano e assegna alla propria esperienza una valutazione molto positiva.
+
+Un sistema di raccomandazione può dedurre da questa prima interazione che l'utente gradisca la cucina messicana. Di conseguenza, comincia a raccomandare altri ristoranti messicani. Se l'utente prova un secondo ristorante messicano e assegna nuovamente una valutazione positiva, il sistema rafforza ulteriormente la propria convinzione.
+
+Si instaura quindi il seguente meccanismo:
+\begin{enumerate}
+    \item l'utente manifesta inizialmente una preferenza;
+    \item il RecSys utilizza tale preferenza per formulare raccomandazioni simili;
+    \item tali raccomandazioni generano ulteriori osservazioni dello stesso tipo;
+    \item i nuovi feedback confermano il modello già costruito;
+    \item il sistema diventa progressivamente più orientato verso la stessa tipologia di contenuto.
+\end{enumerate}
+
+La strategia funziona inizialmente, ma può diventare problematica. L'utente può infatti stancarsi della cucina messicana e, ignorando le raccomandazioni, provare autonomamente un ristorante italiano, scoprendo di apprezzarlo moltissimo.
+
+Il problema è che il RecSys dispone ormai di molti feedback relativi alla cucina messicana. Una singola osservazione positiva sulla cucina italiana potrebbe non essere sufficiente a modificare rapidamente il modello delle preferenze costruito fino a quel momento.
+
+Questo esempio mostra il limite di una strategia eccessivamente orientata all'\emph{exploitation}: sfruttando continuamente ciò che sembra già funzionare, il sistema raccoglie poche informazioni sulle alternative e può quindi restare intrappolato in una rappresentazione incompleta delle preferenze dell'utente.
+
+\subsubsection{Esempio motivazionale: scelta di un banner pubblicitario}
+
+Un secondo esempio riguarda una campagna pubblicitaria online nella quale si dispone di differenti versioni di un banner.
+
+L'obiettivo è scegliere il banner più efficace, cioè quello in grado di massimizzare il \emph{Click-Through Rate} (CTR), ossia la frequenza con cui il banner visualizzato viene cliccato.
+
+Per individuare il banner migliore è possibile effettuare una fase sperimentale:
+\begin{itemize}
+    \item a un gruppo di utenti viene mostrato il primo banner;
+    \item ad altri utenti viene mostrato il secondo;
+    \item il procedimento viene ripetuto per tutte le versioni disponibili;
+    \item vengono infine confrontati i rispettivi valori di conversione, nel caso considerato il CTR.
+\end{itemize}
+
+La fase esplorativa è necessaria per ottenere informazione sufficiente a distinguere le diverse alternative. Tuttavia, ogni volta che viene mostrato un banner sub-ottimale, si incorre potenzialmente in una perdita di profitto rispetto a ciò che si sarebbe ottenuto mostrando il banner migliore.
+
+Esiste dunque una tensione fondamentale:
+\begin{itemize}
+    \item esplorare troppo poco può impedire di identificare il banner realmente migliore;
+    \item esplorare troppo a lungo, quando si dispone già di sufficiente evidenza sull'alternativa migliore, diventa controproducente.
+\end{itemize}
+
+\subsubsection{Definizione di exploitation ed exploration}
+
+Nel contesto delle slide, i due concetti fondamentali sono definiti come segue.
+
+\paragraph{Exploitation.}
+Consiste nello scegliere l'opzione ritenuta migliore sulla base delle conoscenze acquisite fino al momento corrente.
+
+Una politica fortemente \emph{exploitive} tende quindi a privilegiare il guadagno a breve termine. La forma estrema di questa idea è un approccio \emph{greedy}: in ogni istante viene scelta semplicemente l'opzione che, sulla base dei dati disponibili, sembra migliore.
+
+Il rischio è che una scelta iniziale errata venga rinforzata nel tempo e conduca a una soluzione sub-ottimale nel lungo periodo.
+
+\paragraph{Exploration.}
+Consiste nello scegliere deliberatamente un'opzione diversa da quella attualmente ritenuta migliore, allo scopo di acquisire nuova conoscenza.
+
+Una politica fortemente \emph{explorative} può quindi sacrificare reward nel breve termine per aumentare la probabilità di individuare una soluzione migliore nel lungo periodo.
+
+\paragraph{Obiettivo del MAB.}
+Il Multi-Armed Bandit Problem cerca di definire politiche \emph{principled}, cioè fondate su criteri sistematici, in grado di trovare un opportuno \emph{trade-off} tra exploration ed exploitation.
+
+\subsubsection{Interpretazione generale del dilemma}
+
+Il dilemma exploration--exploitation si manifesta in tutti i contesti nei quali:
+\begin{enumerate}
+    \item un agente possiede più azioni o decisioni possibili;
+    \item l'esito delle azioni è incerto;
+    \item l'agente può utilizzare gli esiti osservati per migliorare le decisioni successive.
+\end{enumerate}
+
+Il problema combina pertanto due componenti:
+\begin{itemize}
+    \item \emph{decision making}, perché l'agente deve prendere decisioni;
+    \item \emph{learning}, perché la qualità delle decisioni dipende dall'informazione raccolta durante l'interazione.
+\end{itemize}
+
+Le slide richiamano anche un'analogia con il concetto psicologico di \emph{chiusura cognitiva}:
+\begin{itemize}
+    \item un soggetto eccessivamente ``chiuso'' tende a esplorare poco e ad affidarsi rapidamente alla prima soluzione che appare soddisfacente;
+    \item un soggetto eccessivamente ``aperto'' tende invece a continuare a esplorare senza convergere verso una soluzione definitiva.
+\end{itemize}
+
+Anche in questo caso il comportamento efficace richiede un equilibrio.
+
+\subsection{Exploration ed exploitation nei Recommender Systems}
+
+Nel contesto dei sistemi di raccomandazione, exploration ed exploitation presentano vantaggi e svantaggi differenti.
+
+\subsubsection{Exploitation nei RecSys}
+
+L'exploitation permette di:
+\begin{itemize}
+    \item raccomandare item che, sulla base delle conoscenze acquisite, risultano rilevanti per l'utente.
+\end{itemize}
+
+Tuttavia presenta diversi rischi:
+\begin{itemize}
+    \item la conoscenza delle preferenze dell'utente può restare parziale;
+    \item il sistema può raccomandare item soltanto \emph{localmente ottimali}, cioè ottimali rispetto a ciò che è già noto;
+    \item l'utente può essere progressivamente ``imprigionato in una bolla'', poiché il sistema continua a proporre contenuti simili a quelli già osservati.
+\end{itemize}
+
+\subsubsection{Exploration nei RecSys}
+
+L'exploration permette invece di:
+\begin{itemize}
+    \item costruire una conoscenza più ampia delle preferenze dell'utente;
+    \item aumentare la possibilità di ``stupire'' l'utente proponendo contenuti inattesi ma graditi;
+    \item aprire l'utente a nuove esperienze.
+\end{itemize}
+
+L'esplorazione presenta però un costo:
+\begin{itemize}
+    \item può portare alla raccomandazione di item non rilevanti;
+    \item raccomandazioni non pertinenti possono provocare una disaffezione dell'utente.
+\end{itemize}
+
+Il RecSys deve quindi posizionarsi opportunamente tra questi due estremi.
+
+\subsection{Applicazioni del Multi-Armed Bandit}
+
+Le tecniche MAB trovano applicazione in numerosi domini. Le slide citano, tra gli altri:
+\begin{itemize}
+    \item \emph{clinical trials};
+    \item \emph{portfolio design};
+    \item \emph{wireless selection};
+    \item \emph{hyperparameter optimization};
+    \item \emph{influence maximization};
+    \item \emph{reinforcement learning}/Markov decision trees.
+\end{itemize}
+
+Come riferimento applicativo viene indicato:
+\begin{quote}
+D. Bouneffouf, I. Rish, \emph{A Survey on Practical Applications of Multi-Armed and Contextual Bandits}, 2019.
+\end{quote}
+
+La varietà dei contesti applicativi ha condotto alla formulazione di numerose varianti del problema MAB. Le slide ne considerano soltanto alcune.
+
+\subsection{Arm stocastici}
+
+Una delle assunzioni fondamentali più comuni nel Multi-Armed Bandit Problem è che l'esito di una scelta non sia deterministico.
+
+Esempi:
+\begin{itemize}
+    \item in un \emph{clinical trial}, la somministrazione dello stesso farmaco non produce necessariamente lo stesso decorso in tutti i pazienti;
+    \item l'andamento di un titolo finanziario non è deterministico;
+    \item l'esito di una raccomandazione dipende dalla risposta dell'utente;
+    \item l'esito della visualizzazione di un banner dipende dall'utente che lo osserva.
+\end{itemize}
+
+Nel linguaggio dei MAB:
+\begin{itemize}
+    \item ciascuna alternativa, azione o decisione prende il nome di \emph{arm};
+    \item la selezione di un arm prende il nome di \emph{pull};
+    \item ogni pull produce stocasticamente un \emph{reward}.
+\end{itemize}
+
+\subsubsection{Origine della terminologia ``Multi-Armed Bandit''}
+
+Il nome deriva dall'analogia con le slot machine dei casinò.
+
+Si immagini di avere a disposizione diverse slot machine. Ciascuna possiede un ``braccio'' (\emph{arm}) che può essere tirato (\emph{pull}). Ogni pull restituisce un certo reward.
+
+La caratteristica fondamentale è che il comportamento della macchina è stocastico: a ciascuna slot machine è associata una propria distribuzione di probabilità sui reward.
+
+Inizialmente tali distribuzioni sono sconosciute. Il giocatore deve quindi impararne le caratteristiche esclusivamente sulla base dei reward osservati dopo i pull effettuati.
+
+\subsection{Protocollo formale del MAB stocastico}
+
+Si consideri un insieme di $K$ arm:
+\[
+\mathcal{A}=\{1,\ldots,K\}.
+\]
+
+A ogni arm $i$ è associata una distribuzione di reward sconosciuta $D_i$. Nella notazione delle slide:
+\[
+D_i:\mathbb{R}\rightarrow[0,1].
+\]
+
+Il protocollo mostrato nelle slide assume:
+\begin{itemize}
+    \item $K$ arm;
+    \item un orizzonte temporale di $T$ round, inizialmente considerato noto;
+    \item una distribuzione di reward $D_a$ sconosciuta per ciascun arm $a$.
+\end{itemize}
+
+Per ciascun round $t\in\{1,\ldots,T\}$:
+\begin{enumerate}
+    \item l'algoritmo seleziona un arm $a_t$;
+    \item viene estratto un reward
+    \[
+    r_t\in[0,1]
+    \]
+    dalla distribuzione associata all'arm selezionato:
+    \[
+    r_t\sim D_{a_t};
+    \]
+    \item il reward $r_t$ viene osservato dall'algoritmo.
+\end{enumerate}
+
+Il protocollo specifica inoltre che il reward è campionato indipendentemente dalla distribuzione dell'arm selezionato.
+
+Un aspetto importante è che l'algoritmo osserva il reward dell'arm effettivamente selezionato e ``nulla altro'': non conosce cioè, nello stesso round, quale reward avrebbero prodotto gli arm non scelti.
+
+\subsection{Esempio: banner e reward bernoulliani}
+
+Si consideri nuovamente il problema di scegliere, tra $K$ differenti versioni di un banner pubblicitario, quella più adatta a una campagna.
+
+I banner rappresentano gli arm:
+\[
+\mathcal{A}=\{1,\ldots,K\}.
+\]
+
+Se l'obiettivo è massimizzare il CTR, è naturale codificare il reward come:
+\[
+r=
+\begin{cases}
+1, & \text{se il banner viene cliccato},\\
+0, & \text{se il banner non viene cliccato}.
+\end{cases}
+\]
+
+A ogni banner $i$ è associata una probabilità $p_i$ di ricevere un click.
+
+Pertanto la distribuzione $D_i$ è bernoulliana:
+\[
+D_i(r)=
+\begin{cases}
+p_i, & r=1,\\
+1-p_i, & r=0.
+\end{cases}
+\]
+
+In questo caso il reward atteso è:
+\begin{align*}
+\mu_i
+&=\mathbb{E}[D_i]\\
+&=1\cdot p_i+0\cdot(1-p_i)\\
+&=p_i.
+\end{align*}
+
+Di conseguenza, nel caso dei banner bernoulliani, individuare l'arm con reward atteso massimo equivale a individuare il banner con probabilità di click massima.
+
+\subsection{Obiettivo del MAB stocastico}
+
+A ciascun arm $i$ è associato il valore atteso:
+\[
+\mu_i=\mathbb{E}[D_i].
+\]
+
+L'arm ottimale è indicato con:
+\[
+i^*=\arg\max_{i\in\mathcal{A}}\mu_i.
+\]
+
+Il suo reward atteso è:
+\[
+\mu^*=\max_{i\in\mathcal{A}}\mu_i.
+\]
+
+L'esecuzione di un algoritmo MAB produce una sequenza, o \emph{traccia},
+\[
+a_1,r_1,\ldots,a_t,r_t,\ldots,a_T,r_T,
+\]
+dove:
+\begin{itemize}
+    \item $a_t$ è l'arm selezionato al round $t$;
+    \item $r_t$ è il reward prodotto da $D_{a_t}$.
+\end{itemize}
+
+L'obiettivo considerato nelle prime parti delle slide consiste nel massimizzare il \emph{cumulative reward}:
+\[
+R_T=\sum_{l=1}^{T}r_l.
+\]
+
+La strategia deve quindi acquisire informazioni sugli arm senza sacrificare eccessivamente il reward accumulato durante il processo.
+
+\subsubsection{Strategie deterministiche}
+
+Una strategia deterministica è una funzione che, data una traccia parziale
+\[
+a_1,r_1,\ldots,a_t,r_t,
+\]
+eventualmente vuota per $t=0$, restituisce un unico arm:
+\[
+a_{t+1}.
+\]
+
+Indicando la storia fino a $t$ con
+\[
+\mathcal{H}_t=(a_1,r_1,\ldots,a_t,r_t),
+\]
+una politica deterministica può quindi essere espressa astrattamente come
+\[
+\pi(\mathcal{H}_t)=a_{t+1}.
+\]
+
+A parità di storia, una strategia deterministica seleziona sempre lo stesso arm.
+
+\subsubsection{Strategie stocastiche}
+
+Una strategia stocastica, data la storia
+\[
+\mathcal{H}_t=(a_1,r_1,\ldots,a_t,r_t),
+\]
+restituisce invece una distribuzione di probabilità sugli arm.
+
+Il prossimo arm viene campionato da tale distribuzione:
+\[
+a_{t+1}\sim \pi(\cdot\mid\mathcal{H}_t).
+\]
+
+Di conseguenza, anche a parità di storia, due esecuzioni differenti possono selezionare arm diversi.
+
+\subsection{Notazione fondamentale}
+
+Sia
+\[
+a_1,r_1,\ldots,a_t,r_t
+\]
+la traccia osservata fino al round $t$.
+
+\subsubsection{Funzione caratteristica}
+
+Le slide utilizzano la funzione caratteristica:
+\[
+\mathbb{I}(\mathrm{cond}),
+\]
+definita implicitamente da
+\[
+\mathbb{I}(\mathrm{cond})=
+\begin{cases}
+1, & \text{se la condizione è vera},\\
+0, & \text{se la condizione è falsa}.
+\end{cases}
+\]
+
+\subsubsection{Numero di pull di un arm}
+
+Il numero di volte in cui l'arm $i$ è stato selezionato fino al round $t$ è:
+\[
+N_{i,t}
+=
+\sum_{h=1}^{t}\mathbb{I}(a_h=i).
+\]
+
+Ogni termine della somma vale $1$ soltanto nei round in cui è stato selezionato l'arm $i$.
+
+\subsubsection{Media empirica}
+
+La media empirica dei reward ottenuti dall'arm $i$ fino al round $t$ è:
+\[
+\widehat{\mu}_{i,t}
+=
+\frac{
+\sum_{h=1}^{t}\mathbb{I}(a_h=i)r_h
+}{
+N_{i,t}
+}.
+\]
+
+Il numeratore seleziona esclusivamente i reward osservati nei round in cui $a_h=i$, mentre il denominatore è il numero complessivo di osservazioni dell'arm.
+
+La quantità $\widehat{\mu}_{i,t}$ rappresenta quindi la stima empirica di $\mu_i$.
+
+\subsubsection{Deviazione standard empirica}
+
+Le slide definiscono inoltre:
+\[
+\widehat{\sigma}_{i,t}
+=
+\sqrt{
+\frac{
+\sum_{h=1}^{t}
+\mathbb{I}(a_h=i)
+\left(r_h-\widehat{\mu}_{i,t}\right)^2
+}{
+N_{i,t}-1
+}
+}.
+\]
+
+Essa rappresenta la deviazione standard empirica dei reward osservati per l'arm $i$.
+
+\subsection{Explore-Then-Commit (ETC)}
+
+Una prima politica di allocazione è \emph{Explore-Then-Commit} (ETC).
+
+L'idea consiste nel dividere l'esecuzione in due fasi nettamente separate:
+\begin{enumerate}
+    \item \textbf{exploration}: per una frazione $\gamma$ dell'orizzonte si esplorano uniformemente gli arm;
+    \item \textbf{commit/exploitation}: terminata l'esplorazione, si sceglie l'arm con media empirica maggiore e lo si utilizza per il resto dell'orizzonte.
+\end{enumerate}
+
+Il parametro soddisfa:
+\[
+0\leq\gamma\leq1.
+\]
+
+La durata della fase esplorativa è:
+\[
+\gamma T.
+\]
+
+Nella notazione delle slide:
+\[
+a_{t+1}
+=
+\begin{cases}
+(t+1)\bmod K,
+& t\leq\gamma T,\\[1ex]
+\displaystyle
+\arg\max_{i\in\mathcal{A}}
+\widehat{\mu}_{i,\gamma T},
+& t>\gamma T.
+\end{cases}
+\]
+
+L'espressione modulo $K$ rappresenta l'esplorazione ciclica, o \emph{round-robin}, dei diversi arm.
+
+Questa politica viene associata nelle slide anche all'\emph{A/B testing}.
+
+\subsubsection{Scelta del parametro $\gamma$}
+
+L'obiettivo continua a essere la massimizzazione del cumulative reward $R_T$.
+
+Se $\gamma$ è troppo piccolo:
+\begin{itemize}
+    \item la fase esplorativa raccoglie pochi campioni;
+    \item le medie empiriche possono essere stime poco affidabili;
+    \item al termine dell'esplorazione potrebbe essere scelto
+    \[
+    j=
+    \arg\max_{i\in\mathcal{A}}
+    \widehat{\mu}_{i,\gamma T}
+    \]
+    anche se $j$ è sub-ottimale;
+    \item si potrebbe quindi avere
+    \[
+    \mu_j\ll\mu^*;
+    \]
+    \item poiché $j$ viene poi selezionato per tutti i round
+    \[
+    \gamma T<t\leq T,
+    \]
+    l'errore commesso alla fine dell'esplorazione viene propagato per tutto il resto dell'esecuzione.
+\end{itemize}
+
+Se invece $\gamma$ è troppo vicino a $1$:
+\begin{itemize}
+    \item quasi tutti i pull vengono dedicati all'esplorazione uniforme;
+    \item gli arm vengono selezionati un numero pressoché uguale di volte;
+    \item questo accade indipendentemente dai reward che stanno producendo;
+    \item si verifica quindi un fenomeno di \emph{over-exploration}.
+\end{itemize}
+
+Un ulteriore limite riguarda la modalità di esplorazione: una distribuzione uniforme dei pull può essere inefficiente, perché tratta allo stesso modo arm promettenti e arm chiaramente poco promettenti.
+
+Il problema di migliorare la fase di \emph{pure exploration} conduce alla branca denominata \emph{Best Arm Identification} (BAI), ripresa nelle slide finali.
+
+\subsection{$\epsilon$-Greedy}
+
+A differenza di ETC, $\epsilon$-Greedy non separa rigidamente exploration ed exploitation, ma le alterna durante l'intera esecuzione.
+
+Dato:
+\[
+0\leq\epsilon\leq1,
+\]
+la politica opera come segue:
+\begin{itemize}
+    \item con probabilità $1-\epsilon$, effettua exploitation scegliendo l'arm con media empirica maggiore;
+    \item con probabilità $\epsilon$, effettua exploration scegliendo casualmente un arm.
+\end{itemize}
+
+Si tratta quindi di una strategia stocastica.
+
+\subsubsection{Inizializzazione}
+
+Per i primi $K$ round viene effettuato un pull di ciascun arm:
+\[
+a_{t+1}=t+1,
+\qquad t<K.
+\]
+
+L'obiettivo dell'inizializzazione è garantire che per ogni arm esista almeno un reward osservato, rendendo quindi definibili le medie empiriche.
+
+\subsubsection{Politica di selezione}
+
+Successivamente:
+\begin{align*}
+p &\sim \operatorname{rand}[0,1],\\
+\text{se }p<\epsilon:\qquad
+a_{t+1}&=\operatorname{rand}(K),\\
+\text{altrimenti}:\qquad
+a_{t+1}
+&=
+\arg\max_{i\in\mathcal{A}}\widehat{\mu}_{i,t}.
+\end{align*}
+
+La prima scelta è \emph{explorative}; la seconda è \emph{exploitive}.
+
+\subsubsection{Casi estremi}
+
+Per
+\[
+\epsilon=1,
+\]
+la politica seleziona sempre casualmente un arm. L'intera esecuzione è quindi orientata all'exploration e la conoscenza acquisita non viene utilizzata per fare exploitation.
+
+Per
+\[
+\epsilon=0,
+\]
+la politica seleziona sempre un arm con media empirica massima. Il comportamento è completamente orientato all'exploitation.
+
+Il significato di un valore intermedio di $\epsilon$ è precisamente quello di bilanciare i due comportamenti.
+
+\subsubsection{Politiche Anytime}
+
+ETC richiede di conoscere l'orizzonte $T$, perché la durata della fase esplorativa è definita tramite $\gamma T$.
+
+$\epsilon$-Greedy non richiede invece di conoscere preventivamente $T$. Politiche di questo tipo vengono indicate nelle slide come \emph{AnyTime}.
+
+Questa proprietà è particolarmente importante nelle applicazioni nelle quali non è naturale stabilire a priori il numero complessivo di interazioni, come nel caso dei sistemi di raccomandazione.
+
+\subsection{Scelta di $\epsilon$}
+
+Il valore di $\epsilon$ è un iperparametro.
+
+Come accade per $\gamma$ in ETC, sorge quindi un problema di \emph{hyper-parameter optimization}: quale valore di $\epsilon$ produce il comportamento migliore?
+
+Il valore ottimale dipende dalla particolare istanza del MAB:
+\begin{itemize}
+    \item numero di arm;
+    \item valori attesi $\mu_i$;
+    \item varianze delle distribuzioni;
+    \item più in generale, caratteristiche delle distribuzioni associate agli arm.
+\end{itemize}
+
+Esiste tuttavia una difficoltà concettuale: se tali caratteristiche fossero completamente note, si conoscerebbe già quale arm possiede il valore atteso massimo e il problema di apprendimento sarebbe in larga parte risolto.
+
+Le slide indicano:
+\[
+\epsilon=0.1
+\]
+come valore frequentemente utilizzato, sottolineando però che non è necessariamente ottimale per tutte le istanze.
+
+Un'altra possibilità consiste nel considerare una classe di problemi, testare differenti valori di $\epsilon$ e scegliere quello che produce mediamente risultati migliori.
+
+\subsection{Esperimenti con arm bernoulliani}
+
+Le slide presentano un esperimento con:
+\[
+K=5
+\]
+arm bernoulliani e probabilità:
+\[
+p=\{0.1,0.1,0.1,0.1,0.9\}.
+\]
+
+L'ultimo arm è quindi nettamente migliore degli altri.
+
+L'orizzonte utilizzato è:
+\[
+T=250.
+\]
+
+I valori testati sono:
+\[
+\epsilon\in\{0.1,0.2,0.3,0.4,0.5\}.
+\]
+
+Per ogni configurazione vengono eseguite:
+\[
+5000
+\]
+simulazioni.
+
+I risultati visualizzati sono medie sui reward ottenuti nelle diverse simulazioni e rappresentano pertanto il comportamento medio.
+
+Le slide mostrano due grafici:
+\begin{itemize}
+    \item la probabilità di selezionare il \emph{best arm} in funzione del tempo;
+    \item il cumulative reward in funzione del tempo.
+\end{itemize}
+
+Nel secondo grafico della slide compare testualmente il titolo ``Cumulative Reward of the Exp3 Algorithm'' e la legenda ``Gamma'', pur trovandosi all'interno della discussione sperimentale dedicata ai differenti valori di $\epsilon$.
+
+\subsection{Stabilizzazione di $\epsilon$-Greedy}
+
+Un'importante osservazione sperimentale è che l'accuratezza di $\epsilon$-Greedy tende prima o poi a stabilizzarsi.
+
+Inoltre:
+\begin{itemize}
+    \item valori più grandi di $\epsilon$ tendono a produrre una stabilizzazione più rapida;
+    \item la stabilizzazione non è un fenomeno accidentale legato soltanto all'esperimento mostrato, ma deriva dalla struttura stessa dell'algoritmo.
+\end{itemize}
+
+\subsubsection{Probabilità di selezione di un arm}
+
+Sia:
+\[
+h=
+\arg\max_{i\in\mathcal{A}}
+\widehat{\mu}_{i,t}
+\]
+l'arm che al round $t$ possiede la maggiore media empirica.
+
+La probabilità di scegliere un generico arm $i$ è:
+\[
+\Pr(a_t=i)
+=
+\begin{cases}
+(1-\epsilon)+\dfrac{\epsilon}{K},
+& i=h,\\[2ex]
+\dfrac{\epsilon}{K},
+& i\neq h.
+\end{cases}
+\]
+
+La prima espressione deriva da due possibilità:
+\begin{enumerate}
+    \item con probabilità $1-\epsilon$ viene effettuata exploitation e viene scelto sicuramente $h$;
+    \item con probabilità $\epsilon$ viene effettuata exploration e, scegliendo uniformemente uno tra $K$ arm, $h$ viene comunque estratto con probabilità $1/K$.
+\end{enumerate}
+
+Pertanto:
+\[
+\Pr(a_t=h)
+=
+1-\epsilon+\frac{\epsilon}{K}.
+\]
+
+Per qualsiasi arm $i$ vale comunque:
+\[
+\Pr(a_t=i)\geq\frac{\epsilon}{K}.
+\]
+
+Se $\epsilon>0$, questa probabilità è strettamente positiva e non scompare nel tempo.
+
+\subsubsection{Ogni arm viene campionato infinite volte}
+
+Su un'esecuzione di durata infinita, le slide esprimono la conseguenza precedente mediante:
+\[
+\Pr\left(
+\lim_{t\rightarrow\infty}N_{i,t}=\infty
+\right)=1.
+\]
+
+In altre parole, con probabilità $1$ ogni arm viene selezionato infinite volte.
+
+\subsubsection{Convergenza delle medie empiriche}
+
+La legge dei grandi numeri fornisce:
+\[
+\Pr\left(
+\lim_{N_{i,t}\rightarrow\infty}
+\widehat{\mu}_{i,t}
+=
+\mu_i
+\right)=1.
+\]
+
+Poiché per $\epsilon>0$ ogni arm viene campionato infinite volte, combinando i due risultati si ottiene:
+\[
+\Pr\left(
+\lim_{t\rightarrow\infty}
+\widehat{\mu}_{i,t}
+=
+\mu_i
+\right)=1.
+\]
+
+Dunque le medie empiriche convergono quasi certamente ai rispettivi valori attesi.
+
+Quando le stime sono sufficientemente vicine ai veri valori attesi, l'arm con media empirica massima coincide con l'arm ottimale:
+\[
+\arg\max_{i\in\mathcal{A}}
+\widehat{\mu}_{i,t}
+=
+i^*.
+\]
+
+Da quel momento, salvo le scelte esplorative casuali, la componente greedy seleziona l'arm corretto.
+
+\subsubsection{Accuratezza asintotica}
+
+Una volta stabilizzatasi l'identificazione del best arm, la probabilità di selezionarlo è:
+\[
+(1-\epsilon)+\frac{\epsilon}{K}.
+\]
+
+Questa quantità rappresenta quindi il livello intorno al quale tende a stabilizzarsi l'accuratezza.
+
+\subsection{Interpretazione dei test di $\epsilon$-Greedy}
+
+Per:
+\[
+\epsilon\in\{0.2,0.3,0.4,0.5\},
+\]
+nel test mostrato l'accuratezza tende a stabilizzarsi intorno ai primi $100$ round.
+
+Ciò indica che l'arm con media empirica maggiore è ormai, di fatto, l'arm ottimale.
+
+Tuttavia, un grande $\epsilon$ implica una maggiore frequenza di pull casuali e quindi riduce la percentuale asintotica di selezioni ottimali.
+
+\subsubsection{Caso $\epsilon=0.3$}
+
+Con:
+\[
+\epsilon=0.3,
+\]
+la componente di exploitation viene utilizzata con probabilità:
+\[
+1-\epsilon=0.7.
+\]
+
+Una volta individuato il best arm, questa componente seleziona l'arm ottimale.
+
+Nel restante $30\%$ dei casi viene scelto un arm casualmente. Poiché $K=5$, durante una scelta casuale il best arm viene selezionato con probabilità:
+\[
+\frac{1}{5}.
+\]
+
+Pertanto:
+\[
+0.7+\frac{0.3}{5}
+=
+0.7+0.06
+=
+0.76.
+\]
+
+L'accuratezza asintotica è dunque:
+\[
+0.76.
+\]
+
+\subsubsection{Caso $\epsilon=0.1$}
+
+Per:
+\[
+\epsilon=0.1,
+\]
+la stabilizzazione è più lenta e diventa evidente soltanto verso la fine dei $250$ round.
+
+Intorno al round $120$, tuttavia, la percentuale di scelte ottimali supera quella delle configurazioni con $\epsilon$ maggiore.
+
+Il valore asintotico è:
+\[
+0.9+\frac{0.1}{5}
+=
+0.9+0.02
+=
+0.92.
+\]
+
+Quindi un $\epsilon$ più piccolo:
+\begin{itemize}
+    \item rallenta l'acquisizione dell'informazione necessaria a identificare l'arm migliore;
+    \item una volta identificato l'arm migliore, permette però di selezionarlo con frequenza più elevata.
+\end{itemize}
+
+\subsection{Analisi del cumulative reward}
+
+L'accuratezza descrive la probabilità puntuale di selezionare il best arm a un determinato istante.
+
+L'obiettivo del MAB considerato nelle slide è però massimizzare:
+\[
+R_T=\sum_{t=1}^{T}r_t.
+\]
+
+Il cumulative reward dipende dall'intera traiettoria precedente e anche dall'orizzonte $T$.
+
+Nel test mostrato:
+\begin{itemize}
+    \item per $T=250$, il valore di $\epsilon$ che produce il cumulative reward migliore è
+    \[
+    \epsilon=0.2;
+    \]
+    \item se l'orizzonte fosse soltanto
+    \[
+    T=150,
+    \]
+    il valore migliore sarebbe invece
+    \[
+    \epsilon=0.3.
+    \]
+\end{itemize}
+
+A partire approssimativamente da:
+\[
+t=120,
+\]
+l'accuratezza di $\epsilon=0.1$ supera quella delle configurazioni con $\epsilon$ più alto.
+
+Da quel momento il cumulative reward associato a $\epsilon=0.1$ cresce più rapidamente. Ne consegue che, per $T$ sufficientemente grande, $\epsilon=0.1$ finirà per produrre un cumulative reward superiore.
+
+Le slide osservano inoltre che una strategia completamente exploitive:
+\[
+\epsilon=0
+\]
+avrebbe una curva di accuratezza ancora più lenta e potrebbe raggiungere il cumulative reward delle altre configurazioni soltanto dopo un numero considerevole di round.
+
+\subsection{Annealing $\epsilon$-Greedy}
+
+Gli esperimenti evidenziano due effetti:
+\begin{itemize}
+    \item un $\epsilon$ grande identifica rapidamente il best arm grazie alla maggiore esplorazione;
+    \item un $\epsilon$ grande continua però a pagare il costo di numerosi pull casuali anche quando il best arm è ormai noto.
+\end{itemize}
+
+Da ciò nasce l'idea di utilizzare un valore di $\epsilon$ variabile nel tempo:
+\begin{enumerate}
+    \item inizialmente $\epsilon$ è elevato, favorendo exploration;
+    \item progressivamente $\epsilon$ viene ridotto;
+    \item la politica diventa quindi sempre più exploitive.
+\end{enumerate}
+
+Questa strategia è denominata \emph{Annealing $\epsilon$-Greedy}.
+
+La politica è:
+\begin{align*}
+p &\sim \operatorname{rand}[0,1],\\
+p<\epsilon_t
+&\quad\Longrightarrow\quad
+a_{t+1}=\operatorname{rand}(K),\\
+p\geq\epsilon_t
+&\quad\Longrightarrow\quad
+a_{t+1}
+=
+\arg\max_{i\in\mathcal{A}}\widehat{\mu}_{i,t},\\
+\epsilon_{t+1}&=f(t),
+\end{align*}
+dove:
+\[
+f(t)
+\]
+è una funzione decrescente di $t$.
+
+\subsubsection{Funzioni di decadimento}
+
+La qualità della politica dipende dalla scelta di $f$.
+
+Una forma semplice è il decadimento esponenziale:
+\[
+f(t)=\beta e^{-\alpha t}.
+\]
+
+Le slide osservano tuttavia che questa scelta tende generalmente a ridurre $\epsilon$ troppo velocemente.
+
+È utile invece mantenere la strategia sufficientemente esplorativa nei primi round.
+
+Una funzione proposta nelle slide, utilizzata anche nel reinforcement learning, è:
+\[
+f(t)
+=
+\frac{1}
+{1+\beta e^{\alpha(t-\gamma)}}.
+\]
+
+Poiché il denominatore cresce al crescere di $t$, $f(t)$ decresce e quindi la politica si sposta progressivamente dall'exploration verso l'exploitation.
+
+\subsection{Limiti di $\epsilon$-Greedy}
+
+Il principale limite di $\epsilon$-Greedy è che il livello di esplorazione è controllato da un fattore $\epsilon$ che, sia esso costante oppure funzione del tempo, non dipende direttamente dalle distribuzioni associate agli arm.
+
+Si considerino due arm bernoulliani con probabilità:
+\[
+p_1,\qquad p_2
+\]
+e:
+\[
+\epsilon=0.1.
+\]
+
+\subsubsection{Arm difficili da distinguere}
+
+Se:
+\[
+p_1\approx p_2,
+\]
+le due distribuzioni sono molto simili.
+
+Sono quindi necessari molti campioni per distinguerle. Un'esplorazione del solo $10\%$ può risultare insufficiente:
+\[
+\epsilon=0.1
+\]
+è quindi potenzialmente troppo piccolo.
+
+\subsubsection{Arm facilmente distinguibili}
+
+Se $p_1$ e $p_2$ sono invece molto differenti, l'arm migliore può essere identificato con un numero relativamente piccolo di osservazioni.
+
+Continuare a esplorare nel $10\%$ dei round può allora essere eccessivo:
+\[
+\epsilon=0.1
+\]
+può risultare troppo grande.
+
+\subsubsection{Esplorazione ``alla cieca''}
+
+Quando $\epsilon$-Greedy decide di esplorare, seleziona un arm casualmente senza distinguere tra:
+\begin{itemize}
+    \item arm apparentemente promettenti;
+    \item arm apparentemente molto scarsi.
+\end{itemize}
+
+Le slide suggeriscono che una strategia più raffinata dovrebbe assegnare maggiore attenzione agli arm che appaiono più promettenti.
+
+Da questa osservazione derivano strategie nelle quali si costruisce esplicitamente una misura della ``promettentezza'' di ciascun arm.
+
+\subsection{Softmax}
+
+La stima più immediata della qualità dell'arm $i$ al round $t$ è:
+\[
+\widehat{\mu}_{i,t}.
+\]
+
+Una prima idea consiste nell'assegnare una probabilità di selezione direttamente proporzionale alla media empirica:
+\[
+\mathcal{P}(i,t)
+=
+\frac{
+\widehat{\mu}_{i,t}
+}{
+\sum_{j=1}^{K}\widehat{\mu}_{j,t}
+}.
+\]
+
+\subsubsection{Perché la proporzionalità diretta è troppo esplorativa}
+
+Per arm bernoulliani non degeneri, al crescere di $t$ si ha, quasi sicuramente:
+\[
+\mathcal{P}(i,t)>0
+\]
+per ogni arm.
+
+Di conseguenza tutti gli arm continuano a essere selezionati e, nel limite, vengono osservati un numero infinito di volte.
+
+Per la legge dei grandi numeri:
+\[
+\widehat{\mu}_{i,t}\rightarrow\mu_i.
+\]
+
+La probabilità di selezione tende quindi a:
+\[
+\mathcal{P}(i,t)
+\longrightarrow
+\frac{
+\mu_i
+}{
+\sum_{j=1}^{K}\mu_j
+}.
+\]
+
+Se:
+\begin{itemize}
+    \item il numero di arm è elevato, oppure
+    \item i reward attesi sono relativamente simili,
+\end{itemize}
+allora:
+\[
+\sum_{j=1}^{K}\mu_j
+\]
+può essere molto maggiore di ciascun singolo $\mu_i$.
+
+Anche il best arm può quindi mantenere una probabilità relativamente bassa di essere selezionato. Questo penalizza l'accuratezza.
+
+\subsubsection{Distribuzione di Boltzmann o Softmax}
+
+Per accentuare maggiormente le differenze tra le medie si utilizza una distribuzione di Boltzmann:
+\[
+\mathcal{P}(i,t)
+=
+\frac{
+e^{\alpha\widehat{\mu}_{i,t}}
+}{
+\sum_{j=1}^{K}
+e^{\alpha\widehat{\mu}_{j,t}}
+}.
+\]
+
+Questa trasformazione è denominata \emph{softmax}.
+
+La probabilità è correttamente normalizzata:
+\[
+\sum_{i=1}^{K}\mathcal{P}(i,t)=1.
+\]
+
+Per ragioni storiche, l'inverso:
+\[
+\tau=\frac{1}{\alpha}
+\]
+viene chiamato \emph{temperatura} della distribuzione.
+
+\subsubsection{Rapporto tra le probabilità di due arm}
+
+Consideriamo due arm $i$ e $j$.
+
+Si ha:
+\begin{align*}
+\frac{\mathcal{P}(i,t)}
+{\mathcal{P}(j,t)}
+&=
+\frac{
+e^{\alpha\widehat{\mu}_{i,t}}
+}{
+e^{\alpha\widehat{\mu}_{j,t}}
+}\\
+&=
+e^{\alpha
+(\widehat{\mu}_{i,t}-\widehat{\mu}_{j,t})}.
+\end{align*}
+
+Definendo:
+\[
+\Delta_{ij}
+=
+\widehat{\mu}_{i,t}
+-
+\widehat{\mu}_{j,t},
+\]
+otteniamo:
+\[
+\frac{\mathcal{P}(i,t)}
+{\mathcal{P}(j,t)}
+=
+e^{\alpha\Delta_{ij}}.
+\]
+
+Questa relazione rende immediato il significato del parametro $\alpha$.
+
+\paragraph{Caso $\alpha\rightarrow0$.}
+Per:
+\[
+\alpha\rightarrow0,
+\]
+vale:
+\[
+e^{\alpha\Delta_{ij}}\rightarrow1.
+\]
+
+Le probabilità dei differenti arm diventano quindi uguali e ciascun arm tende ad avere probabilità:
+\[
+\frac{1}{K}.
+\]
+
+La strategia è fortemente explorative.
+
+\paragraph{Caso $\alpha\rightarrow\infty$.}
+Per valori molto grandi di $\alpha$, anche piccole differenze $\Delta_{ij}$ vengono amplificate esponenzialmente.
+
+L'arm con media empirica maggiore riceve quindi una probabilità molto superiore alle altre.
+
+La strategia diventa fortemente exploitive.
+
+\paragraph{Dipendenza dalla difficoltà dell'istanza.}
+A $\alpha$ fissato, se:
+\[
+|\Delta_{ij}|
+\]
+è piccolo, le probabilità degli arm restano simili e la strategia esplora maggiormente.
+
+Se invece le differenze tra le medie empiriche sono grandi, Softmax concentra naturalmente più probabilità sugli arm migliori.
+
+Questa proprietà differenzia Softmax da $\epsilon$-Greedy: la tendenza a esplorare non dipende soltanto da un parametro prefissato, ma anche da quanto le alternative risultano effettivamente distinguibili.
+
+La slide grafica confronta:
+\[
+\alpha=1,\qquad
+\alpha=2,\qquad
+\alpha=0.5,
+\]
+mostrando la funzione:
+\[
+e^{\alpha\Delta_{ij}}.
+\]
+
+La crescita è:
+\begin{itemize}
+    \item più accentuata per $\alpha=2$;
+    \item intermedia per $\alpha=1$;
+    \item più graduale per $\alpha=0.5$.
+\end{itemize}
+
+\subsection{Annealing Softmax}
+
+Anche Softmax può essere resa maggiormente esplorativa all'inizio e progressivamente più exploitive.
+
+Poiché valori piccoli di $\alpha$ favoriscono exploration e valori grandi favoriscono exploitation, occorre scegliere:
+\[
+\alpha(t)
+\]
+crescente con il tempo.
+
+Le slide propongono come esempio:
+\[
+\alpha(t)=c+\log t,
+\qquad
+0<c\ll1.
+\]
+
+All'aumentare di $t$:
+\[
+\alpha(t)\uparrow,
+\]
+e quindi la distribuzione Softmax tende progressivamente a concentrarsi maggiormente sugli arm con media empirica più elevata.
+
+Equivalentemente, poiché:
+\[
+\tau(t)=\frac{1}{\alpha(t)},
+\]
+la temperatura diminuisce nel tempo.
+
+\subsection{Upper Confidence Bound (UCB)}
+
+Le slide introducono UCB partendo dai limiti comuni di $\epsilon$-Greedy e Softmax.
+
+Entrambe:
+\begin{itemize}
+    \item sono strategie stocastiche;
+    \item tendono a preferire l'arm con media empirica maggiore;
+    \item occasionalmente esplorano arm differenti.
+\end{itemize}
+
+La differenza è che:
+\begin{itemize}
+    \item $\epsilon$-Greedy, in exploration, seleziona un arm casualmente;
+    \item Softmax attribuisce maggiore probabilità agli arm con media empirica più alta.
+\end{itemize}
+
+In entrambi i casi la scelta dipende in maniera sostanziale dalla stima:
+\[
+\widehat{\mu}_{i,t}.
+\]
+
+Il problema è che le due strategie considerano principalmente \emph{ciò che si sa}, senza rappresentare esplicitamente \emph{quanto bene lo si sa}.
+
+In particolare, non tengono direttamente conto dell'incertezza associata alla stima.
+
+\subsubsection{Problema delle false partenze}
+
+Si consideri un arm realmente ottimale che, per effetto della casualità, produca reward bassi nei primi pull.
+
+La sua media empirica:
+\[
+\widehat{\mu}_{i,t}
+\]
+può inizialmente essere molto bassa.
+
+Una strategia che utilizza soltanto la media può quindi smettere di selezionarlo frequentemente.
+
+Serviranno potenzialmente molti round prima che nuove osservazioni riescano a ``invertire'' le medie empiriche e correggere la falsa impressione iniziale.
+
+UCB affronta precisamente questo problema introducendo una misura dell'incertezza.
+
+\subsubsection{Principio generale}
+
+UCB associa a ciascun arm un valore:
+\[
+UCB(\mathcal{H},i)
+\]
+che combina:
+\begin{itemize}
+    \item una stima del reward;
+    \item una componente legata all'incertezza.
+\end{itemize}
+
+La politica è deterministica:
+\[
+a_{t+1}
+=
+\arg\max_{i\in\mathcal{A}}
+UCB(\mathcal{H},i),
+\]
+dove:
+\[
+\mathcal{H}
+=
+a_1,r_1,\ldots,a_t,r_t
+\]
+rappresenta la storia.
+
+\subsubsection{Tre varianti riportate nelle slide}
+
+Una prima variante è:
+\[
+UCB(\mathcal{H},i)
+=
+\widehat{\mu}_{i,t}
++
+\sqrt{
+\frac{
+2\log(1/\delta)
+}{
+N_{i,t}
+}
+},
+\qquad
+0<\delta<1.
+\]
+
+Una seconda variante è:
+\[
+UCB(\mathcal{H},i)
+=
+\widehat{\mu}_{i,t}
++
+\sqrt{
+\frac{
+2\log t
+}{
+N_{i,t}
+}
+}.
+\]
+
+Una terza variante introduce un parametro moltiplicativo $\alpha$:
+\[
+UCB(\mathcal{H},i)
+=
+\widehat{\mu}_{i,t}
++
+\alpha
+\sqrt{
+\frac{
+2\log t
+}{
+N_{i,t}
+}
+},
+\qquad
+\alpha>0.
+\]
+
+Se:
+\[
+N_{i,t}=0,
+\]
+le slide inizializzano:
+\[
+UCB(\mathcal{H},i)=+\infty.
+\]
+
+Questo garantisce che ciascun arm venga selezionato almeno una volta.
+
+\subsection{Componente exploitive ed explorative di UCB}
+
+La struttura generale è:
+\[
+UCB(\mathcal{H},i)
+=
+\underbrace{\widehat{\mu}_{i,t}}_{\text{exploitive}}
++
+\underbrace{\mathrm{explorative\_bonus}}_{\text{explorative}}.
+\]
+
+La media empirica premia gli arm che hanno prodotto reward elevati.
+
+Il bonus esplorativo premia invece gli arm sui quali vi è maggiore incertezza.
+
+\subsubsection{Dipendenza da $N_{i,t}$}
+
+Il bonus è decrescente rispetto a:
+\[
+N_{i,t}.
+\]
+
+L'intuizione è:
+\begin{itemize}
+    \item se $N_{i,t}$ è piccolo, l'arm è stato osservato poche volte e la stima è incerta;
+    \item se $N_{i,t}$ è grande, l'arm è stato osservato molte volte e vi è meno necessità di esplorarlo.
+\end{itemize}
+
+Per le versioni contenenti $\log t$, le slide mostrano la relazione:
+\[
+\frac{\log t}{N_{i,t-1}+1}
+<
+\frac{\log(t-1)}{N_{i,t-1}}
+<
+\frac{\log t}{N_{i,t-1}}.
+\]
+
+La relazione evidenzia due situazioni.
+
+\paragraph{L'arm $i$ viene selezionato.}
+Il contatore passa da:
+\[
+N_{i,t-1}
+\]
+a:
+\[
+N_{i,t-1}+1,
+\]
+e il bonus esplorativo associato all'arm tende a diminuire.
+
+\paragraph{Viene selezionato un altro arm.}
+Il contatore $N_{i,t}$ rimane invariato, mentre il tempo globale aumenta da $t-1$ a $t$.
+
+Il termine $\log t$ cresce, per cui il bonus associato all'arm non selezionato aumenta.
+
+Questo meccanismo evita che un arm venga ignorato per sempre: se non viene scelto per molto tempo, il suo bonus di esplorazione tende a diventare progressivamente più importante.
+
+Nella prima variante il bonus dipende essenzialmente dal numero di volte in cui $i$ è stato selezionato.
+
+Nella seconda e nella terza variante compare anche il tempo globale $t$, e quindi il valore dipende indirettamente anche da quante volte sono stati selezionati gli altri arm.
+
+\subsection{Ruolo del parametro $\alpha$ in UCB}
+
+Consideriamo:
+\[
+UCB(\mathcal{H},i)
+=
+\widehat{\mu}_{i,t}
++
+\sqrt{
+\frac{2\log t}{N_{i,t}}
+}.
+\]
+
+La componente esplorativa dipende esclusivamente da:
+\begin{itemize}
+    \item $N_{i,t}$;
+    \item il numero complessivo di pull $t$.
+\end{itemize}
+
+La componente exploitive:
+\[
+\widehat{\mu}_{i,t}
+\]
+dipende invece direttamente dai reward e quindi dalla scala delle distribuzioni degli arm.
+
+Le slide osservano che:
+\begin{itemize}
+    \item se i valori $\mu_i$ sono grandi, il bonus esplorativo può diventare relativamente trascurabile;
+    \item se i valori $\mu_i$ sono prossimi a zero, il bonus può avere un peso relativamente eccessivo.
+\end{itemize}
+
+Da ciò nasce l'introduzione di:
+\[
+\alpha>0,
+\]
+che modula il peso relativo della componente esplorativa:
+\[
+UCB(\mathcal{H},i)
+=
+\widehat{\mu}_{i,t}
++
+\alpha
+\sqrt{
+\frac{2\log t}{N_{i,t}}
+}.
+\]
+
+\subsection{Optimism in the Face of Uncertainty}
+
+Il principio alla base di UCB viene indicato come:
+\begin{quote}
+\emph{optimism in the face of uncertainty}.
+\end{quote}
+
+L'idea è costruire, intorno alla media empirica:
+\[
+\widehat{\mu}_{i,t},
+\]
+un intervallo:
+\[
+I_c
+=
+\left[
+\widehat{\mu}_{i,t}-\gamma_{i,t},
+\widehat{\mu}_{i,t}+\gamma_{i,t}
+\right],
+\]
+nel quale il vero valore:
+\[
+\mu_i
+\]
+ricade con elevata probabilità.
+
+Il parametro:
+\[
+\gamma_{i,t}
+\]
+rappresenta quindi l'ampiezza dell'incertezza.
+
+Nella prima variante di UCB:
+\[
+\gamma_{i,t}
+=
+\sqrt{
+\frac{
+2\log(1/\delta)
+}{
+N_{i,t}
+}
+}.
+\]
+
+\subsubsection{Interpretazione della confidence bound}
+
+Le slide riportano, per distribuzioni normali indicate come:
+\[
+D_i=\mathcal{N}(0,1),
+\]
+la relazione:
+\[
+\Pr\left(
+\left|
+\widehat{\mu}_{i,t}-\mu_i
+\right|
+\leq
+\sqrt{
+\frac{
+2\log(1/\delta)
+}{
+N_{i,t}
+}
+}
+\right)
+\geq
+1-2\delta.
+\]
+
+Questa relazione dà un'interpretazione statistica a $\gamma_{i,t}$: con probabilità almeno $1-2\delta$, l'errore tra media empirica e valore atteso è limitato dalla quantità indicata.
+
+\subsubsection{Perché UCB è ``ottimista''}
+
+Dato l'intervallo:
+\[
+I_c=
+[
+\widehat{\mu}_{i,t}-\gamma_{i,t},
+\widehat{\mu}_{i,t}+\gamma_{i,t}
+],
+\]
+UCB utilizza il valore più favorevole compatibile con tale intervallo:
+\[
+\widehat{\mu}_{i,t}+\gamma_{i,t}.
+\]
+
+Un arm molto incerto viene quindi valutato in maniera ``ottimistica'': finché i dati disponibili non permettono di escludere che possa essere molto buono, riceve un bonus che incentiva ulteriori osservazioni.
+
+\subsubsection{Raffinamento della confidence}
+
+Le prestazioni di UCB dipendono fortemente dalla qualità della stima di $\gamma_{i,t}$.
+
+Le slide indicano due informazioni che possono essere sfruttate:
+\begin{enumerate}
+    \item la varianza delle distribuzioni $D_i$, stimabile empiricamente mediante
+    \[
+    \widehat{\sigma}_{i,t};
+    \]
+    \item la conoscenza della famiglia di distribuzioni, per esempio bernoulliane o normali.
+\end{enumerate}
+
+Da queste idee derivano varianti quali:
+\begin{itemize}
+    \item UCB-V;
+    \item UCB-normal;
+    \item KL-UCB.
+\end{itemize}
+
+\subsubsection{Confronto grafico delle strategie}
+
+Le slide riportano inoltre un confronto grafico tra:
+\begin{itemize}
+    \item Annealing $\epsilon$-Greedy;
+    \item UCB1;
+    \item Annealing Softmax.
+\end{itemize}
+
+Il confronto viene effettuato sia in termini di:
+\begin{itemize}
+    \item probabilità di selezionare il best arm;
+    \item cumulative reward.
+\end{itemize}
+
+Il grafico rende visibili differenti dinamiche transitorie nella fase iniziale e una progressiva crescita delle prestazioni all'aumentare del numero di round.
+
+\subsection{Multi-Armed Bandit e sistemi di raccomandazione}
+
+Nel contesto di un RecSys:
+\begin{itemize}
+    \item ogni arm corrisponde a un item;
+    \item ogni step $t$ corrisponde a una richiesta/interazione di un utente;
+    \item l'arm selezionato è l'item raccomandato all'utente.
+\end{itemize}
+
+\subsubsection{Insieme di arm variabile nel tempo}
+
+Fino a questo punto è stato considerato prevalentemente un insieme fisso di $K$ arm.
+
+Le slide osservano però che le tecniche possono essere adattate anche a un insieme di arm che varia nel tempo.
+
+Indichiamo con:
+\[
+\mathcal{A}_t
+\]
+l'insieme degli arm disponibili allo step $t$.
+
+Per UCB, un nuovo arm può essere inizializzato con:
+\[
+UCB(\mathcal{H},i)=+\infty.
+\]
+
+In questo modo l'arm appena introdotto viene esplorato.
+
+La selezione diventa:
+\[
+a_{t+1}
+=
+\arg\max_{i\in\mathcal{A}_t}
+UCB(\mathcal{H},i).
+\]
+
+Questa caratteristica rende i MAB particolarmente adatti ai contesti in cui utenti e item cambiano rapidamente.
+
+Un esempio indicato nelle slide è quello dei portali di news, nei quali gli item sono articoli che vengono continuamente pubblicati e sostituiti.
+
+\subsection{Raccomandazioni personalizzate e limite del MAB classico}
+
+Per raccomandazioni non personalizzate, le strategie MAB possono essere utilizzate in modo abbastanza diretto.
+
+Per esempio, una strategia \emph{Top ranked} può essere arricchita introducendo exploration, aumentando anche la diversificazione delle proposte.
+
+La situazione cambia con le raccomandazioni personalizzate.
+
+Supponiamo di utilizzare il click come reward:
+\[
+r=
+\begin{cases}
+1, & \text{item cliccato},\\
+0, & \text{item non cliccato}.
+\end{cases}
+\]
+
+Nel modello MAB classico a ogni item $i$ verrebbe associata una distribuzione bernoulliana:
+\[
+D_i.
+\]
+
+Questa distribuzione rappresenterebbe una probabilità generale di click dell'item.
+
+Ma un RecSys personalizzato non è interessato soltanto alla probabilità che un item venga cliccato dalla popolazione generale.
+
+Al round $t$ interessa invece sapere quanto lo specifico utente:
+\[
+u_t
+\]
+sia propenso a cliccare lo specifico item.
+
+La risposta dipende quindi contemporaneamente:
+\begin{itemize}
+    \item dall'item;
+    \item dall'utente.
+\end{itemize}
+
+Una singola distribuzione $D_i$ indipendente dall'utente non è più sufficiente.
+
+\subsection{Contextual Bandits}
+
+Per modellare situazioni come la raccomandazione personalizzata si introducono i \emph{Contextual Multi-Armed Bandit Problems}.
+
+L'idea fondamentale è che la distribuzione di reward di un arm possa cambiare in funzione del contesto.
+
+Al round $t$ compare un contesto:
+\[
+c_t.
+\]
+
+La distribuzione associata all'arm $i$ diventa quindi:
+\[
+D_{i,c_t}.
+\]
+
+Il contesto rappresenta informazione aggiuntiva che la strategia può utilizzare per effettuare la propria scelta.
+
+Nei sistemi di raccomandazione, $c_t$ è tipicamente descritto mediante feature relative sia agli utenti sia agli item.
+
+\subsubsection{Feature dell'utente}
+
+Le slide riportano esempi quali:
+\begin{itemize}
+    \item età;
+    \item provenienza;
+    \item genere;
+    \item interazioni passate.
+\end{itemize}
+
+\subsubsection{Feature degli item}
+
+Nel caso di articoli di news:
+\begin{itemize}
+    \item tipologia dell'articolo, ad esempio cronaca nera, politica, sport;
+    \item data di pubblicazione;
+    \item autore.
+\end{itemize}
+
+Il comportamento dell'algoritmo può quindi dipendere dall'interazione tra le caratteristiche dell'utente corrente e quelle degli item disponibili.
+
+\subsection{Linear Bandits}
+
+I \emph{Linear Bandits} costituiscono un particolare modello contestuale.
+
+Gli arm disponibili possono cambiare nel tempo:
+\[
+\mathcal{A}_t.
+\]
+
+Per ciascun arm:
+\[
+a\in\mathcal{A}_t
+\]
+e ciascun round $t$, il contesto genera un vettore di feature:
+\[
+\mathbf{x}_{t,a}\in\mathbb{R}^{d}.
+\]
+
+Il vettore è $d$-dimensionale:
+\[
+\mathbf{x}_{t,a}
+=
+(x_{t,a}^{(1)},\ldots,x_{t,a}^{(d)}),
+\]
+e rappresenta numericamente $d$ caratteristiche rilevanti.
+
+I valori delle feature dipendono:
+\begin{itemize}
+    \item dall'arm/item $a$;
+    \item dall'utente corrente $u_t$.
+\end{itemize}
+
+\subsubsection{Modello lineare del reward}
+
+Le slide assumono un reward composto da:
+\begin{itemize}
+    \item una componente lineare;
+    \item un rumore stocastico.
+\end{itemize}
+
+La relazione riportata è:
+\[
+D_{a,t}
+=
+\boldsymbol{\theta}^{*}
+\circ
+\mathbf{x}_{t,a}
++
+\eta_t.
+\]
+
+Qui:
+\begin{itemize}
+    \item $\boldsymbol{\theta}^{*}\in\mathbb{R}^{d}$ è un vettore incognito;
+    \item $\mathbf{x}_{t,a}\in\mathbb{R}^{d}$ è il vettore di feature;
+    \item $\eta_t$ rappresenta il rumore stocastico;
+    \item il simbolo $\circ$ è la notazione utilizzata nelle slide per il prodotto coinvolto nel modello lineare.
+\end{itemize}
+
+Tipicamente:
+\[
+\eta_t\sim\mathcal{N}(0,\sigma).
+\]
+
+Nel contesto dei RecSys, il rumore rappresenta possibili incertezze nel comportamento dell'utente.
+
+Poiché il rumore ha media nulla, il reward atteso è:
+\[
+\mu_{a,t}
+=
+\mathbb{E}[D_{a,t}]
+=
+\boldsymbol{\theta}^{*}
+\circ
+\mathbf{x}_{t,a}.
+\]
+
+Il vettore sconosciuto $\boldsymbol{\theta}^{*}$ determina quindi il modo in cui le feature influenzano il reward atteso.
+
+\subsection{UCB per Linear Bandits}
+
+Il principio generale di UCB rimane invariato.
+
+La selezione deve massimizzare una stima ottimistica del reward:
+\[
+a_t
+=
+\arg\max_{a\in\mathcal{A}_t}
+ucb(a).
+\]
+
+Poiché:
+\[
+\boldsymbol{\theta}^{*}
+\]
+è sconosciuto, non è possibile calcolare direttamente:
+\[
+\boldsymbol{\theta}^{*}
+\circ
+\mathbf{x}_{t,a}.
+\]
+
+Occorre quindi rappresentare l'incertezza su $\boldsymbol{\theta}^{*}$.
+
+\subsubsection{Confidence set $\Theta_t$}
+
+Si introduce un insieme:
+\[
+\Theta_t\subset\mathbb{R}^{d}
+\]
+che deve soddisfare due esigenze:
+\begin{enumerate}
+    \item con buona probabilità:
+    \[
+    \boldsymbol{\theta}^{*}\in\Theta_t;
+    \]
+    \item $\Theta_t$ deve essere il più piccolo possibile.
+\end{enumerate}
+
+Il primo requisito garantisce un buon livello di confidenza.
+
+Il secondo evita che l'incertezza sia talmente ampia da rendere poco informativa la stima.
+
+Applicando il principio di \emph{optimism in the face of uncertainty}:
+\[
+ucb(a)
+=
+\max_{\boldsymbol{\theta}\in\Theta_t}
+\boldsymbol{\theta}
+\circ
+\mathbf{x}_{t,a}.
+\]
+
+Per ciascun arm si considera quindi il reward migliore che esso potrebbe avere sotto un parametro compatibile con il confidence set corrente.
+
+\subsection{Stima di $\boldsymbol{\theta}^{*}$}
+
+Prima di determinare $\Theta_t$, occorre trovare una stima centrale:
+\[
+\widehat{\boldsymbol{\theta}}_t.
+\]
+
+Le slide costruiscono tale stima minimizzando una somma di errori quadratici più un termine di regolarizzazione:
+\[
+\widehat{\boldsymbol{\theta}}_t
+=
+\arg\min_{\boldsymbol{\theta}\in\mathbb{R}^{d}}
+\left[
+\sum_{s=1}^{t}
+\left(
+r_s-
+\boldsymbol{\theta}
+\circ
+\mathbf{x}_{s,a_s}
+\right)^2
++
+\lambda
+\|\boldsymbol{\theta}\|_2^2
+\right].
+\]
+
+I termini hanno il seguente significato:
+\begin{itemize}
+    \item $r_s$ è il reward osservato al round $s$;
+    \item $\mathbf{x}_{s,a_s}$ è il vettore di feature dell'arm effettivamente selezionato al round $s$;
+    \item $\boldsymbol{\theta}\circ\mathbf{x}_{s,a_s}$ è la previsione lineare;
+    \item
+    \[
+    r_s-\boldsymbol{\theta}\circ\mathbf{x}_{s,a_s}
+    \]
+    è l'errore di previsione;
+    \item la somma degli errori quadratici misura quanto bene $\boldsymbol{\theta}$ spiega la storia osservata;
+    \item
+    \[
+    \lambda\|\boldsymbol{\theta}\|_2^2
+    \]
+    è la componente di regolarizzazione;
+    \item $\lambda$ è un iperparametro.
+\end{itemize}
+
+Le slide affermano che, differenziando l'obiettivo, si ottiene:
+\[
+\widehat{\boldsymbol{\theta}}_t
+=
+\left(
+\lambda I
++
+\sum_{s=1}^{t}
+\mathbf{x}_{s,a_s}
+\circ
+\mathbf{x}_{s,a_s}
+\right)^{-1}
+\left(
+\sum_{s=1}^{t}
+r_s\mathbf{x}_{s,a_s}
+\right),
+\]
+dove:
+\[
+I
+\]
+è la matrice identità di dimensione $d$.
+
+Si osservi che, nella notazione delle slide, il simbolo $\circ$ viene utilizzato anche nel termine che deve essere compatibile dimensionalmente con la matrice $d\times d$ $\lambda I$; si mantiene qui la notazione originale del materiale.
+
+\subsection{LinUCB e geometria dell'incertezza}
+
+Una volta determinata:
+\[
+\widehat{\boldsymbol{\theta}}_t,
+\]
+si costruisce un intorno all'interno del quale si ritiene che:
+\[
+\boldsymbol{\theta}^{*}
+\]
+cada con elevata probabilità.
+
+Le slide descrivono $\Theta_t$ intuitivamente come un ellissoide con centro:
+\[
+\widehat{\boldsymbol{\theta}}_t.
+\]
+
+Si definisce:
+\[
+V_t
+=
+\lambda I
++
+\sum_{s=1}^{t}
+\mathbf{x}_{s,a_s}
+\circ
+\mathbf{x}_{s,a_s}.
+\]
+
+Secondo la descrizione riportata nelle slide:
+\begin{itemize}
+    \item gli assi dell'ellissoide sono gli autovettori di $V_t$;
+    \item le loro lunghezze sono gli inversi dei corrispondenti autovalori.
+\end{itemize}
+
+LinUCB considera l'incertezza lungo la direzione:
+\[
+\mathbf{x}_{t,a}.
+\]
+
+La politica presentata è:
+\[
+a_t
+=
+\arg\max_{a\in\mathcal{A}_t}
+\left[
+\widehat{\boldsymbol{\theta}}_t
+\circ
+\mathbf{x}_{t,a}
++
+\alpha
+\sqrt{
+\mathbf{x}_{t,a}^{T}
+V_t^{-1}
+\mathbf{x}_{t,a}
+}
+\right].
+\]
+
+La funzione è nuovamente composta da due termini.
+
+\paragraph{Componente exploitive.}
+\[
+\widehat{\boldsymbol{\theta}}_t
+\circ
+\mathbf{x}_{t,a}.
+\]
+
+È il reward previsto utilizzando la migliore stima corrente del parametro.
+
+\paragraph{Componente explorative.}
+\[
+\alpha
+\sqrt{
+\mathbf{x}_{t,a}^{T}
+V_t^{-1}
+\mathbf{x}_{t,a}
+}.
+\]
+
+Rappresenta l'incertezza lungo il vettore di feature dell'arm.
+
+Il parametro:
+\[
+\alpha
+\]
+è un iperparametro che modula l'entità dell'\emph{explorative bonus}.
+
+\subsection{Aggiornamento incrementale di LinUCB}
+
+Le slide introducono gli aggiornamenti:
+\[
+V_{t+1}
+=
+V_t
++
+\mathbf{x}_{t,a_t}
+\circ
+\mathbf{x}_{t,a_t},
+\]
+e:
+\[
+\mathbf{b}_{t+1}
+=
+\mathbf{b}_t
++
+r_t\mathbf{x}_{t,a_t},
+\]
+dove:
+\[
+\mathbf{b}_t
+=
+\sum_{s=1}^{t}
+r_s\mathbf{x}_{s,a_s}.
+\]
+
+La formula precedente per la stima può quindi essere riscritta utilizzando:
+\[
+V_t
+=
+\lambda I
++
+\sum_{s=1}^{t}
+\mathbf{x}_{s,a_s}
+\circ
+\mathbf{x}_{s,a_s}
+\]
+e:
+\[
+\mathbf{b}_t
+=
+\sum_{s=1}^{t}
+r_s\mathbf{x}_{s,a_s}.
+\]
+
+In questa notazione:
+\[
+\widehat{\boldsymbol{\theta}}_t
+=
+V_t^{-1}\mathbf{b}_t.
+\]
+
+Dopo ogni nuova osservazione vengono quindi aggiornate le quantità che riassumono l'informazione raccolta fino a quel momento.
+
+\subsection{Best Arm Identification}
+
+Le slide finali introducono il \emph{Best Arm Identification} (BAI), in particolare nella variante \emph{fixed budget}.
+
+Il modello di interazione resta quello di un MAB:
+\begin{itemize}
+    \item esiste un numero finito di arm stocastici;
+    \item un \emph{forecaster} interagisce sequenzialmente con gli arm;
+    \item a ogni round seleziona un arm;
+    \item osserva un sample/reward estratto dalla distribuzione dell'arm selezionato.
+\end{itemize}
+
+Ciò che cambia è l'obiettivo.
+
+\subsubsection{Differenza tra MAB classico e BAI}
+
+Nel MAB discusso in precedenza si cerca di massimizzare:
+\[
+R_T=
+\sum_{t=1}^{T}r_t.
+\]
+
+Quindi i reward ottenuti \emph{durante} il processo contano direttamente.
+
+Nel Best Arm Identification, invece, non è necessario massimizzare il cumulative reward durante la fase di interazione.
+
+L'obiettivo è, dopo un numero prefissato di round, identificare correttamente l'arm con massimo expected reward:
+\[
+i^*
+=
+\arg\max_i\mu_i.
+\]
+
+Di conseguenza, può essere accettabile sacrificare molti reward durante l'esplorazione purché ciò permetta di identificare con maggiore affidabilità l'arm migliore.
+
+\subsubsection{Contesti applicativi}
+
+BAI è indicato per situazioni in cui esiste una fase di testing offline.
+
+Durante tale fase:
+\begin{itemize}
+    \item non è prioritario accumulare reward;
+    \item è prioritario esplorare sufficientemente il comportamento dei differenti arm;
+    \item al termine viene identificato il migliore;
+    \item il best arm viene quindi impiegato stabilmente quando il sistema entra online.
+\end{itemize}
+
+Le slide citano:
+\begin{itemize}
+    \item Explore-Then-Commit;
+    \item tuning di parametri discreti.
+\end{itemize}
+
+\subsection{Algoritmo generico per Fixed-Budget Best Arm Identification}
+
+In termini astratti, la struttura di un algoritmo per Fixed-Budget BAI è simile a quella di un algoritmo MAB.
+
+Si dispone di un budget:
+\[
+T,
+\]
+cioè del numero complessivo di round disponibili.
+
+Finché il budget non è esaurito:
+\begin{enumerate}
+    \item si seleziona un arm $a_{t+1}$;
+    \item si esegue un pull;
+    \item si osserva un reward, indicato nella slide con $x_{t+1}$;
+    \item si aggiunge alla storia la coppia:
+    \[
+    (a_{t+1},x_{t+1}).
+    \]
+\end{enumerate}
+
+Si noti che in questa parte delle slide il simbolo $x_{t+1}$ viene utilizzato per il reward osservato e non per il vettore di contesto $\mathbf{x}_{t,a}$ utilizzato precedentemente nei Linear Bandits.
+
+Al termine del budget viene restituito l'arm con media empirica più alta:
+\[
+\widehat{i}
+=
+\arg\max_{i\in\mathcal{A}}
+\widehat{\mu}_{i,T}.
+\]
+
+Lo pseudocodice mostrato nelle slide può essere rappresentato concettualmente come:
+\begin{enumerate}
+    \item input: insieme di arm e budget $T$;
+    \item per ogni $t<T$:
+    \begin{enumerate}
+        \item $a_{t+1}\leftarrow \mathrm{select}(\pi_t,T)$;
+        \item $x_{t+1}\leftarrow\mathrm{sample\ arm}\ a_{t+1}$;
+        \item aggiornare la storia con $(a_{t+1},x_{t+1})$;
+    \end{enumerate}
+    \item restituire:
+    \[
+    \arg\max_{i\in\mathcal{A}}\widehat{\mu}_{i,T}.
+    \]
+\end{enumerate}
+
+Il problema fondamentale consiste quindi nel definire una buona strategia di selezione durante i $T$ round.
+
+\subsection{Uniform Exploration nel Fixed-Budget BAI}
+
+La strategia più semplice, e indicata nelle slide come meno efficace, è l'\emph{uniform exploration}, detta anche \emph{round-robin}.
+
+La selezione ciclica viene espressa come:
+\[
+a_{t+1}
+\leftarrow
+(t+1)\bmod K.
+\]
+
+Tutti gli arm ricevono quindi approssimativamente lo stesso numero di sample.
+
+\subsubsection{Limite della strategia uniforme}
+
+La strategia è \emph{memoryless}: l'allocazione dei pull non cambia in funzione dell'andamento osservato round dopo round.
+
+Le slide osservano che essa non dipende da $\pi_t$; il simbolo $\pi_t$ non viene ulteriormente formalizzato nel materiale, ma il punto espresso è che l'allocazione uniforme non si adatta all'informazione raccolta nel corso dell'esecuzione.
+
+In particolare:
+\begin{itemize}
+    \item un arm chiaramente scarso continua a ricevere campioni;
+    \item un arm molto promettente riceve lo stesso numero di campioni degli altri.
+\end{itemize}
+
+Sarebbe invece desiderabile esplorare maggiormente gli arm che sembrano più promettenti.
+
+\subsubsection{BAI è più esplorativo del MAB classico}
+
+Nel BAI il cumulative reward ottenuto durante il testing non costituisce direttamente il criterio di valutazione.
+
+Le slide propongono l'analogia di disporre di monete ``a perdere'': non importa perdere reward durante l'esperimento purché al termine si riesca a identificare correttamente l'arm migliore.
+
+Anche nel BAI esiste quindi un bilanciamento tra exploration ed exploitation, ma rispetto al MAB orientato al cumulative reward la bilancia è maggiormente spostata verso l'exploration.
+
+\subsection{Sequential Halving}
+
+Tra le numerose strategie proposte per Fixed-Budget Best Arm Identification, le slide introducono \emph{Sequential Halving}, descritta come una strategia:
+\begin{itemize}
+    \item molto semplice;
+    \item abbastanza efficace in diverse situazioni.
+\end{itemize}
+
+L'idea fondamentale consiste nell'alternare:
+\begin{enumerate}
+    \item campionamento degli arm ancora attivi;
+    \item eliminazione progressiva degli arm meno promettenti.
+\end{enumerate}
+
+Il budget complessivo:
+\[
+T
+\]
+viene suddiviso in più porzioni o fasi.
+
+La slide afferma che tali fasi hanno una certa dimensione, ma nel materiale visualizzato non viene riportata una formula esplicita per tale dimensione; pertanto non è possibile specificarla ulteriormente senza introdurre informazione esterna alle slide.
+
+Il procedimento descritto è:
+\begin{enumerate}
+    \item nella prima fase, i sample vengono distribuiti uniformemente su tutti gli arm;
+    \item al termine della fase si calcola, per ciascun arm, la media empirica;
+    \item gli arm vengono ordinati secondo le rispettive medie empiriche;
+    \item la metà degli arm che si trova nella parte inferiore del ranking viene eliminata;
+    \item la fase successiva opera soltanto sugli arm superstiti;
+    \item il processo continua eliminando progressivamente metà degli arm;
+    \item al termine delle fasi rimane un unico arm, che viene restituito come best arm.
+\end{enumerate}
+
+Il principio è quindi quello di non sprecare progressivamente il budget sugli arm che, sulla base delle osservazioni già raccolte, appaiono chiaramente poco promettenti.
+
+\subsection{Limiti e varianti del Best Arm Identification}
+
+Strategie come Sequential Halving dipendono fortemente da due assunzioni:
+\begin{enumerate}
+    \item il numero di arm deve essere finito;
+    \item il budget complessivo deve essere noto a priori.
+\end{enumerate}
+
+Le slide evidenziano diversi casi in cui tali assunzioni vengono violate.
+
+\subsubsection{Problemi Anytime}
+
+Tecniche di \emph{Monte Carlo Tree Search} per giochi a turni possono essere \emph{Anytime}.
+
+In tali contesti non è necessariamente disponibile un budget prefissato prima dell'esecuzione.
+
+Per problemi BAI Anytime, le slide osservano che viene spesso utilizzato:
+\[
+\mathrm{UCB1}.
+\]
+
+\subsubsection{Iperparametri continui}
+
+Gli iperparametri da ottimizzare sono frequentemente continui.
+
+Una discretizzazione dello spazio dei possibili valori può generare un numero molto elevato di arm, rendendo problematica l'assunzione di un piccolo insieme finito di alternative.
+
+\subsubsection{Duelling Bandits}
+
+Un'ulteriore variante si verifica quando un arm non produce un reward significativo se valutato isolatamente.
+
+Il reward emerge invece dal confronto fra due arm in un \emph{match}.
+
+Le slide indicano questo scenario con il termine:
+\[
+\text{\emph{duelling bandits}}.
+\]
+
+\subsubsection{Estensioni del modello classico}
+
+Per affrontare casi che non rispettano le assunzioni del BAI classico sono stati sviluppati modelli differenti.
+
+Le slide citano, come esempio:
+\[
+\mathrm{CLOP}.
+\]
+
+L'idea conclusiva è quindi che tanto il Multi-Armed Bandit classico quanto il Best Arm Identification costituiscano modelli di base dai quali derivano numerose varianti, necessarie per adattare il compromesso fra apprendimento, esplorazione e sfruttamento alle caratteristiche dello specifico problema applicativo.
