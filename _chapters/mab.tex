@@ -3,17 +3,21 @@
 
 \subsection{Il Multi-Armed Bandit Problem e il dilemma Exploration--Exploitation}
 
-Il materiale introduce il \emph{Multi-Armed Bandit Problem} (MAB), con particolare attenzione alle applicazioni Web e ai sistemi di raccomandazione (\emph{Recommender Systems}, abbreviati nel seguito come RecSys).
+Il professore parla dei \emph{Multi-Armed Bandit Problem} (MAB), con particolare attenzione alle applicazioni Web e ai sistemi di raccomandazione (\emph{Recommender Systems}, abbreviati nel seguito come RecSys).
+
+\begin{definition}{MAB}
+    Un Multi-Armed Bandit (MAB) è un problema di decisione sequenziale (un problema nel quale un agente deve prendere una successione di decisioni nel tempo) in condizioni di incertezza, nel quale un agente deve scegliere ripetutamente un'azione tra diverse alternative disponibili, senza conoscere inizialmente le ricompense che ciascuna alternativa può generare.
+\end{definition}
 
 Il problema fondamentale alla base dei MAB è il cosiddetto \emph{exploration--exploitation dilemma}, cioè il problema di stabilire quanto un agente debba:
 \begin{itemize}
     \item sfruttare la conoscenza già acquisita, scegliendo l'opzione che al momento sembra migliore (\emph{exploitation});
-    \item esplorare opzioni differenti, anche apparentemente peggiori, allo scopo di acquisire nuova informazione (\emph{exploration}).
+    \item esplorare opzioni differenti, anche apparentemente peggiori, allo scopo di acquisire nuova informazione e capire di piu dal mondo (\emph{exploration}).
 \end{itemize}
 
-Il dilemma nasce perché le conseguenze delle diverse azioni non sono note a priori con certezza. L'agente deve quindi contemporaneamente \emph{imparare} quali azioni siano migliori e \emph{decidere} quali azioni eseguire.
+Il dilemma nasce perché le conseguenze delle diverse azioni non sono note a priori con certezza (\textbf{non sappiano come andranno, infatti vedi gli esempi sotto}). L'agente deve quindi contemporaneamente \emph{imparare} quali azioni siano migliori e \emph{decidere} quali azioni eseguire.
 
-\subsubsection{Esempio motivazionale nei sistemi di raccomandazione}
+\subsubsection{Esempio di MAB nei sistemi di raccomandazione}
 
 Si consideri un utente che utilizza per la prima volta un'applicazione di food delivery. L'utente seleziona un ristorante messicano e assegna alla propria esperienza una valutazione molto positiva.
 
@@ -33,29 +37,40 @@ La strategia funziona inizialmente, ma può diventare problematica. L'utente pu�
 
 Il problema è che il RecSys dispone ormai di molti feedback relativi alla cucina messicana. Una singola osservazione positiva sulla cucina italiana potrebbe non essere sufficiente a modificare rapidamente il modello delle preferenze costruito fino a quel momento.
 
-Questo esempio mostra il limite di una strategia eccessivamente orientata all'\emph{exploitation}: sfruttando continuamente ciò che sembra già funzionare, il sistema raccoglie poche informazioni sulle alternative e può quindi restare intrappolato in una rappresentazione incompleta delle preferenze dell'utente.
+Questo esempio mostra il limite di una strategia eccessivamente orientata all'\emph{exploitation}: sfruttando continuamente ciò che sembra già funzionare, il sistema raccoglie poche informazioni sulle alternative, e quindi acquisire poche informazioni, non aavendo una rappresentazione completa dell'utente.
 
-\subsubsection{Esempio motivazionale: scelta di un banner pubblicitario}
+Questo perchè il sistema, se usa una strategia, orientata all'\emph{exploitation}, sceglierà sempre l'opzione che sembra migliore, preferendo la cucina messicana e mai quella italiana.
 
-Un secondo esempio riguarda una campagna pubblicitaria online nella quale si dispone di differenti versioni di un banner.
 
-L'obiettivo è scegliere il banner più efficace, cioè quello in grado di massimizzare il \emph{Click-Through Rate} (CTR), ossia la frequenza con cui il banner visualizzato viene cliccato.
+\subsubsection{Esempio di MAB: scelta di un banner pubblicitario}
+Ora faremo un esempio che si discosta dai RecSys, per vedere come questo dilemma non c'è solo in quel contesto.
 
-Per individuare il banner migliore è possibile effettuare una fase sperimentale:
-\begin{itemize}
-    \item a un gruppo di utenti viene mostrato il primo banner;
-    \item ad altri utenti viene mostrato il secondo;
-    \item il procedimento viene ripetuto per tutte le versioni disponibili;
-    \item vengono infine confrontati i rispettivi valori di conversione, nel caso considerato il CTR.
-\end{itemize}
 
-La fase esplorativa è necessaria per ottenere informazione sufficiente a distinguere le diverse alternative. Tuttavia, ogni volta che viene mostrato un banner sub-ottimale, si incorre potenzialmente in una perdita di profitto rispetto a ciò che si sarebbe ottenuto mostrando il banner migliore.
+Supponiamo ora di voler lanciare una campagna pubblicitaria online e di poter scegliere fra diversi banner possibili, lo scopo è quello di utilizzare il banner più accattivante, ovvero quello che massimizza il clicktrough rate (CTR)
+A tale scopo è possibile condurre una indagine per la 
+quale ad alcuni utenti viene fornita una versione del 
+banner, ad altri  una seconda versione e così via. Alla 
+fine si misurano i valori di conversione  (in questo caso 
+il CTR).
+Questa fase esplorativa è necessaria per determinare 
+quale è il banner migliore, tuttavia ogni qual volta 
+viene presentato un banner sub-ottimale questo 
+corrisponde ad una perdita in termini di profitto, \textbf{perchè giustamente stiamo in una fase dove sempre vale il profitto}.
+Continuare ad esplorare quando si è già confidenti su 
+quale sia l’opzione migliore è controproducente 
 
-Esiste dunque una tensione fondamentale:
-\begin{itemize}
-    \item esplorare troppo poco può impedire di identificare il banner realmente migliore;
-    \item esplorare troppo a lungo, quando si dispone già di sufficiente evidenza sull'alternativa migliore, diventa controproducente.
-\end{itemize}
+
+Quindi qui si distinguono due fasi principali:
+\begin{enumerate}
+    \item \textbf{Exploration} : dove si esplorano nuovi banner, e si danno in pasto agli utenti, questo porta nuova informazione, ma porta anche ad essere controproducenti, perchè se mostro un banner sub-ottimale, perdo click.
+    L'esplorazione (questo non viene specificato, è una cosa mia), può avvenire in diversi modi, \textbf{non solo creando un nuovo banner, dopo la valutazione degli altri, e facendolo valutare a diversi utenti}, ma anche:
+    \begin{itemize}
+        \item Mostrando nuovamente il banner B a un altro gruppo di utenti, per capire se il suo CTR stimato del 12 percento sia affidabile.
+        \item Mostrando nuovamente il banner C, per verificare se le osservazioni precedenti siano rappresentative.
+        \item Introducendo un nuovo banner D, mai testato prima, e mostrandolo a un gruppo di utenti per valutarne il CTR. (quello che ho detto prima)
+    \end{itemize}
+    \item \textbf{Exploitation} : scegliere il banner che, sulla base delle osservazioni raccolte fino a quel momento, \textbf{sembra} (potrebbe non essere il migliore,dato che ci fermiamo ad esplorare) avere il CTR più elevato.
+\end{enumerate}
 
 \subsubsection{Definizione di exploitation ed exploration}
 
@@ -91,11 +106,6 @@ Il problema combina pertanto due componenti:
     \item \emph{learning}, perché la qualità delle decisioni dipende dall'informazione raccolta durante l'interazione.
 \end{itemize}
 
-Le slide richiamano anche un'analogia con il concetto psicologico di \emph{chiusura cognitiva}:
-\begin{itemize}
-    \item un soggetto eccessivamente ``chiuso'' tende a esplorare poco e ad affidarsi rapidamente alla prima soluzione che appare soddisfacente;
-    \item un soggetto eccessivamente ``aperto'' tende invece a continuare a esplorare senza convergere verso una soluzione definitiva.
-\end{itemize}
 
 Anche in questo caso il comportamento efficace richiede un equilibrio.
 
@@ -182,82 +192,211 @@ La caratteristica fondamentale è che il comportamento della macchina è stocast
 
 Inizialmente tali distribuzioni sono sconosciute. Il giocatore deve quindi impararne le caratteristiche esclusivamente sulla base dei reward osservati dopo i pull effettuati.
 
+
 \subsection{Protocollo formale del MAB stocastico}
 
-Si consideri un insieme di $K$ arm:
+Un \textit{Multi-Armed Bandit} (MAB) stocastico è un problema di decisione sequenziale nel quale un agente deve selezionare ripetutamente un'azione tra diverse alternative disponibili, osservando le ricompense ottenute e utilizzando le informazioni raccolte per migliorare le decisioni successive.
+
+Si considera un insieme finito di $K$ alternative, dette \textit{arms}:
+
 \[
-\mathcal{A}=\{1,\ldots,K\}.
+\mathcal{A} = \{1,2,\ldots,K\}.
 \]
 
-A ogni arm $i$ è associata una distribuzione di reward sconosciuta $D_i$. Nella notazione delle slide:
+Si assume inoltre un orizzonte temporale costituito da $T$ round:
+
 \[
-D_i:\mathbb{R}\rightarrow[0,1].
+t \in \{1,2,\ldots,T\}.
 \]
 
-Il protocollo mostrato nelle slide assume:
-\begin{itemize}
-    \item $K$ arm;
-    \item un orizzonte temporale di $T$ round, inizialmente considerato noto;
-    \item una distribuzione di reward $D_a$ sconosciuta per ciascun arm $a$.
-\end{itemize}
+A ciascun arm $i \in \mathcal{A}$ è associata una variabile aleatoria $R_i$, che rappresenta il \textit{reward} (ricompensa) incerto che si può ottenere selezionando tale arm.
 
-Per ciascun round $t\in\{1,\ldots,T\}$:
+Nel modello considerato, i reward sono limitati all'intervallo $[0,1]$. Pertanto, possiamo definire:
+
+\[
+R_i : \Omega \longrightarrow [0,1],
+\]
+
+dove $\Omega$ rappresenta lo spazio campionario degli esiti possibili dell'esperimento aleatorio.
+
+A ogni variabile aleatoria $R_i$ è associata una distribuzione di probabilità $D_i$:
+
+\[
+R_i \sim D_i.
+\]
+\textbf{Cioè questo significa che $R_i$ segue quella distribuzione di probabilità}
+
+
+La distribuzione $D_i$ descrive probabilisticamente i possibili valori del reward ottenibile selezionando l'arm $i$.
+
+È importante sottolineare che la distribuzione $D_i$ è inizialmente sconosciuta all'agente.
+
+\paragraph{Funzionamento del protocollo}
+
+Per ciascun round $t \in \{1,\ldots,T\}$, il protocollo prevede i seguenti passaggi:
+
 \begin{enumerate}
-    \item l'algoritmo seleziona un arm $a_t$;
-    \item viene estratto un reward
+    \item \textbf{Selezione dell'arm.}
+
+    L'agente seleziona un arm:
+
     \[
-    r_t\in[0,1]
+    a_t \in \mathcal{A}.
     \]
-    dalla distribuzione associata all'arm selezionato:
+
+    La selezione può dipendere dalle informazioni raccolte nei round precedenti.
+
+    \item \textbf{Generazione del reward.}
+
+    La selezione dell'arm $a_t$ determina il campionamento di un reward dalla distribuzione di probabilità associata all'arm selezionato.
+
+    Formalmente, indicando con $R_t$ la variabile aleatoria che rappresenta il reward al round $t$, si ha:
+
     \[
-    r_t\sim D_{a_t};
+    R_t \sim D_{a_t}.
     \]
-    \item il reward $r_t$ viene osservato dall'algoritmo.
+
+    che la variabile aleatoria segue quella distribuzione.
+
+    \item \textbf{Osservazione del reward.}
+
+    L'agente osserva il valore effettivamente ottenuto:
+
+    \[
+    r_t \in [0,1],
+    \]
+
+    che rappresenta una realizzazione della variabile aleatoria $R_t$.
+
+    Il reward osservato viene utilizzato per aggiornare le conoscenze dell'agente e orientare le decisioni nei round successivi.
 \end{enumerate}
 
-Il protocollo specifica inoltre che il reward è campionato indipendentemente dalla distribuzione dell'arm selezionato.
+\paragraph{Natura stocastica dei reward}
 
-Un aspetto importante è che l'algoritmo osserva il reward dell'arm effettivamente selezionato e ``nulla altro'': non conosce cioè, nello stesso round, quale reward avrebbero prodotto gli arm non scelti.
+Un aspetto fondamentale del MAB stocastico è che la selezione ripetuta dello stesso arm non produce necessariamente lo stesso reward.
+
+Infatti, a ciascun arm è associata una distribuzione di probabilità fissa, dalla quale vengono campionati indipendentemente i reward ogni volta che quell'arm viene selezionato.
+
+Supponiamo, ad esempio, che l'agente selezioni lo stesso arm $i$ in tre round differenti:
+
+\[
+a_1=i, \qquad a_3=i, \qquad a_7=i.
+\]
+
+Le variabili aleatorie corrispondenti ai reward sono distribuite secondo la medesima distribuzione:
+
+\[
+R_1 \sim D_i, \qquad
+R_3 \sim D_i, \qquad
+R_7 \sim D_i.
+\]
+
+Tuttavia, i valori effettivamente osservati possono essere differenti:
+
+\[
+r_1 \neq r_3 \neq r_7.
+\]
+
+Questo accade perché la distribuzione $D_i$ descrive le probabilità dei possibili reward, ma non determina con certezza quale valore verrà osservato in uno specifico round.
+
+
 
 \subsection{Esempio: banner e reward bernoulliani}
 
-Si consideri nuovamente il problema di scegliere, tra $K$ differenti versioni di un banner pubblicitario, quella più adatta a una campagna.
+Si consideri il problema di scegliere tra $K$ differenti versioni di un banner pubblicitario, con l'obiettivo di individuare quella che massimizza il \textit{Click-Through Rate} (CTR), ossia la probabilità che un utente clicchi sul banner visualizzato.
 
-I banner rappresentano gli arm:
+I banner rappresentano gli \textit{arm} del problema:
+
 \[
-\mathcal{A}=\{1,\ldots,K\}.
+\mathcal{A} = \{1,2,\ldots,K\}.
 \]
 
-Se l'obiettivo è massimizzare il CTR, è naturale codificare il reward come:
+\paragraph{Definizione della variabile aleatoria}
+
+A ciascun arm $a \in \mathcal{A}$ associamo una variabile aleatoria $R_a$, che rappresenta il reward ottenibile mostrando il banner $a$ a un utente.
+
+Consideriamo l'esperimento aleatorio consistente nel mostrare il banner a un utente e osservare se quest'ultimo effettua un clic.
+
+Lo spazio campionario è:
+
 \[
-r=
+\Omega = \{\text{clic},\text{nessun clic}\}.
+\]
+
+Definiamo quindi la variabile aleatoria:
+
+\[
+R_a : \Omega \longrightarrow \{0,1\},
+\]
+
+nel seguente modo:
+
+\[
+R_a(\omega) =
 \begin{cases}
-1, & \text{se il banner viene cliccato},\\
-0, & \text{se il banner non viene cliccato}.
+1, & \text{se } \omega = \text{clic},\\
+0, & \text{se } \omega = \text{nessun clic}.
 \end{cases}
 \]
 
-A ogni banner $i$ è associata una probabilità $p_i$ di ricevere un click.
+Pertanto, $R_a$ rappresenta una variabile aleatoria discreta che può assumere esclusivamente due valori: $1$ se il banner viene cliccato e $0$ in caso contrario.
 
-Pertanto la distribuzione $D_i$ è bernoulliana:
+\paragraph{Distribuzione di probabilità del reward}
+
+A ciascuna variabile aleatoria $R_a$ è associata una distribuzione di probabilità $D_a$, inizialmente sconosciuta all'agente, che descrive con quali probabilità si ottengono i possibili valori del reward.
+
+Indichiamo con $p_a \in [0,1]$ la probabilità che un utente clicchi sul banner $a$.
+
+Possiamo quindi definire la distribuzione di probabilità della variabile aleatoria $R_a$ come:
+
 \[
-D_i(r)=
 \begin{cases}
-p_i, & r=1,\\
-1-p_i, & r=0.
+P(R_a = 1) = p_a,\\
+P(R_a = 0) = 1-p_a.
 \end{cases}
 \]
 
-In questo caso il reward atteso è:
-\begin{align*}
-\mu_i
-&=\mathbb{E}[D_i]\\
-&=1\cdot p_i+0\cdot(1-p_i)\\
-&=p_i.
-\end{align*}
+Poiché la variabile aleatoria assume soltanto i valori $0$ e $1$, la sua distribuzione è una \textit{Bernoulli} di parametro $p_a$:
 
-Di conseguenza, nel caso dei banner bernoulliani, individuare l'arm con reward atteso massimo equivale a individuare il banner con probabilità di click massima.
+\[
+\boxed{R_a \sim \operatorname{Bernoulli}(p_a).}
+\]
 
+La distribuzione $D_a$ coincide dunque con la distribuzione bernoulliana associata all'arm $a$.
+
+Nel MAB stocastico classico, tale distribuzione rimane fissa nel tempo. Ogni volta che viene selezionato il banner $a$, il reward viene campionato indipendentemente dalla medesima distribuzione $D_a$.
+
+Di conseguenza, mostrare ripetutamente lo stesso banner non implica necessariamente ottenere sempre lo stesso reward.
+
+\paragraph{Calcolo del reward atteso}
+
+Il reward atteso dell'arm $a$ è definito come il valore atteso della variabile aleatoria $R_a$:
+
+\[
+\mu_a = \mathbb{E}[R_a].
+\]
+
+Essendo $R_a$ una variabile aleatoria discreta, il suo valore atteso si calcola come:
+
+\[
+\begin{aligned}
+\mu_a
+&= \sum_{r \in \{0,1\}} r \cdot P(R_a=r)\\
+&= 0 \cdot P(R_a=0) + 1 \cdot P(R_a=1)\\
+&= 0 \cdot (1-p_a) + 1 \cdot p_a\\
+&= p_a.
+\end{aligned}
+\]
+
+Pertanto:
+
+\[
+\boxed{\mu_a = \mathbb{E}[R_a] = p_a.}
+\]
+
+Questo risultato mostra che, nel caso di reward bernoulliani, il reward atteso di un arm coincide con la probabilità che il relativo banner venga cliccato.
+
+\newpage
 \subsection{Obiettivo del MAB stocastico}
 
 A ciascun arm $i$ è associato il valore atteso:
