@@ -203,7 +203,7 @@ Si considera un insieme finito di $K$ alternative, dette \textit{arms}:
 \mathcal{A} = \{1,2,\ldots,K\}.
 \]
 
-Si assume inoltre un orizzonte temporale costituito da $T$ round:
+Si assume inoltre un orizzonte temporale costituito da $T$ round (che già abbiamo definito, quindi già sappiamo quindi round):
 
 \[
 t \in \{1,2,\ldots,T\}.
@@ -238,13 +238,13 @@ Per ciascun round $t \in \{1,\ldots,T\}$, il protocollo prevede i seguenti passa
 \begin{enumerate}
     \item \textbf{Selezione dell'arm.}
 
-    L'agente seleziona un arm:
+    L'agente seleziona un arm (ci sono tanti modi per selezionarlo, poi ne vedremo):
 
     \[
     a_t \in \mathcal{A}.
     \]
 
-    La selezione può dipendere dalle informazioni raccolte nei round precedenti.
+    La selezione può dipendere dalle informazioni raccolte nei round precedenti, $a_t$ rappresenta l'arm che viene preso al tempo $t$
 
     \item \textbf{Generazione del reward.}
 
@@ -398,13 +398,14 @@ Questo risultato mostra che, nel caso di reward bernoulliani, il reward atteso d
 
 \newpage
 \subsection{Obiettivo del MAB stocastico}
-
-A ciascun arm $i$ è associato il valore atteso:
+A ogni arm \(i\) è associata una variabile aleatoria \(R_i\), che rappresenta il reward ottenibile effettuando il pull dell'arm. La distribuzione di probabilità \(D_i\), associata a tale variabile aleatoria, descrive probabilisticamente i possibili reward ottenibili, questa è inizialmente sconosciuta all'agente.
+Inoltre ad ogni arm \(i\in\mathcal A\) è associato anche un reward atteso (anch'esso sconosciuto), definito come il valore atteso della variabile aleatoria \(R_i\):
 \[
-\mu_i=\mathbb{E}[D_i].
+\boxed{\mu_i=\mathbb E[R_i]}
 \]
 
-L'arm ottimale è indicato con:
+
+L'arm ottimale (in modo teorico, dato che non possiamo esplicitamente calcolarlo) è indicato con:
 \[
 i^*=\arg\max_{i\in\mathcal{A}}\mu_i.
 \]
@@ -420,16 +421,18 @@ a_1,r_1,\ldots,a_t,r_t,\ldots,a_T,r_T,
 \]
 dove:
 \begin{itemize}
-    \item $a_t$ è l'arm selezionato al round $t$;
+    \item $a_t$ è l'arm selezionato al round $t$ (ovviamente questo può essere duplicato, lo stesso arm può comparire più volte, anche in round consecutivi);
     \item $r_t$ è il reward prodotto da $D_{a_t}$.
 \end{itemize}
 
-L'obiettivo considerato nelle prime parti delle slide consiste nel massimizzare il \emph{cumulative reward}:
+Intuitivamente, il nostro scopo è quello di trovare una strategia di pull che massimizza il cumulative reward,lo scopo è trovare una strategia che permetta all'agente di decidere quale arm selezionare a ogni round, cercando di massimizzare il cumulative reward.
 \[
 R_T=\sum_{l=1}^{T}r_l.
 \]
+Attenzione, però, a una distinzione importante: non vogliamo semplicemente scegliere l'arm migliore al prossimo round, ma trovare una strategia che produca le migliori decisioni nel corso di tutti i \(T\) round.
 
-La strategia deve quindi acquisire informazioni sugli arm senza sacrificare eccessivamente il reward accumulato durante il processo.
+
+Vedremo due principali strategie:
 
 \subsubsection{Strategie deterministiche}
 
@@ -540,7 +543,7 @@ Essa rappresenta la deviazione standard empirica dei reward osservati per l'arm 
 
 \subsection{Explore-Then-Commit (ETC)}
 
-Una prima politica di allocazione è \emph{Explore-Then-Commit} (ETC).
+Una prima politica deterministica è \emph{Explore-Then-Commit} (ETC).
 
 L'idea consiste nel dividere l'esecuzione in due fasi nettamente separate:
 \begin{enumerate}
@@ -576,6 +579,145 @@ L'espressione modulo $K$ rappresenta l'esplorazione ciclica, o \emph{round-robin
 
 Questa politica viene associata nelle slide anche all'\emph{A/B testing}.
 
+\begin{warning}{}
+    Nota che il termine $\gamma$ deve essere definito in modo tale che tutti gli arms devono essere presi almeno una volta, questo perchè le medie devono essere definite tutte.
+\end{warning}
+
+
+
+\begin{example}{Explore-Then-Commit come politica deterministica}
+
+Consideriamo un problema di Multi-Armed Bandit con $K=3$ arm:
+
+\[
+\mathcal A=\{A,B,C\}.
+\]
+
+Supponiamo di avere un orizzonte temporale di:
+
+\[
+T=12 \text{ round}.
+\]
+
+La strategia \textit{Explore-Then-Commit} (ETC) suddivide
+l'orizzonte temporale in due fasi: exploration ed exploitation.
+
+La durata della fase di exploration è determinata dal parametro:
+
+\[
+\gamma\in[0,1].
+\]
+
+Supponiamo di scegliere:
+
+\[
+\gamma=0.5.
+\]
+
+Pertanto, il numero di round dedicati all'exploration è:
+
+\[
+T_{\mathrm{exploration}}
+=\gamma T
+=0.5\cdot12
+=\boxed{6\text{ round}}.
+\]
+
+I restanti round vengono dedicati all'exploitation:
+
+\[
+T_{\mathrm{exploitation}}
+=T-\gamma T
+=12-6
+=\boxed{6\text{ round}}.
+\]
+
+\paragraph{Prima fase: Exploration}
+
+Durante i primi $6$ round, gli arm vengono selezionati
+seguendo un ordine ciclico prestabilito, indipendentemente
+dai reward osservati.
+
+Supponiamo di ottenere la seguente traccia:
+
+\[
+\begin{array}{c|c|c}
+\text{Round }t & \text{Arm }a_t & \text{Reward }r_t\\
+\hline
+1 & A & 0\\
+2 & B & 1\\
+3 & C & 0\\
+4 & A & 1\\
+5 & B & 0\\
+6 & C & 1
+\end{array}
+\]
+
+La storia osservata al termine dell'exploration è:
+
+\[
+\mathcal H_6=
+(A,0,B,1,C,0,A,1,B,0,C,1).
+\]
+
+
+\paragraph{Seconda fase: Exploitation}
+
+Terminata la fase di exploration, l'agente calcola
+la media empirica dei reward osservati per ciascun arm:
+
+\[
+\hat{\mu}_A=\frac{0+1}{2}=0.5,
+\]
+
+\[
+\hat{\mu}_B=\frac{1+0}{2}=0.5,
+\]
+
+\[
+\hat{\mu}_C=\frac{0+1}{2}=0.5.
+\]
+
+Poiché tutti gli arm presentano la medesima
+media empirica, supponiamo che la strategia
+adotti una regola deterministica per risolvere
+le parità, scegliendo l'arm con indice minore,
+secondo l'ordinamento $A<B<C$.
+
+Pertanto, l'arm selezionato per l'exploitation è:
+
+\[
+j=A.
+\]
+\end{example}
+\begin{example}{Continuo esempio di sopra}
+Dal round $t=7$ fino al round $t=12$,
+l'agente seleziona sempre l'arm $A$,
+indipendentemente dai reward successivamente osservati.
+
+Una possibile prosecuzione della traccia è:
+
+\[
+\begin{array}{c|c|c}
+\text{Round }t & \text{Arm }a_t & \text{Reward }r_t\\
+\hline
+7 & A & 1\\
+8 & A & 0\\
+9 & A & 1\\
+10 & A & 1\\
+11 & A & 0\\
+12 & A & 1
+\end{array}
+\]
+Nel nostro esempio, il cumulative reward al termine dei 9 round è:
+\[
+R_9=\sum_{t=1}^{9}r_t=5
+\]
+\end{example}
+
+
+\newpage
+
 \subsubsection{Scelta del parametro $\gamma$}
 
 L'obiettivo continua a essere la massimizzazione del cumulative reward $R_T$.
@@ -595,6 +737,7 @@ Se $\gamma$ è troppo piccolo:
     \[
     \mu_j\ll\mu^*;
     \]
+    dove $\mu^*$ è il valore massimo teorico, come detto all'inizio
     \item poiché $j$ viene poi selezionato per tutti i round
     \[
     \gamma T<t\leq T,
@@ -613,6 +756,9 @@ Se invece $\gamma$ è troppo vicino a $1$:
 Un ulteriore limite riguarda la modalità di esplorazione: una distribuzione uniforme dei pull può essere inefficiente, perché tratta allo stesso modo arm promettenti e arm chiaramente poco promettenti.
 
 Il problema di migliorare la fase di \emph{pure exploration} conduce alla branca denominata \emph{Best Arm Identification} (BAI), ripresa nelle slide finali.
+
+
+\newpage
 
 \subsection{$\epsilon$-Greedy}
 
@@ -635,16 +781,21 @@ Si tratta quindi di una strategia stocastica.
 Per i primi $K$ round viene effettuato un pull di ciascun arm:
 \[
 a_{t+1}=t+1,
-\qquad t<K.
+\qquad \forall t<K.
 \]
 
 L'obiettivo dell'inizializzazione è garantire che per ogni arm esista almeno un reward osservato, rendendo quindi definibili le medie empiriche.
 
+Ovviamente in modo implementativo, quello che si andrà a fare è far partire l'indice $t$ da 0 e farlo arrivare a $K-1$, cioè:
+\[
+t \in {0,...,K-1}
+\]
+che sono in totale K round, perciò sopra diciamo per K round.
 \subsubsection{Politica di selezione}
 
-Successivamente:
+Successivamente, trovandoci al tempo $t$:
 \begin{align*}
-p &\sim \operatorname{rand}[0,1],\\
+p &\sim \operatorname{rand}[0,1] \text{cioè viene campionato da una distribuzione che ad esempio può essere uniforme in 0,1}\\
 \text{se }p<\epsilon:\qquad
 a_{t+1}&=\operatorname{rand}(K),\\
 \text{altrimenti}:\qquad
@@ -652,6 +803,9 @@ a_{t+1}
 &=
 \arg\max_{i\in\mathcal{A}}\widehat{\mu}_{i,t}.
 \end{align*}
+\begin{warning}{}
+    Ad esempio, potremmo trovarci dopo l'inizializzazione al tempo $t = K$ e ovviamente avere già definito $a_{t = K}$ (dal tempo precedente), e quindi avere già la media empirica definita
+\end{warning}
 
 La prima scelta è \emph{explorative}; la seconda è \emph{exploitive}.
 
@@ -713,6 +867,13 @@ arm bernoulliani e probabilità:
 \[
 p=\{0.1,0.1,0.1,0.1,0.9\}.
 \]
+cioè
+\[
+R_1 \sim \text{Bernulli(0.1)} \\
+\dots
+R_5 \sim \text{Bernulli(0.9)} \\
+\]
+
 
 L'ultimo arm è quindi nettamente migliore degli altri.
 
@@ -732,16 +893,22 @@ Per ogni configurazione vengono eseguite:
 \]
 simulazioni.
 
-I risultati visualizzati sono medie sui reward ottenuti nelle diverse simulazioni e rappresentano pertanto il comportamento medio.
+Quindi quello che viene effettivamente fatto, è che per esempio per $\epsilon = 0.1$, viene testato 5000 volte (osservando per le 5000 volte, 250 round ovviamente).
+Questo viene fatto per tutti gli $\epsilon$ che abbiamo detto prima, quindi sono:
+\[
+5000 * 5
+\]
+simulazioni
 
-Le slide mostrano due grafici:
-\begin{itemize}
-    \item la probabilità di selezionare il \emph{best arm} in funzione del tempo;
-    \item il cumulative reward in funzione del tempo.
-\end{itemize}
+I risultati visualizzati sono \textbf{medie sui reward ottenuti nelle diverse simulazioni} e rappresentano pertanto il comportamento medio.
+Cioè significa che per esempio se $\epsilon = 0.1$ allora il grafico mostra per tutti i 250 round, una media delle 5000 simulazioni osservate, per ogni $t$.
 
-Nel secondo grafico della slide compare testualmente il titolo ``Cumulative Reward of the Exp3 Algorithm'' e la legenda ``Gamma'', pur trovandosi all'interno della discussione sperimentale dedicata ai differenti valori di $\epsilon$.
-
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{_files/_images/epsilon-greedy.png}
+    \caption{Se al round \(t=200\) osserviamo un valore sull'asse Y pari a \(0.75\), significa che: Al round 200, la probabilità stimata di selezionare il vero best arm è pari a 0.75 , sulla base delle 5000 simulazioni indipendenti}
+    \label{fig:etichetta}
+\end{figure}
 \subsection{Stabilizzazione di $\epsilon$-Greedy}
 
 Un'importante osservazione sperimentale è che l'accuratezza di $\epsilon$-Greedy tende prima o poi a stabilizzarsi.
@@ -764,7 +931,7 @@ l'arm che al round $t$ possiede la maggiore media empirica.
 
 La probabilità di scegliere un generico arm $i$ è:
 \[
-\Pr(a_t=i)
+\Pr(a_{t+1}=i)
 =
 \begin{cases}
 (1-\epsilon)+\dfrac{\epsilon}{K},
@@ -777,20 +944,22 @@ La probabilità di scegliere un generico arm $i$ è:
 La prima espressione deriva da due possibilità:
 \begin{enumerate}
     \item con probabilità $1-\epsilon$ viene effettuata exploitation e viene scelto sicuramente $h$;
-    \item con probabilità $\epsilon$ viene effettuata exploration e, scegliendo uniformemente uno tra $K$ arm, $h$ viene comunque estratto con probabilità $1/K$.
+    \item con probabilità $\epsilon$ viene effettuata exploration e, scegliendo uniformemente uno tra $K$ arm, $h$ viene comunque estratto con probabilità $1/K$, e quindi $\epsilon * 1/K$.
 \end{enumerate}
 
 Pertanto:
 \[
-\Pr(a_t=h)
+\Pr(a_{t+1}=h)
 =
 1-\epsilon+\frac{\epsilon}{K}.
 \]
 
 Per qualsiasi arm $i$ vale comunque:
 \[
-\Pr(a_t=i)\geq\frac{\epsilon}{K}.
+\Pr(a_{t+1}=i)\geq\frac{\epsilon}{K}.
 \]
+Come infatti abbiamo dimostrato
+
 
 Se $\epsilon>0$, questa probabilità è strettamente positiva e non scompare nel tempo.
 
@@ -803,7 +972,7 @@ Su un'esecuzione di durata infinita, le slide esprimono la conseguenza precedent
 \right)=1.
 \]
 
-In altre parole, con probabilità $1$ ogni arm viene selezionato infinite volte.
+La probabilità che, al tendere all'infinito del numero di round \(t\), il numero di volte in cui viene selezionato l'arm \(i\) cresca illimitatamente, tendendo quindi all'infinito, è pari a 1.
 
 \subsubsection{Convergenza delle medie empiriche}
 
@@ -829,13 +998,14 @@ Poiché per $\epsilon>0$ ogni arm viene campionato infinite volte, combinando i 
 
 Dunque le medie empiriche convergono quasi certamente ai rispettivi valori attesi.
 
-Quando le stime sono sufficientemente vicine ai veri valori attesi, l'arm con media empirica massima coincide con l'arm ottimale:
+Questo vuol dire che prima o poi le $\hat{\mu}_{i,t}$ saranno così vicine alle rispettive $\mu_i$ che 
 \[
 \arg\max_{i\in\mathcal{A}}
 \widehat{\mu}_{i,t}
 =
 i^*.
 \]
+\textbf{Cioè seleziona la miglior media empirica vera e quindi veramente il miglior arm.}
 
 Da quel momento, salvo le scelte esplorative casuali, la componente greedy seleziona l'arm corretto.
 
@@ -846,7 +1016,8 @@ Una volta stabilizzatasi l'identificazione del best arm, la probabilità di sele
 (1-\epsilon)+\frac{\epsilon}{K}.
 \]
 
-Questa quantità rappresenta quindi il livello intorno al quale tende a stabilizzarsi l'accuratezza.
+Come vedi, questa probabilità è uguale a quella di prima, solo che queste è la probabilità di selezionare \textbf{davvero il best-arm}, perchè le medie di sono stabilizzate (al tendere all'infinito), invece prima era una stima,
+perchè le medie su cui si calcolavano i best-arm erano empiriche.
 
 \subsection{Interpretazione dei test di $\epsilon$-Greedy}
 
@@ -880,14 +1051,14 @@ Nel restante $30\%$ dei casi viene scelto un arm casualmente. Poiché $K=5$, dur
 
 Pertanto:
 \[
-0.7+\frac{0.3}{5}
+0.7+\frac{1}{5} * 0.3
 =
 0.7+0.06
 =
 0.76.
 \]
 
-L'accuratezza asintotica è dunque:
+La probabilità di selezionare il best-arm è dunque:
 \[
 0.76.
 \]
@@ -913,9 +1084,11 @@ Il valore asintotico è:
 
 Quindi un $\epsilon$ più piccolo:
 \begin{itemize}
-    \item rallenta l'acquisizione dell'informazione necessaria a identificare l'arm migliore;
-    \item una volta identificato l'arm migliore, permette però di selezionarlo con frequenza più elevata.
+    \item rallenta l'acquisizione dell'informazione necessaria a identificare l'arm migliore, perchè si fa poca esplorazione
+    \item una volta identificato l'arm migliore, permette però di selezionarlo con frequenza più elevata, perchè la probabilità è piu alta.
 \end{itemize}
+
+\newpage
 
 \subsection{Analisi del cumulative reward}
 
@@ -963,8 +1136,10 @@ avrebbe una curva di accuratezza ancora più lenta e potrebbe raggiungere il cum
 Gli esperimenti evidenziano due effetti:
 \begin{itemize}
     \item un $\epsilon$ grande identifica rapidamente il best arm grazie alla maggiore esplorazione;
-    \item un $\epsilon$ grande continua però a pagare il costo di numerosi pull casuali anche quando il best arm è ormai noto.
+    \item un $\epsilon$ grande continua però a pagare il costo di numerosi \textbf{pull casuali anche quando il best arm è ormai noto}, come abbiamo detto prima.
 \end{itemize}
+Questo è il trade-off principale.
+
 
 Da ciò nasce l'idea di utilizzare un valore di $\epsilon$ variabile nel tempo:
 \begin{enumerate}
@@ -1017,54 +1192,256 @@ f(t)
 
 Poiché il denominatore cresce al crescere di $t$, $f(t)$ decresce e quindi la politica si sposta progressivamente dall'exploration verso l'exploitation.
 
-\subsection{Limiti di $\epsilon$-Greedy}
+\subsection{Limite della politica $\varepsilon$-Greedy}
 
-Il principale limite di $\epsilon$-Greedy è che il livello di esplorazione è controllato da un fattore $\epsilon$ che, sia esso costante oppure funzione del tempo, non dipende direttamente dalle distribuzioni associate agli arm.
+Il principale limite della politica $\varepsilon$-Greedy è che il livello di
+\textit{exploration} viene controllato dal parametro $\varepsilon$, il quale,
+sia esso costante oppure funzione del tempo, non dipende direttamente dalle
+distribuzioni di probabilità associate agli arm.
 
-Si considerino due arm bernoulliani con probabilità:
+In particolare, la politica non tiene conto di quanto sia difficile distinguere
+gli arm sulla base dei reward osservati.
+
+Per comprendere questo limite, consideriamo un problema di Multi-Armed Bandit
+con $K=2$ arm bernoulliani:
+
 \[
-p_1,\qquad p_2
+R_{1}\sim\operatorname{Bernoulli}(p_1),
+\qquad
+R_{2}\sim\operatorname{Bernoulli}(p_2).
 \]
-e:
+
+Fissiamo il parametro:
+
 \[
-\epsilon=0.1.
+\varepsilon=0.1.
 \]
 
-\subsubsection{Arm difficili da distinguere}
-
-Se:
-\[
-p_1\approx p_2,
-\]
-le due distribuzioni sono molto simili.
-
-Sono quindi necessari molti campioni per distinguerle. Un'esplorazione del solo $10\%$ può risultare insufficiente:
-\[
-\epsilon=0.1
-\]
-è quindi potenzialmente troppo piccolo.
-
-\subsubsection{Arm facilmente distinguibili}
-
-Se $p_1$ e $p_2$ sono invece molto differenti, l'arm migliore può essere identificato con un numero relativamente piccolo di osservazioni.
-
-Continuare a esplorare nel $10\%$ dei round può allora essere eccessivo:
-\[
-\epsilon=0.1
-\]
-può risultare troppo grande.
-
-\subsubsection{Esplorazione ``alla cieca''}
-
-Quando $\epsilon$-Greedy decide di esplorare, seleziona un arm casualmente senza distinguere tra:
+Questo significa che, a ogni round, l'algoritmo effettua:
 \begin{itemize}
-    \item arm apparentemente promettenti;
-    \item arm apparentemente molto scarsi.
+    \item \textbf{Exploration}, con probabilità $\varepsilon=0.1$,
+    selezionando uniformemente uno dei due arm;
+
+    \item \textbf{Exploitation}, con probabilità $1-\varepsilon=0.9$,
+    selezionando l'arm che possiede la media empirica dei reward maggiore.
 \end{itemize}
 
-Le slide suggeriscono che una strategia più raffinata dovrebbe assegnare maggiore attenzione agli arm che appaiono più promettenti.
+Analizziamo due situazioni differenti.
 
-Da questa osservazione derivano strategie nelle quali si costruisce esplicitamente una misura della ``promettentezza'' di ciascun arm.
+\subsubsection{Primo caso: arm difficili da distinguere}
+
+Supponiamo che le probabilità di successo dei due arm siano:
+
+\[
+p_1=0.50,
+\qquad
+p_2=0.51.
+\]
+
+In questo caso, l'arm ottimale è $a_2$, poiché possiede il reward atteso
+maggiore:
+
+\[
+\mu_2=0.51>0.50=\mu_1.
+\]
+
+Tuttavia, le due distribuzioni sono molto simili, poiché la differenza
+tra i rispettivi reward attesi è:
+
+\[
+\Delta=\mu_2-\mu_1=0.01.
+\]
+
+Di conseguenza, sono necessarie molte osservazioni per riuscire a
+distinguere con affidabilità i due arm.
+
+Supponiamo che, dopo aver selezionato ciascun arm 10 volte,
+l'algoritmo abbia osservato:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Arm} & \textbf{Successi} & \textbf{Media empirica} \\
+\hline
+$a_1$ & $6/10$ & $0.60$ \\
+\hline
+$a_2$ & $5/10$ & $0.50$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Le medie empiriche risultano quindi:
+
+\[
+\hat{\mu}_{1,t}=0.60,
+\qquad
+\hat{\mu}_{2,t}=0.50.
+\]
+
+Pertanto:
+
+\[
+\hat{\mu}_{1,t}>\hat{\mu}_{2,t}.
+\]
+
+L'algoritmo ritiene erroneamente che $a_1$ sia l'arm migliore,
+nonostante il vero arm ottimale sia $a_2$.
+
+Poiché abbiamo fissato $\varepsilon=0.1$, la probabilità di
+selezionare $a_2$ al round successivo è:
+
+\[
+P(a_{t+1}=a_2)
+=
+\frac{\varepsilon}{K}
+=
+\frac{0.1}{2}
+=
+0.05.
+\]
+
+Dunque, finché $a_1$ continua a possedere la media empirica maggiore,
+l'arm realmente ottimale viene selezionato con probabilità soltanto del $5\%$.
+
+Questo può rallentare notevolmente il processo di apprendimento,
+poiché l'algoritmo potrebbe continuare a effettuare
+\textit{exploitation} sull'arm sbagliato.
+
+\paragraph{Conclusione del primo caso.}
+
+Quando le distribuzioni degli arm sono molto simili, è necessario
+raccogliere un numero elevato di osservazioni per distinguerle.
+
+Un valore di $\varepsilon$ troppo piccolo può quindi comportare
+un'esplorazione insufficiente, rallentando l'identificazione
+dell'arm ottimale.
+
+\subsubsection{Secondo caso: arm facilmente distinguibili}
+
+Supponiamo invece che le probabilità di successo siano:
+
+\[
+p_1=0.10,
+\qquad
+p_2=0.90.
+\]
+
+Anche in questo caso, l'arm ottimale è $a_2$, ma la differenza
+tra i reward attesi è molto maggiore:
+
+\[
+\Delta=\mu_2-\mu_1=0.80.
+\]
+
+Poiché le distribuzioni sono molto differenti, è generalmente
+sufficiente un numero relativamente piccolo di osservazioni
+per identificare correttamente l'arm migliore.
+
+Supponiamo, ad esempio, che dopo 10 selezioni per ciascun arm
+si ottengano:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Arm} & \textbf{Successi} & \textbf{Media empirica} \\
+\hline
+$a_1$ & $1/10$ & $0.10$ \\
+\hline
+$a_2$ & $9/10$ & $0.90$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Le medie empiriche sono:
+
+\[
+\hat{\mu}_{1,t}=0.10,
+\qquad
+\hat{\mu}_{2,t}=0.90.
+\]
+
+Pertanto:
+
+\[
+\hat{\mu}_{2,t}>\hat{\mu}_{1,t}.
+\]
+
+L'algoritmo identifica correttamente $a_2$ come l'arm migliore.
+
+Tuttavia, poiché $\varepsilon=0.1$ è costante, l'algoritmo
+continua a effettuare \textit{exploration} con probabilità $10\%$,
+indipendentemente dalle informazioni già raccolte.
+
+Di conseguenza, la probabilità di selezionare l'arm subottimale
+$a_1$ rimane:
+
+\[
+P(a_{t+1}=a_1)
+=
+\frac{\varepsilon}{K}
+=
+\frac{0.1}{2}
+=
+0.05.
+\]
+
+Quindi, anche quando l'algoritmo ha identificato correttamente
+l'arm ottimale, continua a selezionare l'arm peggiore
+con probabilità del $5\%$ a ogni round.
+
+Questo comporta una perdita di reward atteso rispetto
+alla selezione esclusiva dell'arm ottimale.
+
+\paragraph{Conclusione del secondo caso.}
+
+Quando le distribuzioni degli arm sono facilmente distinguibili,
+l'algoritmo può identificare rapidamente l'arm migliore.
+
+In questa situazione, mantenere una probabilità di
+\textit{exploration} costante può risultare eccessivo,
+poiché l'algoritmo continua a selezionare arm subottimali
+anche quando le osservazioni indicano chiaramente quale sia
+l'arm migliore.
+
+\subsubsection{Conclusione generale}
+
+I due esempi evidenziano il principale limite della politica
+$\varepsilon$-Greedy.
+
+In entrambi i casi abbiamo utilizzato lo stesso parametro:
+
+\[
+\varepsilon=0.1.
+\]
+
+Tuttavia, le due situazioni richiedono esigenze esplorative differenti:
+
+\begin{itemize}
+    \item \textbf{Arm difficili da distinguere:}
+    quando i reward attesi sono molto simili, può essere necessario
+    esplorare maggiormente per ottenere stime sufficientemente accurate.
+    Un valore piccolo di $\varepsilon$ potrebbe risultare insufficiente.
+
+    \item \textbf{Arm facilmente distinguibili:}
+    quando i reward attesi sono molto differenti, l'arm migliore può
+    essere identificato con relativamente poche osservazioni.
+    Continuare a esplorare con una probabilità elevata può quindi
+    risultare inefficiente.
+\end{itemize}
+
+Il problema fondamentale è che la politica $\varepsilon$-Greedy
+\textbf{non adatta direttamente il livello di exploration
+all'incertezza associata alle stime dei reward degli arm}.
+
+Il parametro $\varepsilon$ determina infatti la probabilità
+di esplorazione indipendentemente dalle medie empiriche
+e dal numero di osservazioni raccolte per ciascun arm.
+
+Questo limite motiva l'introduzione di politiche più sofisticate,
+come \textit{Upper Confidence Bound} (UCB), che tengono conto
+anche dell'incertezza delle stime per decidere quale arm selezionare.
+
+\newpage
 
 \subsection{Softmax}
 
