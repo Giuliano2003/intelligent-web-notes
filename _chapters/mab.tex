@@ -208,6 +208,7 @@ Si assume inoltre un orizzonte temporale costituito da $T$ round (che già abbia
 \[
 t \in \{1,2,\ldots,T\}.
 \]
+\textbf{$t$ può anche prendere valori fra 0 e $T-1$ tanto sono comunque $T$ round}
 
 A ciascun arm $i \in \mathcal{A}$ è associata una variabile aleatoria $R_i$, che rappresenta il \textit{reward} (ricompensa) incerto che si può ottenere selezionando tale arm.
 
@@ -1444,6 +1445,7 @@ anche dell'incertezza delle stime per decidere quale arm selezionare.
 \newpage
 
 \subsection{Softmax}
+Questo viene visto come un ulteriore algoritmo, diverso da $\epsilon$-Greedy, che cerca di mitigare i suoi problemi.
 
 La stima più immediata della qualità dell'arm $i$ al round $t$ è:
 \[
@@ -1460,10 +1462,95 @@ Una prima idea consiste nell'assegnare una probabilità di selezione direttament
 \sum_{j=1}^{K}\widehat{\mu}_{j,t}
 }.
 \]
+\textbf{Nota che in questo algoritmo anche se non viene visto, vi è una fase di inizializzazione, anche perchè come vedi al denominatore devono essere definite tutte le medie empiriche degli arms}.
+\\
+In pseudocodice, si ha che al tempo $t$:
+\[
+\boxed{
+\begin{array}{ll}
+\text{se }t<K: &
+a_{t+1}=t+1
+\\[1ex]
+\text{altrimenti:} &
+P(a_{t+1}=i)
+=\mathcal{P}(i,t)
+\end{array}}
+\]
+Poi campiono \(a_{t+1}\) (cioè il prossimo arm) secondo questa distribuzione, osservi il reward e aggiorni la media empirica dell'arm selezionato
+\begin{observation}{}
+    Softmax prova a essere più raffinato. L'idea di partenza della slide è: invece di dire ``o scelgo il migliore o scelgo casualmente'', assegno a \emph{ogni arm} una probabilità che dipende da quanto quell'arm sembra promettente.
 
+La quantità
+\[
+\widehat{\mu}_{i,t}
+\]
+è la \textbf{media empirica} del reward dell'arm \(i\) dopo le osservazioni disponibili fino al round \(t\). In altre parole, è la stima corrente di quanto sia buono l'arm \(i\).
+
+Per esempio, se hai tre arm e le loro medie empiriche sono
+\[
+\widehat{\mu}_{1,t}=0.6,\qquad
+\widehat{\mu}_{2,t}=0.3,\qquad
+\widehat{\mu}_{3,t}=0.1,
+\]
+la prima idea proposta nella slide è assegnare la probabilità
+\[
+\mathcal{P}(i,t)
+=
+\frac{\widehat{\mu}_{i,t}}
+{\sum_{j=1}^{K}\widehat{\mu}_{j,t}}.
+\]
+Il denominatore serve semplicemente a normalizzare le medie affinché le probabilità sommino a \(1\).
+
+Nel nostro esempio:
+\[
+0.6+0.3+0.1=1,
+\]
+quindi
+\[
+\mathcal{P}(1,t)=0.6,\qquad
+\mathcal{P}(2,t)=0.3,\qquad
+\mathcal{P}(3,t)=0.1.
+\]
+Quindi l'arm migliore viene scelto più spesso, ma anche gli altri mantengono una certa probabilità di essere selezionati.
+
+Il punto importante è proprio il confronto con \(\epsilon\)-Greedy. Supponiamo ancora:
+\[
+\widehat{\mu}_1=0.6,\qquad
+\widehat{\mu}_2=0.3,\qquad
+\widehat{\mu}_3=0.1
+\]
+e prendiamo \(\epsilon=0.3\).
+
+Con \(\epsilon\)-Greedy, assumendo che l'arm \(1\) sia il migliore:
+\[
+P(a=1)
+=
+0.7+\frac{0.3}{3}
+=
+0.8,
+\]
+mentre
+\[
+P(a=2)=P(a=3)=\frac{0.3}{3}=0.1.
+\]
+Nota la cosa importante:
+\[
+P(a=2)=P(a=3).
+\]
+Per \(\epsilon\)-Greedy, durante l'exploration l'arm \(2\), che sembra abbastanza promettente, viene trattato esattamente come l'arm \(3\), che sembra molto peggiore.
+
+Con l'idea che introduce Softmax, invece:
+\[
+P(a=1)=0.6,\qquad
+P(a=2)=0.3,\qquad
+P(a=3)=0.1.
+\]
+\end{observation}
+
+\newpage
 \subsubsection{Perché la proporzionalità diretta è troppo esplorativa}
 
-Per arm bernoulliani non degeneri, al crescere di $t$ si ha, quasi sicuramente:
+Per arm bernoulliani non degeneri, al crescere di $t$ ($t$ che tende all'infinito) si ha, quasi sicuramente:
 \[
 \mathcal{P}(i,t)>0
 \]
@@ -1489,8 +1576,8 @@ La probabilità di selezione tende quindi a:
 
 Se:
 \begin{itemize}
-    \item il numero di arm è elevato, oppure
-    \item i reward attesi sono relativamente simili,
+    \item il numero di arm è elevato (quindi $K$ è troppo grande), oppure
+    \item i reward attesi (medie) sono relativamente simili cioè sembrano tutte buone e simili fra di loro,
 \end{itemize}
 allora:
 \[
@@ -1498,7 +1585,7 @@ allora:
 \]
 può essere molto maggiore di ciascun singolo $\mu_i$.
 
-Anche il best arm può quindi mantenere una probabilità relativamente bassa di essere selezionato. Questo penalizza l'accuratezza.
+Anche il best arm può quindi mantenere una probabilità relativamente bassa di essere selezionato, perchè il denominatore è grande. Questo penalizza l'accuratezza.
 
 \subsubsection{Distribuzione di Boltzmann o Softmax}
 
@@ -1564,29 +1651,379 @@ e^{\alpha\Delta_{ij}}.
 
 Questa relazione rende immediato il significato del parametro $\alpha$.
 
-\paragraph{Caso $\alpha\rightarrow0$.}
-Per:
+\begin{warning}{}
+    Nota che questi valori di $\alpha$ si possono vedere già dal tempo 0, perchè sto facendo tendere $\alpha$ e non il tempo.
+\end{warning}
+
+\paragraph{Caso $\alpha \to 0$.}
+
+Quando
+
 \[
-\alpha\rightarrow0,
-\]
-vale:
-\[
-e^{\alpha\Delta_{ij}}\rightarrow1.
+\alpha \to 0,
 \]
 
-Le probabilità dei differenti arm diventano quindi uguali e ciascun arm tende ad avere probabilità:
+per qualunque valore finito di $\Delta_{ij}$ si ha
+
 \[
+\alpha\Delta_{ij}\to 0.
+\]
+
+Di conseguenza,
+
+\[
+e^{\alpha\Delta_{ij}}
+\to
+e^0
+=
+1.
+\]
+
+Pertanto,
+
+\[
+\frac{\mathcal{P}(i,t)}{\mathcal{P}(j,t)}
+\to 1.
+\]
+
+Questo significa che le probabilità di selezione dei due arm diventano progressivamente simili, indipendentemente dalla differenza tra le rispettive medie empiriche.
+
+Nel limite, tutti gli arm tendono ad avere la stessa probabilità di selezione:
+
+\[
+\mathcal{P}(i,t)
+\to
 \frac{1}{K}.
 \]
+\textbf{Questo perchè le probabilità devono sommare ad 1 e ci sono $K$ arms}
 
-La strategia è fortemente explorative.
+La strategia diventa quindi fortemente \emph{explorative}: nel senso che campionando dalla distribuzione l'arm, questo è casuale, perchè le probabilità sono simili
 
-\paragraph{Caso $\alpha\rightarrow\infty$.}
-Per valori molto grandi di $\alpha$, anche piccole differenze $\Delta_{ij}$ vengono amplificate esponenzialmente.
+In sintesi,
 
-L'arm con media empirica maggiore riceve quindi una probabilità molto superiore alle altre.
+\[
+\boxed{
+\alpha\to0
+\quad\Longrightarrow\quad
+\mathcal{P}(i,t)\approx\frac{1}{K}
+\quad\Longrightarrow\quad
+\text{forte exploration}
+}
+\]
 
-La strategia diventa fortemente exploitive.
+\paragraph{Caso $\alpha \to +\infty$.}
+
+Supponiamo che l'arm $i$ abbia una media empirica maggiore (non molto maggiore, ma solo maggiore) dell'arm $j$:
+
+\[
+\widehat{\mu}_{i,t}
+>
+\widehat{\mu}_{j,t}.
+\]
+
+In questo caso,
+
+\[
+\Delta_{ij}>0.
+\]
+
+Se
+
+\[
+\alpha\to+\infty,
+\]
+
+allora
+
+\[
+\alpha\Delta_{ij}
+\to+\infty,
+\]
+
+e quindi
+
+\[
+e^{\alpha\Delta_{ij}}
+\to+\infty.
+\]
+
+Ne segue che
+
+\[
+\frac{\mathcal{P}(i,t)}{\mathcal{P}(j,t)}
+\to+\infty.
+\]
+
+Questo non significa che $\mathcal{P}(i,t)$ possa diventare maggiore di $1$, ma significa che la probabilità assegnata all'arm $i$ diventa enormemente maggiore rispetto a quella assegnata all'arm $j$.
+
+In altre parole, anche se la differenza fra le medie empiriche era piccola, la probabilità assegnata all'arm $i$, diventa molto maggiore rispetto all'item $j$
+
+Poi successivamente consideriamo che $i$ è l'unico arm con media empirica massima, per valori molto grandi di $\alpha$ si ha
+
+\[
+\mathcal{P}(i,t)\to 1,
+\]
+
+mentre per gli altri arm
+
+\[
+\mathcal{P}(j,t)\to 0.
+\]
+Questo calcolo lo dimostro sotto:
+\begin{observation}{}
+Supponiamo che l'arm $i$ sia l'unico arm con media empirica massima al round $t$, cioè
+
+\[
+\widehat{\mu}_{i,t}
+>
+\widehat{\mu}_{j,t}
+\qquad
+\forall j\neq i.
+\]
+
+La probabilità Softmax di selezionare l'arm $i$ è
+
+\[
+\mathcal{P}(i,t)
+=
+\frac{
+e^{\alpha\widehat{\mu}_{i,t}}
+}{
+\sum_{k=1}^{K}e^{\alpha\widehat{\mu}_{k,t}}
+}.
+\]
+
+Nel denominatore possiamo separare il termine relativo all'arm $i$ da tutti gli altri:
+
+\[
+\sum_{k=1}^{K}e^{\alpha\widehat{\mu}_{k,t}}
+=
+e^{\alpha\widehat{\mu}_{i,t}}
++
+\sum_{j\neq i}
+e^{\alpha\widehat{\mu}_{j,t}}.
+\]
+
+Pertanto,
+
+\[
+\mathcal{P}(i,t)
+=
+\frac{
+e^{\alpha\widehat{\mu}_{i,t}}
+}{
+e^{\alpha\widehat{\mu}_{i,t}}
++
+\sum_{j\neq i}
+e^{\alpha\widehat{\mu}_{j,t}}
+}.
+\]
+
+Dividiamo ora numeratore e denominatore per
+\[
+e^{\alpha\widehat{\mu}_{i,t}}.
+\]
+
+Si ottiene
+
+\[
+\mathcal{P}(i,t)
+=
+\frac{
+\dfrac{e^{\alpha\widehat{\mu}_{i,t}}}
+{e^{\alpha\widehat{\mu}_{i,t}}}
+}{
+\dfrac{e^{\alpha\widehat{\mu}_{i,t}}}
+{e^{\alpha\widehat{\mu}_{i,t}}}
++
+\sum_{j\neq i}
+\dfrac{
+e^{\alpha\widehat{\mu}_{j,t}}
+}{
+e^{\alpha\widehat{\mu}_{i,t}}
+}
+}.
+\]
+
+Il primo rapporto vale
+
+\[
+\frac{
+e^{\alpha\widehat{\mu}_{i,t}}
+}{
+e^{\alpha\widehat{\mu}_{i,t}}
+}
+=1.
+\]
+
+Per ciascun $j\neq i$, utilizzando la proprietà
+
+\[
+\frac{e^a}{e^b}=e^{a-b},
+\]
+
+si ha
+
+\[
+\frac{
+e^{\alpha\widehat{\mu}_{j,t}}
+}{
+e^{\alpha\widehat{\mu}_{i,t}}
+}
+=
+e^{
+\alpha\widehat{\mu}_{j,t}
+-
+\alpha\widehat{\mu}_{i,t}
+}
+=
+e^{
+\alpha
+\left(
+\widehat{\mu}_{j,t}
+-
+\widehat{\mu}_{i,t}
+\right)
+}.
+\]
+
+Di conseguenza,
+
+\[
+\mathcal{P}(i,t)
+=
+\frac{
+1
+}{
+1+
+\sum_{j\neq i}
+e^{
+\alpha
+\left(
+\widehat{\mu}_{j,t}
+-
+\widehat{\mu}_{i,t}
+\right)
+}
+}.
+\]
+
+Poiché $i$ è l'arm con media empirica strettamente massima, per ogni $j\neq i$ vale
+
+\[
+\widehat{\mu}_{j,t}
+-
+\widehat{\mu}_{i,t}
+<0.
+\]
+
+Ponendo, per ciascun $j\neq i$,
+
+\[
+\delta_j
+=
+\widehat{\mu}_{i,t}
+-
+\widehat{\mu}_{j,t}
+>0,
+\]
+
+possiamo scrivere
+
+\[
+\widehat{\mu}_{j,t}
+-
+\widehat{\mu}_{i,t}
+=
+-\delta_j.
+\]
+\end{observation}
+
+\begin{observation}{}
+Pertanto,
+
+\[
+e^{
+\alpha
+\left(
+\widehat{\mu}_{j,t}
+-
+\widehat{\mu}_{i,t}
+\right)
+}
+=
+e^{-\alpha\delta_j}.
+\]
+
+Quando
+
+\[
+\alpha\to+\infty,
+\]
+
+poiché $\delta_j>0$, si ha
+
+\[
+-\alpha\delta_j\to-\infty,
+\]
+
+e dunque
+
+\[
+e^{-\alpha\delta_j}
+\to 0.
+\]
+
+Quindi tutti i termini della somma al denominatore tendono a zero:
+
+\[
+\sum_{j\neq i}
+e^{
+\alpha
+\left(
+\widehat{\mu}_{j,t}
+-
+\widehat{\mu}_{i,t}
+\right)
+}
+\to 0.
+\]
+
+Ne segue che
+
+\[
+\mathcal{P}(i,t)
+\to
+\frac{1}{1+0}
+=
+1.
+\]
+
+Pertanto,
+
+\[
+\boxed{
+\alpha\to+\infty
+\quad\Longrightarrow\quad
+\mathcal{P}(i,t)\to1
+}
+\]
+
+quando $i$ è l'unico arm con media empirica massima.
+
+Equivalentemente, per ogni altro arm $j\neq i$,
+
+\[
+\mathcal{P}(j,t)\to0.
+\]
+
+L'interpretazione è che, al crescere di $\alpha$, anche piccole differenze tra le medie empiriche vengono amplificate esponenzialmente; di conseguenza, la distribuzione Softmax concentra progressivamente quasi tutta la massa di probabilità sull'arm che presenta la media empirica maggiore.
+\end{observation}
+
+
+La strategia diventa quindi fortemente \emph{exploitive},nel senso che dopo aver assegnato le probabilità, campionando il prossimo arm, è piu probabile avere quello migliore, perciò si dice \emph{exploitive}
+
+
 
 \paragraph{Dipendenza dalla difficoltà dell'istanza.}
 A $\alpha$ fissato, se:
@@ -1617,6 +2054,8 @@ La crescita è:
     \item più graduale per $\alpha=0.5$.
 \end{itemize}
 
+
+
 \subsection{Annealing Softmax}
 
 Anche Softmax può essere resa maggiormente esplorativa all'inizio e progressivamente più exploitive.
@@ -1645,6 +2084,8 @@ Equivalentemente, poiché:
 \tau(t)=\frac{1}{\alpha(t)},
 \]
 la temperatura diminuisce nel tempo.
+
+\newpage
 
 \subsection{Upper Confidence Bound (UCB)}
 
@@ -1715,6 +2156,16 @@ a_1,r_1,\ldots,a_t,r_t
 \]
 rappresenta la storia.
 
+Quindi \(UCB(\mathcal H,i)\) dipende dalla storia proprio perché sia
+\[
+\widehat{\mu}_{i,t}
+\]
+sia
+\[
+N_{i,t}
+\]
+sono calcolati usando le osservazioni contenute in \(\mathcal H\)
+
 \subsubsection{Tre varianti riportate nelle slide}
 
 Una prima variante è:
@@ -1776,7 +2227,206 @@ le slide inizializzano:
 UCB(\mathcal{H},i)=+\infty.
 \]
 
-Questo garantisce che ciascun arm venga selezionato almeno una volta.
+
+\begin{observation}{Motivazione dell'inizializzazione}
+
+Questa inizializzazione garantisce che ciascun arm venga selezionato almeno una volta.
+
+Supponiamo, ad esempio, di avere tre arm:
+
+\[
+\mathcal A=\{1,2,3\}.
+\]
+
+All'inizio nessun arm è stato ancora selezionato, quindi
+
+\[
+N_{1,0}=N_{2,0}=N_{3,0}=0.
+\]
+
+Di conseguenza,
+
+\[
+UCB(\mathcal H,1)
+=
+UCB(\mathcal H,2)
+=
+UCB(\mathcal H,3)
+=
++\infty.
+\]
+
+La politica UCB seleziona l'arm che massimizza il valore UCB:
+
+\[
+a_1
+=
+\arg\max_{i\in\mathcal A}
+UCB(\mathcal H,i).
+\]
+
+In questo momento tutti gli arm hanno lo stesso valore $+\infty$, quindi esiste un pareggio. L'$\arg\max$ non è di per sé casuale: è necessario adottare una regola di \emph{tie-breaking}, ad esempio scegliendo casualmente uno degli arm che massimizzano la funzione.
+
+Supponiamo che venga selezionato l'arm $2$. Dopo aver osservato il relativo reward si ha
+
+\[
+N_{2,1}=1,
+\]
+
+mentre
+
+\[
+N_{1,1}=0,
+\qquad
+N_{3,1}=0.
+\]
+
+A questo punto il valore UCB dell'arm $2$ è finito, poiché esso è già stato osservato:
+
+\[
+UCB(\mathcal H,2)
+=
+\widehat{\mu}_{2,1}
++
+\sqrt{
+\frac{2\log t}{N_{2,1}}
+}.
+\]
+
+Gli arm $1$ e $3$, invece, non sono ancora stati selezionati e quindi mantengono valore
+
+\[
+UCB(\mathcal H,1)=+\infty,
+\qquad
+UCB(\mathcal H,3)=+\infty.
+\]
+
+Pertanto, al round successivo, l'arm $2$ non può essere selezionato al posto di un arm ancora inesplorato, poiché un valore finito è sempre minore di $+\infty$.
+
+L'algoritmo selezionerà quindi uno tra gli arm $1$ e $3$. Supponiamo che venga selezionato l'arm $1$. Dopo il relativo pull avremo
+
+\[
+N_{1,2}=1,
+\qquad
+N_{2,2}=1,
+\qquad
+N_{3,2}=0.
+\]
+
+Di conseguenza,
+
+\[
+UCB(\mathcal H,1)<+\infty,
+\]
+
+\[
+UCB(\mathcal H,2)<+\infty,
+\]
+
+mentre
+
+\[
+UCB(\mathcal H,3)=+\infty.
+\]
+
+L'arm $3$ sarà quindi necessariamente selezionato nel round successivo.
+
+Al termine di questa fase iniziale si avrà
+
+\[
+N_{i,t}\geq 1
+\qquad
+\forall i\in\mathcal A,
+\]
+
+\end{observation}
+
+\begin{observation}{continuo}
+cioè ciascun arm sarà stato osservato almeno una volta.
+
+Da questo momento tutti i valori UCB sono finiti e la selezione viene effettuata confrontando effettivamente, per ciascun arm, la somma tra la componente exploitive e quella explorative:
+
+\[
+UCB(\mathcal H,i)
+=
+\widehat{\mu}_{i,t}
++
+\mathrm{explorative\_bonus}.
+\]
+
+La convenzione
+
+\[
+UCB(\mathcal H,i)=+\infty
+\qquad
+\text{se }N_{i,t}=0
+\]
+
+può quindi essere interpretata come un meccanismo di inizializzazione incorporato direttamente nella funzione UCB.
+
+A differenza di $\epsilon$-Greedy, dove la fase iniziale viene esplicitamente definita tramite
+
+\[
+a_{t+1}=t+1,
+\qquad
+t<K,
+\]
+
+in UCB non è necessario specificare separatamente una fase di inizializzazione: la presenza del valore $+\infty$ forza automaticamente l'algoritmo a selezionare tutti gli arm non ancora osservati prima di confrontare realmente i loro valori UCB.
+\end{observation}
+
+\begin{algorithmic}[1]
+
+\Require insieme di arm $\mathcal A=\{1,\ldots,K\}$
+\Require orizzonte temporale $T$
+
+\State Inizializza, per ogni arm $i\in\mathcal A$:
+\[
+N_i \gets 0,
+\qquad
+\widehat{\mu}_i \gets 0.
+\]
+
+\For{$t=0,\ldots,T-1$}
+
+    \State Seleziona l'arm
+    \[
+    a_{t+1}
+    \gets
+    \arg\max_{i\in\mathcal A} UCB_i.
+    \]
+
+    \State Esegui un pull dell'arm $a_{t+1}$ e osserva il reward
+    \[
+    r_{t+1}.
+    \]
+
+    \State Aggiorna il numero di pull dell'arm selezionato:
+    \[
+    N_{a_{t+1}}
+    \gets
+    N_{a_{t+1}}+1.
+    \]
+
+    \State Aggiorna la sua media empirica:
+    \[
+    \widehat{\mu}_{a_{t+1}}
+    \gets
+    \widehat{\mu}_{a_{t+1}}
+    +
+    \frac{
+    r_{t+1}
+    -
+    \widehat{\mu}_{a_{t+1}}
+    }{
+    N_{a_{t+1}}
+    }.
+    \]
+
+\EndFor
+
+\end{algorithmic}
+
 
 \subsection{Componente exploitive ed explorative di UCB}
 
@@ -1789,24 +2439,31 @@ UCB(\mathcal{H},i)
 \underbrace{\mathrm{explorative\_bonus}}_{\text{explorative}}.
 \]
 
-La media empirica premia gli arm che hanno prodotto reward elevati.
+La media empirica premia gli arm che hanno prodotto reward elevati, questa è una stima della vera media.
 
-Il bonus esplorativo premia invece gli arm sui quali vi è maggiore incertezza.
+L'explorative, indica l'incertezza che abbiamo sulla stima fatta del membro a sinistra
+
+\begin{observation}{}
+    Nota che se la parte di explorative è 0, per tutti gli arm,l'algoritmo quello che fa è fare un mero algoritmo di exploitive
+\end{observation}
 
 \subsubsection{Dipendenza da $N_{i,t}$}
 
-Il bonus è decrescente rispetto a:
+Il bonus è sempre una funzione decrescente rispetto a:
 \[
 N_{i,t}.
 \]
 
 L'intuizione è:
 \begin{itemize}
-    \item se $N_{i,t}$ è piccolo, l'arm è stato osservato poche volte e la stima è incerta;
-    \item se $N_{i,t}$ è grande, l'arm è stato osservato molte volte e vi è meno necessità di esplorarlo.
+    \item se $N_{i,t}$ è piccolo, l'arm è stato osservato poche volte e la stima è incerta e quindi il bonus è grande;
+    \item se $N_{i,t}$ è grande, l'arm è stato osservato molte volte e vi è meno necessità di esplorarlo, e quindi già abbiamo tante informazioni, quindi il bonus relativo all'esplorazione diventa piu piccolo e diventa praticamente una fase solo di scelta della media empirica massima, cioè di exploitive
 \end{itemize}
 
-Per le versioni contenenti $\log t$, le slide mostrano la relazione:
+Infatti nella prima versione della UCB vista sopra, questa dipende solo da $N_{i,t}$
+
+
+Per le due successive versioni contenenti $\log t$, si inizia prima analizzando la relazione:
 \[
 \frac{\log t}{N_{i,t-1}+1}
 <
@@ -1815,7 +2472,38 @@ Per le versioni contenenti $\log t$, le slide mostrano la relazione:
 \frac{\log t}{N_{i,t-1}}.
 \]
 
-La relazione evidenzia due situazioni.
+\begin{warning}{}
+    Nota che devi pensare come se l'algoritmo fosse al tempo $t$ e sta aggiornando la variabile $N$, quindi è naturale che il tempo $t$ su N non sia ancora aggiornato e stia ancora a $t-1$
+\end{warning}
+
+
+Questa relazione è vera perchè:
+\begin{enumerate}
+    \item 
+    \[
+    \frac{\log(t-1)}{N_{i,t-1}}
+    <
+    \frac{\log t}{N_{i,t-1}}.
+    \]
+    Poichè aumenta banalmente il numeratore
+    \item 
+    \[
+    \frac{\log t}{N_{i,t-1}+1}
+    <
+    \frac{\log t}{N_{i,t-1}}.
+    \]
+    Poichè il denominatore è piu grande,e quindi viene diviso da un numero piu grande, quindi è piu piccolo.
+    \item
+    \[
+    \frac{\log t}{N_{i,t-1}+1}
+    <
+    \frac{\log(t-1)}{N_{i,t-1}}
+    \]
+    Questo potrebbe sembrare poco intuitivo, ma devi pensare si che il numeratore è un numero piu grande, ma è logaritmico,invece il denominatore è un numero piu grande, e quindi complessivamente il membro di sinistra è piu piccolo.
+\end{enumerate}
+
+
+Tramite le ultime 2 versioni della UCB, posso stabilire delle relazioni interessanti:
 
 \paragraph{L'arm $i$ viene selezionato.}
 Il contatore passa da:
@@ -1827,6 +2515,13 @@ a:
 N_{i,t-1}+1,
 \]
 e il bonus esplorativo associato all'arm tende a diminuire.
+Questo viene descritto dalla proprietà:
+\[
+    \frac{\log t}{N_{i,t-1}+1}
+    <
+    \frac{\log(t-1)}{N_{i,t-1}}
+\]
+Quindi si aumenta di tempo, il contatore aumenta e il bonus diminuisce.
 
 \paragraph{Viene selezionato un altro arm.}
 Il contatore $N_{i,t}$ rimane invariato, mentre il tempo globale aumenta da $t-1$ a $t$.
@@ -1834,6 +2529,13 @@ Il contatore $N_{i,t}$ rimane invariato, mentre il tempo globale aumenta da $t-1
 Il termine $\log t$ cresce, per cui il bonus associato all'arm non selezionato aumenta.
 
 Questo meccanismo evita che un arm venga ignorato per sempre: se non viene scelto per molto tempo, il suo bonus di esplorazione tende a diventare progressivamente più importante.
+
+Questa proprietà è espressa da:
+\[
+\frac{\log(t-1)}{N_{i,t-1}}
+<
+\frac{\log t}{N_{i,t-1}}.
+\]
 
 Nella prima variante il bonus dipende essenzialmente dal numero di volte in cui $i$ è stato selezionato.
 
@@ -1885,6 +2587,8 @@ UCB(\mathcal{H},i)
 \frac{2\log t}{N_{i,t}}
 }.
 \]
+
+\newpage
 
 \subsection{Optimism in the Face of Uncertainty}
 
