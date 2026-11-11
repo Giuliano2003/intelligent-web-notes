@@ -2389,6 +2389,8 @@ N_i \gets 0,
 
 \For{$t=0,\ldots,T-1$}
 
+    \State Inizializzazione a piu infinito se è la prima volta /Aggiornamento del valore UCB per ogni arm
+
     \State Seleziona l'arm
     \[
     a_{t+1}
@@ -2634,96 +2636,351 @@ N_{i,t}
 }
 }.
 \]
+Quindi nella prima variante l'intervallo diventa esplicitamente:
+\[
+\boxed{
+I_c
+=
+\left[
+\widehat{\mu}_{i,t}
+-
+\sqrt{\frac{2\log(1/\delta)}{N_{i,t}}},
+\;
+\widehat{\mu}_{i,t}
++
+\sqrt{\frac{2\log(1/\delta)}{N_{i,t}}}
+\right]
+}
+\]
+L'idea è che il vero valore atteso \(\mu_i\) cada, con elevata probabilità, dentro questo intervallo.
+
+Quindi tieni presente, che la stima della media vera è:
+\[
+\widehat{\mu_{i,t}}
+\]
+ma non si utilizza questa, bensi l'upper bound dell'intervallo di confidenza, cioè:
+\[
+\widehat{\mu}_{i,t}
++
+\sqrt{\frac{2\log(1/\delta)}{N_{i,t}}}
+\]
+infatti nella seconda versione utilizzata c'è proprio questa formula.
 
 \subsubsection{Interpretazione della confidence bound}
 
-Le slide riportano, per distribuzioni normali indicate come:
+Le slide riportano, per distribuzioni normali del tipo
+
 \[
 D_i=\mathcal{N}(0,1),
 \]
-la relazione:
+
+la relazione
+
 \[
 \Pr\left(
 \left|
 \widehat{\mu}_{i,t}-\mu_i
 \right|
-\leq
+\le
 \sqrt{
-\frac{
-2\log(1/\delta)
-}{
-N_{i,t}
-}
+\frac{2\log(1/\delta)}
+{N_{i,t}}
 }
 \right)
-\geq
+\ge
 1-2\delta.
 \]
 
-Questa relazione dà un'interpretazione statistica a $\gamma_{i,t}$: con probabilità almeno $1-2\delta$, l'errore tra media empirica e valore atteso è limitato dalla quantità indicata.
+Questa espressione fornisce un'interpretazione statistica del termine di confidence bound.
 
-\subsubsection{Perché UCB è ``ottimista''}
+La quantità
 
-Dato l'intervallo:
 \[
-I_c=
-[
-\widehat{\mu}_{i,t}-\gamma_{i,t},
-\widehat{\mu}_{i,t}+\gamma_{i,t}
-],
+\left|
+\widehat{\mu}_{i,t}-\mu_i
+\right|
 \]
-UCB utilizza il valore più favorevole compatibile con tale intervallo:
+
+rappresenta l'errore tra:
+
 \[
+\widehat{\mu}_{i,t},
+\]
+
+cioè la media empirica dell'arm $i$ calcolata a partire dai reward osservati, e
+
+\[
+\mu_i,
+\]
+
+cioè il vero valore atteso dell'arm.
+
+Definiamo
+
+\[
+\gamma_{i,t}
+=
+\sqrt{
+\frac{2\log(1/\delta)}
+{N_{i,t}}
+}.
+\]
+
+La relazione precedente può quindi essere riscritta come
+
+\[
+\Pr\left(
+\left|
+\widehat{\mu}_{i,t}-\mu_i
+\right|
+\le
+\gamma_{i,t}
+\right)
+\ge
+1-2\delta.
+\]
+
+In altre parole, con probabilità almeno $1-2\delta$, l'errore commesso utilizzando la media empirica come stima del vero valore atteso non supera $\gamma_{i,t}$.
+
+Dalla disequazione
+
+\[
+\left|
+\widehat{\mu}_{i,t}-\mu_i
+\right|
+\le
+\gamma_{i,t}
+\]
+
+si ottiene
+
+\[
+-\gamma_{i,t}
+\le
+\widehat{\mu}_{i,t}-\mu_i
+\le
+\gamma_{i,t}.
+\]
+
+Riordinando i termini:
+
+\[
+\widehat{\mu}_{i,t}-\gamma_{i,t}
+\le
+\mu_i
+\le
 \widehat{\mu}_{i,t}+\gamma_{i,t}.
 \]
 
-Un arm molto incerto viene quindi valutato in maniera ``ottimistica'': finché i dati disponibili non permettono di escludere che possa essere molto buono, riceve un bonus che incentiva ulteriori osservazioni.
+Pertanto,
 
-\subsubsection{Raffinamento della confidence}
+\[
+\boxed{
+\mu_i
+\in
+\left[
+\widehat{\mu}_{i,t}-\gamma_{i,t},
+\;
+\widehat{\mu}_{i,t}+\gamma_{i,t}
+\right]
+}
+\]
 
-Le prestazioni di UCB dipendono fortemente dalla qualità della stima di $\gamma_{i,t}$.
+con probabilità almeno
 
-Le slide indicano due informazioni che possono essere sfruttate:
-\begin{enumerate}
-    \item la varianza delle distribuzioni $D_i$, stimabile empiricamente mediante
-    \[
-    \widehat{\sigma}_{i,t};
-    \]
-    \item la conoscenza della famiglia di distribuzioni, per esempio bernoulliane o normali.
-\end{enumerate}
+\[
+\boxed{
+1-2\delta
+}.
+\]
 
-Da queste idee derivano varianti quali:
-\begin{itemize}
-    \item UCB-V;
-    \item UCB-normal;
-    \item KL-UCB.
-\end{itemize}
+Questa relazione giustifica quindi la costruzione dell'intervallo di confidenza centrato nella media empirica:
 
-\subsubsection{Confronto grafico delle strategie}
+\[
+I_c
+=
+\left[
+\widehat{\mu}_{i,t}-\gamma_{i,t},
+\;
+\widehat{\mu}_{i,t}+\gamma_{i,t}
+\right].
+\]
 
-Le slide riportano inoltre un confronto grafico tra:
-\begin{itemize}
-    \item Annealing $\epsilon$-Greedy;
-    \item UCB1;
-    \item Annealing Softmax.
-\end{itemize}
+Il termine
 
-Il confronto viene effettuato sia in termini di:
-\begin{itemize}
-    \item probabilità di selezionare il best arm;
-    \item cumulative reward.
-\end{itemize}
+\[
+\gamma_{i,t}
+=
+\sqrt{
+\frac{2\log(1/\delta)}
+{N_{i,t}}
+}
+\]
 
-Il grafico rende visibili differenti dinamiche transitorie nella fase iniziale e una progressiva crescita delle prestazioni all'aumentare del numero di round.
+non rappresenta dunque un bonus scelto arbitrariamente, ma una quantità che misura l'incertezza associata alla stima $\widehat{\mu}_{i,t}$.
+
+In particolare, se il numero di osservazioni dell'arm cresce,
+
+\[
+N_{i,t}\uparrow,
+\]
+
+allora
+
+\[
+\gamma_{i,t}\downarrow.
+\]
+
+Di conseguenza,
+
+\[
+\boxed{
+N_{i,t}\uparrow
+\quad\Longrightarrow\quad
+\gamma_{i,t}\downarrow
+\quad\Longrightarrow\quad
+\text{intervallo di confidenza più stretto}
+}
+\]
+
+e quindi la stima $\widehat{\mu}_{i,t}$ diventa progressivamente più precisa.
+
+Viceversa, se l'arm è stato osservato poche volte, $N_{i,t}$ è piccolo e quindi $\gamma_{i,t}$ è grande: l'intervallo di confidenza è più ampio e l'incertezza sulla stima è maggiore.
+
+È proprio questa quantità che UCB utilizza come componente esplorativa. Infatti, l'upper confidence bound è dato da
+
+\[
+UCB(\mathcal H,i)
+=
+\widehat{\mu}_{i,t}
++
+\gamma_{i,t}.
+\]
+
+La strategia UCB non utilizza quindi soltanto la stima centrale $\widehat{\mu}_{i,t}$, ma considera il valore massimo compatibile con l'incertezza corrente, secondo il principio di \emph{optimism in the face of uncertainty}.
+
+
+\newpage
 
 \subsection{Multi-Armed Bandit e sistemi di raccomandazione}
 
-Nel contesto di un RecSys:
+Nel contesto di un sistema di raccomandazione, il modello del Multi-Armed Bandit può essere interpretato in modo diretto associando gli elementi astratti del MAB agli elementi del RecSys.
+
+In particolare:
 \begin{itemize}
-    \item ogni arm corrisponde a un item;
-    \item ogni step $t$ corrisponde a una richiesta/interazione di un utente;
-    \item l'arm selezionato è l'item raccomandato all'utente.
+    \item ogni arm corrisponde a un item che può essere raccomandato;
+    \item ogni step $t$ corrisponde a una nuova richiesta o interazione di un utente (\textbf{che può essere dello stesso utente o di un utente diverso});
+    \item l'arm selezionato al round $t$ rappresenta l'item che il sistema decide di raccomandare;
+    \item dopo la raccomandazione, il sistema osserva il feedback dell'utente sotto forma di reward.
 \end{itemize}
+
+Se l'insieme degli item disponibili è
+
+\[
+\mathcal A=\{1,\ldots,K\},
+\]
+
+allora ciascun elemento $i\in\mathcal A$ rappresenta un possibile item da mostrare all'utente.
+
+Al round $t$, il sistema seleziona un arm
+
+\[
+a_t\in\mathcal A.
+\]
+
+Nel contesto del recommender system, $a_t$ rappresenta quindi l'item effettivamente raccomandato all'utente che interagisce con il sistema in quel momento.
+
+Il processo può essere rappresentato schematicamente come
+
+\[
+\boxed{
+\text{utente}
+\longrightarrow
+\text{selezione dell'item}
+\longrightarrow
+\text{raccomandazione}
+\longrightarrow
+\text{feedback}
+\longrightarrow
+\text{aggiornamento del modello}
+}
+\]
+
+Dopo che l'item è stato mostrato, l'utente produce una risposta che viene trasformata in un reward.
+
+Per esempio, utilizzando il click come segnale di feedback, si può definire
+
+\[
+r_t=
+\begin{cases}
+1, & \text{se l'utente clicca sull'item raccomandato},\\
+0, & \text{se l'utente non clicca sull'item raccomandato}.
+\end{cases}
+\]
+
+La coppia
+
+\[
+(a_t,r_t)
+\]
+
+rappresenta quindi, rispettivamente:
+\begin{itemize}
+    \item l'item raccomandato;
+    \item il feedback osservato dopo la raccomandazione.
+\end{itemize}
+
+Ripetendo il processo nei vari round si ottiene una storia del tipo
+
+\[
+(a_1,r_1),
+(a_2,r_2),
+\ldots,
+(a_t,r_t).
+\]
+
+Questa storia viene utilizzata dalla politica MAB per aggiornare le stime relative ai differenti item e decidere quale arm selezionare nei round successivi.
+
+Per esempio, per ogni item $i$ può essere mantenuta la media empirica
+
+\[
+\widehat{\mu}_{i,t},
+\]
+
+che rappresenta la stima corrente del reward medio ottenuto raccomandando quell'item.
+
+Una strategia UCB, ad esempio, può scegliere il prossimo item mediante
+
+\[
+a_{t+1}
+=
+\arg\max_{i\in\mathcal A}
+UCB(\mathcal H,i),
+\]
+
+dove $\mathcal H$ rappresenta la storia delle interazioni osservate fino al round $t$.
+
+Nel contesto del RecSys, questa espressione significa che il sistema confronta i valori UCB dei differenti item e raccomanda quello che, sulla base del reward stimato e dell'incertezza corrente, risulta più promettente.
+
+Il processo complessivo è quindi iterativo:
+
+\[
+\boxed{
+\text{selezione di un item}
+\rightarrow
+\text{osservazione del reward}
+\rightarrow
+\text{aggiornamento delle stime}
+\rightarrow
+\text{nuova selezione}
+}
+\]
+
+Il limite del modello MAB classico emerge quando si vogliono produrre raccomandazioni personalizzate. Nel modello classico, infatti, la distribuzione di reward è associata essenzialmente all'arm/item e non tiene direttamente conto delle caratteristiche dello specifico utente che si presenta al round $t$.
+
+Di conseguenza, il sistema impara quanto un determinato item sia efficace in generale, ma non necessariamente quanto esso sia adatto a uno specifico utente.
+
+È proprio da questo limite che nasce l'introduzione dei \emph{Contextual Bandits}, nei quali la distribuzione del reward dipende non soltanto dall'arm selezionato, ma anche dal contesto associato all'interazione corrente.
 
 \subsubsection{Insieme di arm variabile nel tempo}
 
@@ -2756,11 +3013,11 @@ Questa caratteristica rende i MAB particolarmente adatti ai contesti in cui uten
 
 Un esempio indicato nelle slide è quello dei portali di news, nei quali gli item sono articoli che vengono continuamente pubblicati e sostituiti.
 
+Questo insieme variabile tipicamente è adottato nei Linear bandits
+
 \subsection{Raccomandazioni personalizzate e limite del MAB classico}
 
 Per raccomandazioni non personalizzate, le strategie MAB possono essere utilizzate in modo abbastanza diretto.
-
-Per esempio, una strategia \emph{Top ranked} può essere arricchita introducendo exploration, aumentando anche la diversificazione delle proposte.
 
 La situazione cambia con le raccomandazioni personalizzate.
 
@@ -2773,12 +3030,12 @@ r=
 \end{cases}
 \]
 
-Nel modello MAB classico a ogni item $i$ verrebbe associata una distribuzione bernoulliana:
+Nel modello MAB classico a ogni item $i$ (o arm) verrebbe associata una distribuzione bernoulliana:
 \[
 D_i.
 \]
 
-Questa distribuzione rappresenterebbe una probabilità generale di click dell'item.
+Questa distribuzione rappresenterebbe una probabilità generale di click dell'item, è una distribuzione generale dell'arm, non personalizzata sul singolo utente.
 
 Ma un RecSys personalizzato non è interessato soltanto alla probabilità che un item venga cliccato dalla popolazione generale.
 
@@ -2802,7 +3059,7 @@ Per modellare situazioni come la raccomandazione personalizzata si introducono i
 
 L'idea fondamentale è che la distribuzione di reward di un arm possa cambiare in funzione del contesto.
 
-Al round $t$ compare un contesto:
+Al round $t$ compare un contesto, che è il contesto fino al round $t$:
 \[
 c_t.
 \]
@@ -2816,27 +3073,31 @@ Il contesto rappresenta informazione aggiuntiva che la strategia può utilizzare
 
 Nei sistemi di raccomandazione, $c_t$ è tipicamente descritto mediante feature relative sia agli utenti sia agli item.
 
-\subsubsection{Feature dell'utente}
+Quindi $c_t$ è descritto come un insieme di informazioni aggiuntive disponibili al round \(t\), tipicamente feature che descrivono sia l'utente sia gli item.
+Quindi, nel caso più semplice, puoi pensare:
+\[
+c_t = \text{profilo dell'utente }u_t.
+\]
+Per esempio:
+\[
+c_t =
+(\text{età},\text{genere},\text{provenienza},\text{interazioni passate}).
+\]
+quindi devi pensarlo come al contesto corrente del round \(t\), quindi come qualcosa che può cambiare da un round al successivo.
 
-Le slide riportano esempi quali:
-\begin{itemize}
-    \item età;
-    \item provenienza;
-    \item genere;
-    \item interazioni passate.
-\end{itemize}
+\begin{center}
+Quindi, ricapitolando, al round $t$ il sistema osserva il contesto corrente $c_t$ e, sulla base di esso, seleziona un arm, cioè raccomanda un determinato item all'utente.
 
-\subsubsection{Feature degli item}
+Dopo aver selezionato l'arm $i$, il reward osservato, ad esempio $1$ se l'utente clicca sull'item raccomandato e $0$ altrimenti, viene campionato dalla distribuzione
 
-Nel caso di articoli di news:
-\begin{itemize}
-    \item tipologia dell'articolo, ad esempio cronaca nera, politica, sport;
-    \item data di pubblicazione;
-    \item autore.
-\end{itemize}
+\[
+D_{i,c_t}.
+\]
 
-Il comportamento dell'algoritmo può quindi dipendere dall'interazione tra le caratteristiche dell'utente corrente e quelle degli item disponibili.
+La differenza rispetto al MAB classico è che la distribuzione del reward non dipende più soltanto dall'arm selezionato, ma anche dal contesto corrente $c_t$.
 
+Poiché il contesto può cambiare da un round al successivo, anche la distribuzione di reward associata allo stesso arm può cambiare nei diversi round.
+\end{center}
 \subsection{Linear Bandits}
 
 I \emph{Linear Bandits} costituiscono un particolare modello contestuale.
@@ -2845,6 +3106,7 @@ Gli arm disponibili possono cambiare nel tempo:
 \[
 \mathcal{A}_t.
 \]
+Quindi avremo un insieme $\mathcal{A}_t$ di arm ad ogni step $t$.
 
 Per ciascun arm:
 \[
@@ -2866,8 +3128,73 @@ e rappresenta numericamente $d$ caratteristiche rilevanti.
 I valori delle feature dipendono:
 \begin{itemize}
     \item dall'arm/item $a$;
-    \item dall'utente corrente $u_t$.
+    \item dal contesto.
 \end{itemize}
+
+\begin{example}{}
+Supponiamo che al round \(t\) arrivi un utente \(u_t\), e che ci siano due articoli disponibili:
+\[
+\mathcal A_t=\{a_1,a_2\}.
+\]
+Immaginiamo di usare \(d=3\) feature:
+\[
+\mathbf{x}_{t,a}
+=
+\bigl(
+\text{affinità utente-item},
+\text{recenza},
+\text{interesse per la categoria}
+\bigr).
+\]
+Per l'articolo \(a_1\) potremmo avere:
+\[
+\mathbf{x}_{t,a_1}
+=
+(0.9,\,0.8,\,0.7).
+\]
+Per l'articolo \(a_2\):
+\[
+\mathbf{x}_{t,a_2}
+=
+(0.3,\,0.9,\,0.2).
+\]
+Questo vuol dire, intuitivamente, che nel contesto corrente:
+\begin{enumerate}
+    \item \(a_1\) è molto compatibile con l'utente;
+    \item \(a_1\) è abbastanza recente;
+    \item l'utente è abbastanza interessato alla categoria di \(a_1\);
+\end{enumerate}
+Quindi
+\[
+\boxed{
+\mathbf{x}_{t,a}
+=
+\text{rappresentazione dell'arm }a\text{ come vettore di feature nel contesto del round }t
+}
+\]
+Le sue componenti
+\[
+\mathbf{x}_{t,a}
+=
+\left(
+x_{t,a}^{(1)},
+\ldots,
+x_{t,a}^{(d)}
+\right)
+\]
+descrivono quindi l'arm \(a\) rispetto alle informazioni contestuali disponibili in quel round.
+
+La precisazione importante è che non rappresenta soltanto caratteristiche “intrinseche” dell'arm: nelle slide i valori dipendono sia dall'arm/item \(a\) sia dall'utente corrente \(u_t\).
+
+Quindi la formulazione più precisa è:
+\[
+\boxed{
+\mathbf{x}_{t,a}
+\text{ rappresenta numericamente l'arm }a
+\text{ nel contesto corrente }c_t
+}
+\]
+\end{example}
 
 \subsubsection{Modello lineare del reward}
 
@@ -2879,7 +3206,7 @@ Le slide assumono un reward composto da:
 
 La relazione riportata è:
 \[
-D_{a,t}
+R_{a,t}
 =
 \boldsymbol{\theta}^{*}
 \circ
@@ -2890,11 +3217,30 @@ D_{a,t}
 
 Qui:
 \begin{itemize}
-    \item $\boldsymbol{\theta}^{*}\in\mathbb{R}^{d}$ è un vettore incognito;
+    \item $\boldsymbol{\theta}^{*}\in\mathbb{R}^{d}$ è un vettore incognito che vale per tutti i round e tutti gli arm;
     \item $\mathbf{x}_{t,a}\in\mathbb{R}^{d}$ è il vettore di feature;
     \item $\eta_t$ rappresenta il rumore stocastico;
     \item il simbolo $\circ$ è la notazione utilizzata nelle slide per il prodotto coinvolto nel modello lineare.
 \end{itemize}
+
+Puoi pensare al reward come a una variabile aleatoria del tipo
+\[
+R_{a,t}
+=
+\boldsymbol{\theta}^*\circ \mathbf{x}_{t,a}
++
+\eta_t,
+\]
+dove:
+\[
+\boldsymbol{\theta}^*\circ \mathbf{x}_{t,a}
+\]
+è la parte deterministica, cioè il valore medio previsto dal modello, mentre
+\[
+\eta_t
+\]
+è la parte aleatoria.
+
 
 Tipicamente:
 \[
@@ -2907,7 +3253,7 @@ Poiché il rumore ha media nulla, il reward atteso è:
 \[
 \mu_{a,t}
 =
-\mathbb{E}[D_{a,t}]
+\mathbb{E}[R_{a,t}]
 =
 \boldsymbol{\theta}^{*}
 \circ
@@ -2915,6 +3261,80 @@ Poiché il rumore ha media nulla, il reward atteso è:
 \]
 
 Il vettore sconosciuto $\boldsymbol{\theta}^{*}$ determina quindi il modo in cui le feature influenzano il reward atteso.
+
+Quindi nei linear bandits,a differenza del MAB classico, dove per ogni arm \(i\), avevamo direttamente una media incognita:
+\[
+\mu_i,
+\]
+che stimavamo tramite
+\[
+\widehat{\mu}_{i,t}.
+\]
+Quindi UCB era qualcosa del tipo:
+\[
+UCB(\mathcal H,i)
+=
+\widehat{\mu}_{i,t}
++
+\text{bonus di incertezza}.
+\]
+e poi si massimizzava UCB.
+Nei Linear Bandits, invece, la situazione cambia 
+\[
+\mu_{a,t}
+=
+\boldsymbol{\theta}^{*}\circ \mathbf{x}_{t,a}.
+\]
+Quindi il valore dell’arm dipende da due cose:
+\[
+\mathbf{x}_{t,a}
+\]
+che conosci, perché è il vettore di feature dell’arm nel contesto corrente, e
+\[
+\boldsymbol{\theta}^{*}
+\]
+che invece è sconosciuto.
+Il problema centrale diventa quindi:
+\[
+\boxed{
+\text{non devo più stimare separatamente una }\mu_i\text{ per ogni arm;}
+}
+\]
+devo invece stimare un unico vettore globale
+\[
+\boxed{
+\boldsymbol{\theta}^{*}
+}
+\]
+che mi permette poi di stimare il reward atteso di tutti gli arm e per tutti i round e che poi mi permette di applicare la regola UCB
+
+
+il vero parametro
+\[
+\boldsymbol{\theta}^*
+\]
+non è noto, quindi non puoi calcolare direttamente il vero reward atteso
+\[
+\mu_{a,t}
+=
+\boldsymbol{\theta}^*
+\circ
+\mathbf{x}_{t,a}.
+\]
+Allora costruisci una stima del parametro:
+\[
+\widehat{\boldsymbol{\theta}}_t,
+\]
+e da questa ottieni, per ogni arm \(a\), una stima del reward atteso:
+\[
+\boxed{
+\widehat{\mu}_{a,t}
+=
+\widehat{\boldsymbol{\theta}}_t
+\circ
+\mathbf{x}_{t,a}
+}
+\]
 
 \subsection{UCB per Linear Bandits}
 
@@ -2927,6 +3347,10 @@ a_t
 \arg\max_{a\in\mathcal{A}_t}
 ucb(a).
 \]
+
+\begin{warning}{}
+    Dove $ucb(a)$ sarà qualcosa del tipo $ucb(a) = \widehat{\mu}_{a,t} + \text{explorative\_bonus}$.
+\end{warning}
 
 Poiché:
 \[
@@ -2960,17 +3384,12 @@ Il primo requisito garantisce un buon livello di confidenza.
 
 Il secondo evita che l'incertezza sia talmente ampia da rendere poco informativa la stima.
 
-Applicando il principio di \emph{optimism in the face of uncertainty}:
-\[
-ucb(a)
-=
-\max_{\boldsymbol{\theta}\in\Theta_t}
-\boldsymbol{\theta}
-\circ
-\mathbf{x}_{t,a}.
-\]
-
-Per ciascun arm si considera quindi il reward migliore che esso potrebbe avere sotto un parametro compatibile con il confidence set corrente.
+Quindi:
+\begin{enumerate}
+    \item costruire una stima centrale di \(\theta^*\), cioè \(\widehat{\theta}_t\);
+    \item costruire attorno a quella stima un insieme di confidenza \(\Theta_t\).
+\end{enumerate}
+È l'analogo multidimensionale dell'intervallo di confidenza visto nell'UCB classico.
 
 \subsection{Stima di $\boldsymbol{\theta}^{*}$}
 
@@ -2999,23 +3418,50 @@ r_s-
 \]
 
 I termini hanno il seguente significato:
-\begin{itemize}
-    \item $r_s$ è il reward osservato al round $s$;
-    \item $\mathbf{x}_{s,a_s}$ è il vettore di feature dell'arm effettivamente selezionato al round $s$;
-    \item $\boldsymbol{\theta}\circ\mathbf{x}_{s,a_s}$ è la previsione lineare;
-    \item
-    \[
-    r_s-\boldsymbol{\theta}\circ\mathbf{x}_{s,a_s}
-    \]
-    è l'errore di previsione;
-    \item la somma degli errori quadratici misura quanto bene $\boldsymbol{\theta}$ spiega la storia osservata;
-    \item
-    \[
-    \lambda\|\boldsymbol{\theta}\|_2^2
-    \]
-    è la componente di regolarizzazione;
-    \item $\lambda$ è un iperparametro.
-\end{itemize}
+Al round \(s\), tu hai effettivamente selezionato l'arm
+\[
+a_s,
+\]
+hai osservato il suo vettore di feature
+\[
+x_{s,a_s},
+\]
+e hai ricevuto il reward reale, cioè quello vero
+\[
+r_s
+=
+\boldsymbol{\theta}^*
+\circ
+\mathbf{x}_{s,a_s}
++
+\eta_s.
+\]
+Se provi un candidato \(\theta\), il modello avrebbe come reward:
+
+\[
+\theta\circ x_{s,a_s}
+\]
+
+Poiché l'errore potrebbe essere positivo o negativo, viene elevato al quadrato:
+\[
+\left(r_s-\theta\circ x_{s,a_s}\right)^2.
+\]
+Poi si sommano gli errori su tutti i round:
+\[
+\sum_{s=1}^{t}
+\left(
+r_s-\theta\circ x_{s,a_s}
+\right)^2.
+\]
+Quindi stai cercando il \(\theta\) che rende complessivamente più piccole possibile tutte le differenze tra reward osservati e reward previsti.
+
+Il termine
+\[
+\lambda\|\theta\|_2^2
+\]
+è invece la regolarizzazione.
+
+Serve a evitare che il modello scelga coefficienti \(\theta\) eccessivamente grandi pur di adattarsi troppo ai dati osservati.
 
 Le slide affermano che, differenziando l'obiettivo, si ottiene:
 \[
@@ -3186,6 +3632,8 @@ V_t^{-1}\mathbf{b}_t.
 
 Dopo ogni nuova osservazione vengono quindi aggiornate le quantità che riassumono l'informazione raccolta fino a quel momento.
 
+\newpage
+
 \subsection{Best Arm Identification}
 
 Le slide finali introducono il \emph{Best Arm Identification} (BAI), in particolare nella variante \emph{fixed budget}.
@@ -3262,7 +3710,7 @@ Finché il budget non è esaurito:
 
 Si noti che in questa parte delle slide il simbolo $x_{t+1}$ viene utilizzato per il reward osservato e non per il vettore di contesto $\mathbf{x}_{t,a}$ utilizzato precedentemente nei Linear Bandits.
 
-Al termine del budget viene restituito l'arm con media empirica più alta:
+Al termine del budget (quindi al termine di tutte le iterazioni) viene restituito l'arm con media empirica più alta:
 \[
 \widehat{i}
 =
@@ -3289,7 +3737,7 @@ Il problema fondamentale consiste quindi nel definire una buona strategia di sel
 
 \subsection{Uniform Exploration nel Fixed-Budget BAI}
 
-La strategia più semplice, e indicata nelle slide come meno efficace, è l'\emph{uniform exploration}, detta anche \emph{round-robin}.
+La strategia più semplice per implementare la funzione \textbf{select}, e indicata nelle slide come meno efficace, è l'\emph{uniform exploration}, detta anche \emph{round-robin}.
 
 La selezione ciclica viene espressa come:
 \[
@@ -3323,7 +3771,7 @@ Le slide propongono l'analogia di disporre di monete ``a perdere'': non importa 
 Anche nel BAI esiste quindi un bilanciamento tra exploration ed exploitation, ma rispetto al MAB orientato al cumulative reward la bilancia è maggiormente spostata verso l'exploration.
 
 \subsection{Sequential Halving}
-
+Un'altra strategia per implementare la funzione \textbf{select}
 Tra le numerose strategie proposte per Fixed-Budget Best Arm Identification, le slide introducono \emph{Sequential Halving}, descritta come una strategia:
 \begin{itemize}
     \item molto semplice;
@@ -3346,7 +3794,7 @@ La slide afferma che tali fasi hanno una certa dimensione, ma nel materiale visu
 
 Il procedimento descritto è:
 \begin{enumerate}
-    \item nella prima fase, i sample vengono distribuiti uniformemente su tutti gli arm;
+    \item nella prima fase (che può comprendere piu round), i sample vengono distribuiti uniformemente su tutti gli arm;
     \item al termine della fase si calcola, per ciascun arm, la media empirica;
     \item gli arm vengono ordinati secondo le rispettive medie empiriche;
     \item la metà degli arm che si trova nella parte inferiore del ranking viene eliminata;
@@ -3354,7 +3802,10 @@ Il procedimento descritto è:
     \item il processo continua eliminando progressivamente metà degli arm;
     \item al termine delle fasi rimane un unico arm, che viene restituito come best arm.
 \end{enumerate}
-
+c'è una prima fase composta da più round, durante la quale si effettua sampling uniforme sugli arm attivi; alla fine della fase si calcolano le medie empiriche e si dimezza l'insieme degli arm eliminando quelli meno promettenti.
+\begin{center}
+Nel \emph{Sequential Halving}, il budget è suddiviso in più fasi, ciascuna composta da più round. In ogni fase si campionano uniformemente gli arm ancora attivi; al termine si calcolano le loro medie empiriche, si ordinano gli arm e si elimina la metà meno promettente. Il processo continua fino a lasciare un solo arm, identificato come \emph{best arm}.
+\end{center}
 Il principio è quindi quello di non sprecare progressivamente il budget sugli arm che, sulla base delle osservazioni già raccolte, appaiono chiaramente poco promettenti.
 
 \subsection{Limiti e varianti del Best Arm Identification}
