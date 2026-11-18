@@ -121,7 +121,7 @@ In questo caso, 27 è non tipato, perchè non stiamo specificando il suo tipo.
     \begin{center}
         \texttt{stringa\string^\string^URIref}
     \end{center}
-    dove URIref, è l'uri del datatype, del valore nella stringa, che ne specifica il tipo.
+    dove URIref, è l'uri del datatype.
 \end{definition}
 
 \begin{example}{Esempio di letterale tipato}
@@ -131,7 +131,7 @@ In questo caso, 27 è non tipato, perchè non stiamo specificando il suo tipo.
 RDF non definisce un insieme di datatype, esistono definiti quindi esternamente a RDF, tipicamente, RDF prende i datatype da XML Schema.
 
 
-Il datatype, è formato da 3 parti principali:
+Un datatype è formato da 3 parti principali:
 \begin{itemize}
     \item \textbf{Value Space} : È l'insieme dei valori effettivi che appartengono a quel tipo.
     Per xsd::integer è
@@ -356,10 +356,20 @@ $$
 
 dove soggetto, predicato e oggetto possono essere risorse identificate tramite URI, mentre l'oggetto può essere anche un \textbf{literal} o un \textbf{blank node}, mentre il soggetto può essere anche un blank node.
 
+\begin{center}
+    RDF definisce un modello di dati indipendente da qualsiasi sintassi di serializzazione.
+\end{center}
+
+
+
 Una serializzazione è una particolare sintassi che permette di trasformare il modello RDF in una rappresentazione testuale o, più in generale, in un formato memorizzabile e scambiabile.
-
+Le serializzazioni sono dei linguaggi concreti che permettono di scrivere, memorizzare e scambiare i grafi RDF.
 Esistono diverse serializzazioni RDF, tra cui:
-
+\begin{warning}{}
+    RDF definisce come sono strutturati i dati, mentre le serializzazioni definiscono come questi dati vengono scritti.
+    Uno stesso grafo RDF può essere rappresentato attraverso serializzazioni differenti, senza modificarne il significato.
+    Questa distinzione è fondamentale perché RDF non coincide con Turtle, RDF/XML o N-Triples: questi sono soltanto modi diversi di rappresentare il modello RDF.
+\end{warning}
 \begin{itemize}
 \item \textbf{Turtle}: sintassi compatta e leggibile, che permette di utilizzare prefissi e abbreviazioni;
 \item \textbf{RDF/XML}: serializzazione di RDF basata sulla sintassi XML;
@@ -771,8 +781,15 @@ ex:enrolledIn  a rdf:Property ;
 
 \begin{definition}{NameSpace}
     Il namespace è la parte comune di URI ai termini del vocabolario che stiamo definendo (nel caso di sopra http://example.org/university/ ).
-    Quindi il namespace, è proprio l'URI di base, che si sceglie come parte comune per identificare e costruire in modo univoco gli URI completi di tutte le risorse, le classi e le proprietà di quel vocabolario, consentendo di abbreviarle tramite l'uso di un prefisso (QName) e un nome locale.
+    E quindi si dice che stiamo definendo proprio un vocabolario per quel NameSpace.
 \end{definition}
+La struttura:
+\[
+\underbrace{\texttt{ex}}_{\text{Prefisso}}
+:
+\underbrace{\texttt{Student}}_{\text{Nome locale}}
+\]
+è chiamata \textbf{QName}.
 
 I termini di un vocabolario possono essere rappresentati tramite QName, usando lo stesso prefisso per gli URI che condividono un namespace.
 Ad esempio per il vocabolario di prima si potrebbe decidere si usare come prefisso "ex:", per "http://example.org/university/".
