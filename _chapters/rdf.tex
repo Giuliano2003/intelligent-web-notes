@@ -920,7 +920,7 @@ ex:Mario Rossi rdf:type ex:Studente .
 \end{verbatim}
 
 \noindent
-\textit{Inferenza logica:} Grazie a \texttt{rdfs:subClassOf}, un motore di inferenza che legge questo grafo dedurra' automaticamente la tripla implicita \texttt{ex:Mario Rossi rdf:type ex:Persona}, anche se noi non l'abbiamo scritta esplicitamente.
+\textit{Inferenza logica:} Grazie a \texttt{rdfs:subClassOf}, un motore di inferenza \textbf{che applica le regole RDFS può dedurlo} che legge questo grafo dedurra' automaticamente la tripla implicita \texttt{ex:Mario Rossi rdf:type ex:Persona}, anche se noi non l'abbiamo scritta esplicitamente.
 Questo perchè grazie a \textbf{rdf:type}, posso dire che Mario Rossi è un'istanza di Studente, ma grazie a \textbf{rdfs:subClassOf}, posso dire che 
 ogni istanza di studente è anche \textbf{un'istanza} di una persona, quindi Mario rossi è un'istanza di Persona, e questo si esprime nel seguente modo:
 ex:Mario Rossi rdf:type ex:Persona . Questo perchè con rdf:type si esprime "è un'istanza".
@@ -1010,7 +1010,7 @@ Nel contesto del Web Semantico, i concetti di \textit{vocabolario} e
 \textit{ontologia} sono strettamente correlati, ma non completamente
 sovrapponibili.
 
-Un \textbf{vocabolario} definisce principalmente un insieme di termini
+Un \textbf{vocabolario} (come RDFS) definisce principalmente un insieme di termini
 utilizzabili per descrivere un determinato dominio. Tali termini possono
 essere rappresentati, ad esempio, attraverso classi e proprietà RDF. Per
 esempio, un vocabolario potrebbe definire la classe \texttt{Person} e la
@@ -1026,30 +1026,17 @@ possono essere utilizzati nella descrizione delle risorse, senza
 necessariamente specificare una conoscenza complessa sulle relazioni
 esistenti tra tali concetti.
 
-Un'\textbf{ontologia}, invece, estende questo concetto introducendo una
+
+\subsubsection{Definizione di Ontologia}
+Un'ontologia è una rappresentazione formale e condivisa di un dominio di conoscenza (es. dominio universitario), costituita da classi, proprietà, relazioni e assiomi.
+Essa può essere costruita utilizzando un vocabolario come \textbf{RDFS} oppure linguaggi appositi per creare ontologie tipo {OWL}, che forniscono gli strumenti necessari per descrivere formalmente i concetti del dominio e la loro semantica.
+
+Un'\textbf{ontologia}, a differenza di un vocabolario come RDFS, estende questo concetto introducendo una
 descrizione formale della semantica del dominio. Oltre a definire classi e
 proprietà, un'ontologia può specificare relazioni tra classi, gerarchie,
 vincoli e assiomi che descrivono come i diversi concetti sono collegati tra
 loro.
 
-Ad esempio, è possibile stabilire che \texttt{Student} sia una
-sottoclasse di \texttt{Person}:
-
-\begin{verbatim}
-:Student rdfs:subClassOf :Person .
-\end{verbatim}
-
-Oppure, utilizzando OWL, è possibile esprimere vincoli più complessi.
-Ad esempio:
-
-\[
-\mathit{Student} \sqsubseteq
-\exists\,\mathit{attends}.\mathit{University}
-\]
-
-indica che ogni individuo appartenente alla classe \texttt{Student} deve
-essere collegato, tramite la proprietà \texttt{attends}, ad almeno un
-individuo appartenente alla classe \texttt{University}.
 
 La differenza può quindi essere riassunta nel seguente modo:
 
@@ -1063,13 +1050,38 @@ La differenza può quindi essere riassunta nel seguente modo:
 \end{itemize}
 
 È importante sottolineare che la distinzione non è sempre netta: un
-vocabolario sufficientemente ricco può contenere anche informazioni
-semantiche e, in senso lato, essere considerato un'ontologia. Per questo
+vocabolario \textbf{sufficientemente ricco può contenere anche informazioni
+semantiche e, in senso lato, essere considerato un'ontologia}. Per questo
 motivo, nella letteratura sul Web Semantico i due termini vengono talvolta
 utilizzati in modo intercambiabile. La distinzione precedente è quindi
 soprattutto utile per comprendere il diverso livello di formalizzazione
 della conoscenza rappresentata.
 
+
+Quindi un'ontologia può essere creata anche meramente da un vocabolario RDFS.
+
+
+\begin{table}[h!]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{|l|p{5cm}|p{5cm}|}
+        \hline
+        \textbf{Caratteristica} & \textbf{RDFS} & \textbf{OWL} \\
+        \hline
+        Natura & Vocabolario RDF con semantica formale & Linguaggio per ontologie \\
+        \hline
+        Espressività & Limitata & Maggiore \\
+        \hline
+        Classi e gerarchie & Sì & Sì \\
+        \hline
+        Vincoli logici complessi & Limitati & Sì \\
+        \hline
+        Creazione di ontologie & Sì, semplici & Sì, anche complesse \\
+        \hline
+    \end{tabular}
+    \caption{Confronto tra RDFS (dizionario) e OWL (linguaggio per creare ontologie)}
+    \label{tab:rdfs-owl}
+\end{table}
 
 \newpage
 \section{SPARQL}

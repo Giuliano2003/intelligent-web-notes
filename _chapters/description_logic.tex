@@ -1,0 +1,1013 @@
+\chapter{Logiche Descrittive}
+% Pacchetti richiesti nel master: amsmath, amssymb, tabularx, tikz.
+% Per i grafi è sufficiente TikZ senza librerie aggiuntive.
+
+\section{Cosa sono le Logiche Descrittive (DL) e a cosa servono?}
+
+\begin{definition}{Logiche Descrittive}
+    Le Logiche Descrittive (\emph{Description Logics}, DL) sono un linguaggio
+    matematico preciso per descrivere in modo formale le categorie (concetti),
+    le relazioni e gli oggetti del mondo reale.
+
+    Sono la base teorica del linguaggio \textbf{OWL~2} utilizzato sul Semantic
+    Web per costruire ontologie.
+\end{definition}
+
+\begin{observation}{Perché si usano e non la FOL completa?}
+    La Logica del Primo Ordine (FOL) è potentissima, ma un computer potrebbe
+    impiegare un tempo infinito per rispondere a una domanda o rimanere
+    bloccato (è indecidibile).
+
+    Le DL sono \textbf{frammenti decidibili} di FOL: limitano la complessità
+    usando solo relazioni \textbf{unarie} (categorie) e \textbf{binarie}
+    (legami tra due elementi), in modo che i calcoli terminino sempre
+    fornendo una risposta automatica.
+\end{observation}
+
+\begin{observation}{Il bilanciamento (trade-off)}
+    Più «operatori» o costruttori logici aggiungiamo a una DL, più la logica
+    diventa \textbf{espressiva} (capace di descrivere cose complesse).
+    Tuttavia, maggiore è l'espressività, maggiore è la \textbf{complessità
+    computazionale} (tempo e sforzo che il computer impiega per fare
+    ragionamenti). Un buon progettista deve scegliere la logica bilanciando
+    espressività e complessità.
+\end{observation}
+
+\section{Com'è strutturata una Logica Formale}
+Una logica è un sistema formale caratterizzato da:
+\begin{enumerate}
+    \item Un insieme di simboli e regole sintattiche che definiscono un linguaggio formale, che
+ne delinea la sintassi e la struttura delle espressioni; Il linguaggio formale stabilisce quali simboli possiamo utilizzare e \textbf{come combinarli per costruire espressioni valide}.
+    \item  Una semantica, che assegna valori alle espressioni del linguaggio, assegnando valori
+di verità agli enunciati; \textbf{La semantica stabilisce il significato delle espressioni del linguaggio.}
+    \item Un calcolo, che definisce le regole di inferenza.\textbf{Il calcolo definisce come possiamo ricavare nuove conoscenze a partire da quelle già presenti, attraverso regole di inferenza formalmente definite.}
+\end{enumerate}
+
+
+\newpage
+\section{Il linguaggio formale}
+In questa sezione descriviamo la prima parte di una logica formale, cioè il linguaggio, che definisce un insieme di simboli e come posso combinare questi simboli per creare espressioni valide.
+
+\begin{definition}{La segnatura}
+    \begin{description}
+        \item[\(N_C\) (nomi di concetto / \emph{concept names})]\hfill\break
+            Rappresentano le \textbf{categorie} o insiemi di oggetti
+            (predicati unari). Esempi: \textsf{Persona}, \textsf{Città},
+            \textsf{Auto}. \\
+            Questi rappresentano sono i concetti atomici.
+        \item[\(N_R\) (nomi di ruolo / \emph{role names})]\hfill\break
+            Rappresentano le \textbf{relazioni} o attributi che collegano
+            due elementi (predicati binari). Esempi: \textsf{haFiglio},
+            \textsf{viveA}, \textsf{guidatoDa}.
+        \item[\(N_I\) (nomi di individuo / \emph{individual names})]\hfill\break
+            Rappresentano gli \textbf{oggetti singoli e specifici}
+            (sono attributi di un'istanza di \(N_C\)).
+            % Inciso dell'originale. Formalmente, un nome di individuo denota
+            % un elemento del dominio, come precisato nella semantica.
+            Esempi: \textsf{mario}, \textsf{roma}, \textsf{fiat500}.
+    \end{description}
+\end{definition}
+
+Quindi stiamo definendo i simboli fondamentali che possiamo utilizzare, il primo insieme di simboli che definiamo è la \textbf{segnatura}:
+\[
+\Sigma=(N_C,N_R,N_I)
+\]
+\begin{enumerate}
+    \item \(N_C\): nomi di concetto.
+    \item \(N_R\): nomi di ruolo.
+    \item \(N_I\): nomi di individuo.
+\end{enumerate}
+Oltre ai simboli non logici appartenenti alla segnatura, il linguaggio mette a disposizione costanti e costruttori logici.
+\begin{enumerate}
+    \item Le costanti logiche \(\top\) e \(\bot\).
+    \begin{definition}{Le due costanti logiche speciali}
+    \begin{description}
+        \item[\(\top\) (Top / Concetto Universale)]
+            concetto universale.
+        \item[\(\bot\) (Bottom / Concetto Vuoto)]
+            concetto vuoto.
+    \end{description}
+    \end{definition}
+    \item I costruttori logici, come \(\sqcap,\sqcup,\neg,\exists,\forall\).
+\end{enumerate}
+La prima componenete di una logica, non definisce solo i simboli che si possono utilizzare (sintassi), ma anche come questi si possono combinare fra di loro, in modo da costruire espressioni valide, infatti negli ulteriori sotto-capitoli successivi, vedremo proprio queste regole.
+\begin{observation}{Concetti atomici e complessi}
+    Nelle Logiche Descrittive distinguiamo due tipologie
+    di concetti:
+    \begin{enumerate}
+        \item \textbf{Concetti atomici}: sono i nomi di
+        concetto appartenenti all'insieme $N_C$.
+        Rappresentano i concetti primitivi del linguaggio,
+        non costruiti mediante operatori logici.
+
+        \item \textbf{Concetti complessi (non atomici)}:
+        sono espressioni costruite applicando i
+        \textbf{costruttori logici} (come l'intersezione) a concetti atomici
+        o ad altri concetti complessi.
+    \end{enumerate}
+\end{observation}
+
+
+\newpage
+\subsection{Come combinare i concetti (costruttori di concetto)}
+
+Siano \(C\) e \(D\) due concetti (sia atomici che non), \(R\) un ruolo e \(a\) un individuo.
+
+\begin{definition}{Intersezione (\(C\sqcap D\)): «E / AND»}
+    L'insieme di tutti gli oggetti che appartengono \textbf{sia a \(C\)
+    che a \(D\)}.
+\end{definition}
+\begin{observation}{Esempio di intersezione}
+    \(\mathsf{Persona}\sqcap\mathsf{Studente}\) (chi è sia una persona
+    sia uno studente).
+\end{observation}
+
+\begin{definition}{Unione (\(C\sqcup D\)): «O / OR»}
+    L'insieme di tutti gli oggetti che appartengono a \(C\), oppure a \(D\),
+    oppure a entrambi.
+\end{definition}
+\begin{observation}{Esempio di unione}
+    \(\mathsf{Cane}\sqcup\mathsf{Gatto}\) (gli animali che sono cani o gatti).
+\end{observation}
+
+\begin{definition}{Negazione (\(\neg C\)): «NON / NOT»}
+    Tutti gli oggetti dell'universo tranne quelli che stanno nel concetto \(C\).
+\end{definition}
+\begin{observation}{Esempio di negazione}
+    \(\neg\mathsf{Fumatore}\) (tutti i non fumatori).
+    In OWL: \texttt{owl:complementOf}.
+\end{observation}
+
+\begin{definition}{Restrizione esistenziale (\(\exists R.C\)): «almeno uno»}
+    \(\exists R.C\) rappresenta un nuovo concetto, formato da tutti gli individui che hanno almeno una relazione $R$ con un \textbf{individuo} appartenente a $C$
+\end{definition}
+\begin{observation}{Esempio di restrizione esistenziale}
+    \(\exists\mathsf{child}.\mathsf{Blond}\) rappresenta il concetto costituito da tutti gli individui che hanno almeno un figlio biondo, ossia che sono collegati, tramite il ruolo \(\mathsf{child}\), ad almeno un individuo appartenente al concetto \(\mathsf{Blond}\).
+
+
+    Per ora non abbiamo ancora definito, come collegare i vari individui fra di loro, però quello che devi immaginare è un grafo in cui i nodi sono gli individui, etichettati dal loro concetto, e collegati tramite una relazione.
+\end{observation}
+
+\begin{definition}{Restrizione universale ($\forall R.C$): «solo / tutti»}
+    $\forall R.C$ rappresenta il concetto costituito da tutti gli individui
+    che sono collegati, tramite il ruolo $R$, esclusivamente a individui
+    appartenenti al concetto $C$.
+\end{definition}
+
+\begin{warning}{Restrizione universale e vacuità logica}
+    \(\forall\mathsf{child}.\mathsf{Blond}\) rappresenta chi ha solo figli
+    biondi (comprende per vacuità logica anche chi non ha figli).
+\end{warning}
+
+\begin{definition}{Restrizioni numeriche qualificate (\(\geq n\,R.C\)) e (\(\leq n\,R.C\))}
+    \begin{enumerate}
+        \item \((\geq n\,R.C)\) (minimo): individui che hanno \textbf{almeno}
+            \(n\) relazioni \(R\) verso oggetti del concetto \(C\).
+        \item \((\leq n\,R.C)\) (massimo): individui che hanno \textbf{al massimo}
+            \(n\) relazioni \(R\) verso oggetti del concetto \(C\).
+    \end{enumerate}
+\end{definition}
+\begin{observation}{Esempi di restrizioni numeriche qualificate}
+    \((\geq 2\,\mathsf{child}.\mathsf{blond})\) descrive chi ha almeno due
+    figli biondi.
+
+    \((\leq 2\,\mathsf{child}.\mathsf{blond})\) descrive chi ha al massimo
+    due figli biondi.
+\end{observation}
+
+\begin{definition}{Nominali (\(\{a\}\))}
+    Un concetto costituito da un \textbf{singolo individuo specifico} \(a\).
+\end{definition}
+\begin{observation}{Nominali e insiemi enumerati}
+    \(\{\mathsf{italia}\}\) è il concetto contenente solo l'individuo
+    \(\mathsf{italia}\). L'unione \(\{a_1\}\sqcup\cdots\sqcup\{a_n\}\)
+    forma insiemi enumerati.
+\end{observation}
+
+\newpage
+
+\subsection{Come combinare le relazioni (costruttori di ruolo)}
+
+Siano \(R\) e \(R'\) due ruoli.
+
+\begin{definition}{Ruolo inverso (\(R^{-}\))}
+    Inverte la direzione della relazione (inverte «da chi a chi» va la freccia).
+\end{definition}
+\begin{observation}{Esempio di ruolo inverso}
+    Se \(\mathsf{child}\) significa «ha come figlio», allora
+    \(\mathsf{child}^{-}\) equivale a \(\mathsf{parent}\) («ha come
+    genitore»).
+\end{observation}
+
+\begin{definition}{Composizione di ruoli (\(R\circ R'\))}
+    Catena di due relazioni in sequenza.
+\end{definition}
+\begin{observation}{Esempio di composizione}
+    \(\mathsf{parent}\circ\mathsf{parent}\equiv\mathsf{grandparent}\)
+    (il genitore del genitore è il nonno).
+\end{observation}
+
+\section{La semantica formale: cosa significano ma\-te\-ma\-ti\-ca\-men\-te le formule?}
+Ora vedremo la seconda componente di una logica descrittiva, la semantica.
+La semantica stabilisce come interpretare matematicamente i simboli e le espressioni del linguaggio.
+\begin{definition}{Interpretazione}
+    Per dare un significato matematico rigoroso a ogni simbolo si usa
+    un'\textbf{interpretazione}
+    \[
+        \mathcal I=\langle\Delta^{\mathcal I},\cdot^{\mathcal I}\rangle.
+    \]
+    \begin{itemize}
+        \item \(\Delta^{\mathcal I}\) (\textbf{dominio di interpretazione}):
+            un insieme non vuoto di oggetti.
+        \item \(\cdot^{\mathcal I}\) (\textbf{funzione di interpretazione}):
+            assegna un significato ai simboli del linguaggio.
+    \end{itemize}
+    Ogni concetto \(A\) diventa un insieme di elementi (che se ci pensi è quello che matematicamente è un concetto) :
+    \[
+        A^{\mathcal I}\subseteq\Delta^{\mathcal I}.
+    \]
+    Ogni ruolo \(R\) diventa un insieme di coppie di elementi:
+    \[
+        R^{\mathcal I}\subseteq\Delta^{\mathcal I}\times\Delta^{\mathcal I}.
+    \]
+    Ogni individuo \(a\) diventa un singolo elemento concreto:
+    \[
+        a^{\mathcal I}\in\Delta^{\mathcal I}.
+    \]
+\end{definition}
+
+
+\begin{example}{Interpretazione con un dominio di individui}
+    Consideriamo un universo costituito da tre individui:
+    Mario, Luca e Anna.
+
+    Definiamo il dominio di interpretazione:
+    \[
+        \Delta^{\mathcal I}
+        = \{\text{Mario},\text{Luca},\text{Anna}\}.
+    \]
+
+    Supponiamo di voler rappresentare due concetti:
+    \textsf{Persona} e \textsf{Studente}, e un ruolo
+    \textsf{haFiglio}.
+
+    Possiamo definire la seguente interpretazione:
+    \[
+    \begin{aligned}
+        \mathsf{Persona}^{\mathcal I}
+        &= \{\text{Mario},\text{Luca},\text{Anna}\},\\
+        \mathsf{Studente}^{\mathcal I}
+        &= \{\text{Luca},\text{Anna}\},\\
+        \mathsf{haFiglio}^{\mathcal I}
+        &= \{(\text{Mario},\text{Luca}),
+             (\text{Mario},\text{Anna})\}.
+    \end{aligned}
+    \]
+
+    Osserviamo che:
+    \begin{itemize}
+        \item Il dominio $\Delta^{\mathcal I}$ contiene
+        tutti gli oggetti considerati.
+
+        \item Il concetto \textsf{Persona} viene
+        interpretato come un sottoinsieme del dominio.
+
+        \item Il concetto \textsf{Studente} viene
+        interpretato come l'insieme degli individui
+        che sono studenti.
+
+        \item Il ruolo \textsf{haFiglio} viene
+        interpretato come un insieme di coppie
+        ordinate, che rappresentano le relazioni
+        tra gli individui.
+    \end{itemize}
+
+    In questo esempio, per semplicità, \textbf{utilizziamo
+    direttamente i nomi propri per indicare
+    gli elementi del dominio.}
+\end{example}
+
+\begin{example}{Funzionamento della funzione di interpretazione}
+    Consideriamo una segnatura:
+    \[
+        \Sigma=(N_C,N_R,N_I)
+    \]
+    dove:
+    \[
+    \begin{aligned}
+        N_C &= \{\mathsf{Persona},\mathsf{Studente}\},\\
+        N_R &= \{\mathsf{haFiglio}\},\\
+        N_I &= \{\mathsf{mario},\mathsf{luca}\}.
+    \end{aligned}
+    \]
+
+    Questi sono soltanto \textbf{simboli del linguaggio
+    formale}: non abbiamo ancora assegnato loro
+    un significato matematico.
+
+    Definiamo ora un'interpretazione:
+    \[
+        \mathcal I =
+        (\Delta^{\mathcal I},\cdot^{\mathcal I})
+    \]
+    con dominio:
+    \[
+        \Delta^{\mathcal I}=\{d_1,d_2,d_3\}.
+    \]
+
+    Gli elementi $d_1,d_2,d_3$ sono oggetti
+    del dominio, \textbf{distinti dai simboli del linguaggio}.
+
+    La \textbf{funzione di interpretazione}
+    $\cdot^{\mathcal I}$ assegna ai simboli
+    della segnatura i seguenti significati:
+
+    \[
+    \begin{aligned}
+        \mathsf{Persona}^{\mathcal I}
+        &= \{d_1,d_2,d_3\} \subseteq \Delta^{\mathcal I} ,\\
+        \mathsf{Studente}^{\mathcal I}
+        &= \{d_2\},\\
+        \mathsf{haFiglio}^{\mathcal I}
+        &= \{(d_1,d_2)\} \subseteq \Delta^{\mathcal I} \times \Delta^{\mathcal I}  ,\\
+        \mathsf{mario}^{\mathcal I}
+        &= d_1 \in \Delta^{\mathcal I},\\
+        \mathsf{luca}^{\mathcal I}
+        &= d_2.
+    \end{aligned}
+    \]
+
+    Analizziamo le assegnazioni:
+
+    \begin{itemize}
+        \item Il simbolo $\mathsf{Persona}$ viene
+        associato all'insieme $\{d_1,d_2,d_3\}$.
+
+        \item Il simbolo $\mathsf{Studente}$ viene
+        associato all'insieme $\{d_2\}$.
+
+        \item Il simbolo $\mathsf{haFiglio}$ viene
+        associato alla relazione binaria
+        $\{(d_1,d_2)\}$.
+
+        \item Il nome di individuo $\mathsf{mario}$
+        viene associato all'elemento $d_1$.
+
+        \item Il nome di individuo $\mathsf{luca}$
+        viene associato all'elemento $d_2$.
+    \end{itemize}
+
+    Possiamo quindi osservare che:
+    \[
+        \mathsf{mario}^{\mathcal I}
+        \in \mathsf{Persona}^{\mathcal I}
+    \]
+    e:
+    \[
+        (\mathsf{mario}^{\mathcal I},
+         \mathsf{luca}^{\mathcal I})
+        \in \mathsf{haFiglio}^{\mathcal I}.
+    \]
+
+    Inoltre, considerando il concetto complesso:
+    \[
+        \exists\,\mathsf{haFiglio}.\mathsf{Studente}
+    \]
+    otteniamo:
+    \[
+        (\exists\,\mathsf{haFiglio}.\mathsf{Studente})
+        ^{\mathcal I}
+        = \{d_1\}.
+    \]
+
+    Infatti, $d_1$ è collegato tramite
+    $\mathsf{haFiglio}^{\mathcal I}$
+    all'elemento $d_2$, che appartiene
+    a $\mathsf{Studente}^{\mathcal I}$.
+
+    \textbf{Conclusione:}
+    la funzione di interpretazione permette
+    di passare dai simboli astratti del linguaggio
+    agli oggetti, agli insiemi e alle relazioni
+    definiti sul dominio di interpretazione.
+\end{example}
+
+
+\subsection{Traduzione matematica di ogni formula}
+Dopo aver stabilito come interpretare i simboli della segnatura \(N_C,N_R,N_I\), il passo successivo consiste nel definire formalmente la semantica delle espressioni complesse del linguaggio.
+Quindi estendiamo ricorsivamente l'interpretazione alle espressioni costruite mediante gli operatori logici e le costanti logiche.
+\begin{center}
+    \begingroup
+    \small
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{@{}ll@{}}
+        \hline
+        \textbf{Formula logica} & \textbf{Definizione semantica matematica} \\
+        \hline
+        \(\bot\) & \(\bot^{\mathcal I}=\varnothing\) \\
+        \(\top\) & \(\top^{\mathcal I}=\Delta^{\mathcal I}\) \\
+        \(C\sqcap D\) & \((C\sqcap D)^{\mathcal I}=C^{\mathcal I}\cap D^{\mathcal I}\) \\
+        \(C\sqcup D\) & \((C\sqcup D)^{\mathcal I}=C^{\mathcal I}\cup D^{\mathcal I}\) \\
+        \(\neg C\) & \((\neg C)^{\mathcal I}=\Delta^{\mathcal I}\setminus C^{\mathcal I}\) \\
+        \(\exists R.C\) &
+            \(\{d\in\Delta^{\mathcal I}\mid
+              \exists e\in\Delta^{\mathcal I}.\,[(d,e)\in R^{\mathcal I}\land e\in C^{\mathcal I}]\}\) \\
+        \(\forall R.C\) &
+            \(\{d\in\Delta^{\mathcal I}\mid
+              \forall e\in\Delta^{\mathcal I}.\,[(d,e)\in R^{\mathcal I}\to e\in C^{\mathcal I}]\}\) \\
+        \((\geq n\,R.C)\) &
+            \(\{d\in\Delta^{\mathcal I}\mid
+              \#\{e\in\Delta^{\mathcal I}\mid(d,e)\in R^{\mathcal I}\land e\in C^{\mathcal I}\}\geq n\}\) \\
+        \(\{a\}\) & \(\{a\}^{\mathcal I}=\{a^{\mathcal I}\}\) \\
+        \(R^{-}\) & \((R^{-})^{\mathcal I}=\{(d,e)\mid(e,d)\in R^{\mathcal I}\}\) \\
+        \hline
+    \end{tabular}
+    \endgroup
+\end{center}
+
+
+\section{Struttura di una Knowledge Base (KB)}
+
+\begin{definition}{Base di conoscenza}
+    Una \textbf{base di conoscenza} (\emph{Knowledge Base}, KB) è un insieme
+    finito di \textbf{assiomi}, cioè affermazioni che descrivono le regole di
+    un determinato ambito.
+
+    Queste informazioni si organizzano in tre parti: \textbf{TBox},
+    \textbf{RBox} e \textbf{ABox}.
+\end{definition}
+
+\subsection{TBox (\emph{Terminological Box}): le regole sui concetti}
+
+\begin{definition}{TBox e inclusioni generali di concetto}
+    La \textbf{TBox} descrive le relazioni generali tra i concetti, cioè tra
+    le categorie di oggetti. Contiene le \textbf{inclusioni generali di
+    concetto} (GCI), che hanno la forma
+    \[
+        C\sqsubseteq D.
+    \]
+    Questa espressione significa che \textbf{ogni individuo che appartiene al
+    concetto \(C\) appartiene anche al concetto \(D\)}.
+\end{definition}
+
+\begin{observation}{Esempio di inclusione di concetto}
+    \[
+        \mathsf{Studente}\sqsubseteq\mathsf{Persona}.
+    \]
+    Significa che \textbf{ogni studente è una persona}. È una regola generale
+    che vale per tutti gli studenti.
+\end{observation}
+
+Dal punto di vista degli insiemi, in un'interpretazione \(\mathcal I\):
+\[
+    C^{\mathcal I}\subseteq D^{\mathcal I}.
+\]
+
+\subsection{RBox (\emph{Role Box}): le regole sulle relazioni}
+
+\begin{definition}{RBox}
+    La \textbf{RBox} descrive le proprietà dei ruoli, cioè delle relazioni tra
+    individui. Può contenere:
+    \begin{itemize}
+        \item inclusioni di ruolo;
+        \item dichiarazioni di funzionalità;
+        \item transitività.
+    \end{itemize}
+\end{definition}
+
+\subsubsection{Inclusioni di ruolo}
+
+\begin{definition}{Inclusione di ruolo}
+    Un'inclusione di ruolo ha la forma
+    \[
+        R\sqsubseteq R'.
+    \]
+    Significa che \textbf{ogni coppia di individui collegata da \(R\) è
+    collegata anche da \(R'\)}.
+\end{definition}
+\begin{observation}{Esempio di inclusione di ruolo}
+    \[
+        \mathsf{haPadre}\sqsubseteq\mathsf{haGenitore}.
+    \]
+    Se Mario ha Luigi come padre, allora Mario ha Luigi anche come genitore.
+\end{observation}
+
+\subsubsection{Ruoli funzionali}
+
+\begin{definition}{Funzionalità di un ruolo}
+    La dichiarazione
+    \[
+        \operatorname{func}(R)
+    \]
+    stabilisce che \textbf{ogni individuo può essere collegato tramite \(R\)
+    ad al massimo un individuo distinto}.
+\end{definition}
+\begin{observation}{Esempio di ruolo funzionale}
+    \[
+        \operatorname{func}(\mathsf{haMadreBiologica}).
+    \]
+    Significa che ogni individuo può avere \textbf{al massimo una madre biologica}.
+\end{observation}
+\begin{warning}{«Al massimo uno» non significa «esattamente uno»}
+    La funzionalità impedisce di avere due individui distinti come destinazione
+    dello stesso ruolo, ma \textbf{non impone che una relazione esista}.
+\end{warning}
+
+
+\subsubsection{Ruoli transitivi}
+
+\begin{definition}{Transitività di un ruolo}
+    La dichiarazione
+    \[
+        \operatorname{trans}(R)
+    \]
+    stabilisce che, se \(a\) è collegato a \(b\) tramite \(R\) e \(b\) è
+    collegato a \(c\) tramite \(R\), allora anche \(a\) è collegato a \(c\)
+    tramite \(R\):
+    \[
+        R(a,b)\land R(b,c)\ \Rightarrow\ R(a,c).
+    \]
+\end{definition}
+\begin{observation}{Esempio di ruolo transitivo}
+    Il ruolo \(\mathsf{haAntenato}\) è transitivo. Se Luigi è un antenato di
+    Mario e Giovanni è un antenato di Luigi, allora \textbf{Giovanni è anche
+    un antenato di Mario}. In OWL: \texttt{owl:TransitiveProperty}.
+\end{observation}
+
+\subsection{ABox (\emph{Assertion Box}): i fatti sui singoli individui}
+
+\begin{definition}{ABox}
+    La \textbf{ABox} contiene le \textbf{asserzioni}, cioè le affermazioni
+    che riguardano individui specifici, come \(\mathsf{mario}\) o \(\mathsf{luigi}\).
+\end{definition}
+
+\subsubsection{Asserzioni di concetto}
+
+\begin{definition}{Asserzione di concetto}
+    Un'asserzione di concetto ha la forma
+    \[
+        C(a).
+    \]
+    Significa che \textbf{l'individuo \(a\) appartiene al concetto \(C\)}.
+\end{definition}
+\begin{observation}{Esempio di asserzione di concetto}
+    \[
+        \mathsf{Studente}(\mathsf{mario}).
+    \]
+    Questa affermazione dice che \textbf{Mario è uno studente}.
+    In RDF: \texttt{rdf:type}.
+\end{observation}
+
+\subsubsection{Asserzioni di ruolo}
+
+\begin{definition}{Asserzione di ruolo}
+    Un'asserzione di ruolo ha la forma
+    \[
+        R(a,b).
+    \]
+    Significa che \textbf{l'individuo \(a\) è collegato all'individuo \(b\)
+    tramite il ruolo \(R\)}.
+\end{definition}
+\begin{observation}{Esempio di asserzione di ruolo}
+    \[
+        \mathsf{haAmico}(\mathsf{mario},\mathsf{luigi}).
+    \]
+    Questa affermazione dice che \textbf{Mario ha Luigi come amico}.
+\end{observation}
+
+\begin{observation}{Come si usano insieme queste informazioni?}
+    Nella \textbf{TBox} possiamo avere la regola generale
+    \(\mathsf{Studente}\sqsubseteq\mathsf{Persona}\).
+
+    Nella \textbf{ABox} possiamo avere il fatto \(\mathsf{Studente}(\mathsf{mario})\).
+
+    Combinando queste informazioni, possiamo \textbf{dedurre che Mario è
+    una persona}, cioè \(\mathsf{Persona}(\mathsf{mario})\).
+\end{observation}
+La Knowledge Base quindi \(\mathcal K\) contiene un insieme di assiomi che rappresentano le conoscenze che assumiamo vere sul dominio.
+\textbf{Tuttavia, non è detto che questi assiomi siano veri in qualsiasi interpretazione.}
+
+
+Infatti:
+\begin{itemize}
+    \item Se un'interpretazione \(\mathcal I\) soddisfa tutti gli assiomi della KB, allora è un modello della KB:
+    \[
+    \mathcal I\models\mathcal K
+    \]
+    (poi piu in la vedremo la definizione formale, per il momento ti basta sapere questo.)
+    \item Se un'interpretazione non è un modello della KB:
+    \[
+\mathcal I\not\models\mathcal K
+    \]
+\end{itemize}
+La KB specifica ciò che vogliamo sia vero (ma non tutti le interpretazioni possono soddisfare), mentre le interpretazioni rappresentano i possibili significati matematici dei simboli. I modelli sono precisamente quelle interpretazioni in cui tutti gli assiomi della KB risultano veri.
+\section{Come leggere i nomi delle Logiche Descrittive}
+
+I nomi delle DL sono acronimi che indicano quali «strumenti» o operatori
+la logica possiede.
+
+\begin{center}
+    \begingroup
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabularx}{\linewidth}{@{}lX@{}}
+        \hline
+        \textbf{Nome} & \textbf{Strumenti o operatori} \\
+        \hline
+        \(\mathcal{ALC}\) & È la logica attributiva di base con complemento.
+            Include \(\top,\bot\), concetti atomici, \(\sqcap,\sqcup,\neg\),
+            \(\exists P.C,\forall P.C\) e assiomi GCI + ABox. \\
+        \(\mathcal S\) & È l'abbreviazione per \(\mathcal{ALC}\) estesa con
+            i \textbf{ruoli transitivi} (\(\operatorname{trans}(R)\)). \\
+        \(\mathcal H\) & Aggiunge le \textbf{gerarchie di ruoli} (\(R\sqsubseteq R'\)). \\
+        \(\mathcal O\) & Aggiunge i \textbf{nominali} (\(\{a\}\)). \\
+        \(\mathcal I\) & Aggiunge i \textbf{ruoli inversi} (\(R^{-}\)). \\
+        \(\mathcal Q\) & Aggiunge le \textbf{restrizioni numeriche qualificate}
+            (\((\geq n\,R.C)\), \((\leq n\,R.C)\)). \\
+        \(\mathcal N\) & Aggiunge le \textbf{restrizioni numeriche non qualificate}
+            (\((\geq n\,R.\top)\), \((\leq n\,R.\top)\)). \\
+        \hline
+    \end{tabularx}
+    \endgroup
+\end{center}
+
+\begin{observation}{Combinazioni chiave da ricordare per l'esame}
+    \begin{itemize}
+        \item \(\mathcal{ALCIO}\): logica \(\mathcal{ALC}\) + nominali
+            (\(\mathcal O\)) + ruoli inversi (\(\mathcal I\)).
+        \item \(\mathcal{SHOIN}\): è il fondamento matematico dello standard
+            \textbf{OWL-DL} (\(\mathcal S+\mathcal H+\mathcal O+\mathcal I+\mathcal N\)).
+        \item \(\mathcal{SROIQ}\): è il fondamento matematico dello standard
+            \textbf{OWL~2-DL} (\(\mathcal S+\mathcal R+\mathcal O+\mathcal I+\mathcal Q\),
+            con composizione di ruoli ristretta \(R_1\circ\cdots\circ R_n\sqsubseteq R\),
+            il concetto \(\mathsf{Self}\) e il ruolo universale \(U\)).
+    \end{itemize}
+\end{observation}
+
+\newpage
+
+\section{Logiche Descrittive: leggere i grafi e interpretare le formule}
+
+Questi esempi collegano i grafi alle definizioni di \textbf{dominio},
+\textbf{interpretazione}, \textbf{concetto} e \textbf{ruolo}.
+
+\subsection{Come leggere questi grafi}
+
+Un \textbf{nodo} rappresenta un elemento del dominio \(\Delta^{\mathcal I}\).
+Le etichette che assegniamo ai nodi servono a identificarli.
+
+Una lettera come \(A\) o \(B\) accanto a un nodo indica
+l'\textbf{appartenenza a un concetto}. Se il nodo \(d\) è etichettato con \(A\), allora:
+\[
+    d\in A^{\mathcal I}.
+\]
+Una \textbf{freccia} etichettata con \(R\), che parte da \(d\) e arriva a \(e\),
+rappresenta una coppia appartenente al ruolo:
+\[
+    (d,e)\in R^{\mathcal I}.
+\]
+Chiamiamo \(e\) un \textbf{successore} di \(d\) tramite \(R\): è semplicemente
+un nodo raggiunto da \(d\) seguendo una freccia \(R\) in uscita.
+
+\begin{observation}{Che cosa significa valutare un concetto?}
+    Un'espressione come \(\exists R.A\) descrive una categoria di elementi.
+    La sua interpretazione \((\exists R.A)^{\mathcal I}\) è \textbf{l'insieme
+    di tutti i nodi del grafo che soddisfano quella descrizione}.
+
+    Per trovarlo, controlliamo ogni nodo e raccogliamo quelli che rispettano
+    la condizione.
+\end{observation}
+
+\subsection{Primo grafo: restrizioni esistenziali e universali}
+
+Nel primo disegno i nodi non hanno nomi. Per poterli indicare nelle
+spiegazioni, li etichettiamo con \(x_1,\ldots,x_6\).
+
+\begin{center}
+    \begin{tikzpicture}[
+        x=0.20\linewidth, y=1cm, >=stealth,
+        vertice/.style={circle, draw=black!40, fill=black!4,
+                        minimum size=9mm, inner sep=2pt},
+        ruolo/.style={fill=white, inner sep=1.5pt, font=\small}
+    ]
+        \node[vertice] (x1) at (0,0)      {\(x_1\)};
+        \node[vertice] (x2) at (1,-0.65)  {\(x_2\)};
+        \node[vertice] (x3) at (2,0)      {\(x_3\!:\!B\)};
+        \node[vertice] (x4) at (3,1.05)   {\(x_4\!:\!A\)};
+        \node[vertice] (x5) at (3,-1.05)  {\(x_5\!:\!A\)};
+        \node[vertice] (x6) at (4,0)      {\(x_6\!:\!B\)};
+
+        \draw[->] (x1.20) to[bend left=19] node[ruolo] {\(R\)} (x3.160);
+        \draw[->] (x1.-20) to[out=0,in=180] node[ruolo] {\(S\)} (x2.west);
+        \draw[->] (x2.east) to[out=0,in=180] node[ruolo] {\(S\)} (x3.200);
+        \draw[->] (x3.20) to[out=0,in=180] node[ruolo] {\(R\)} (x4.west);
+        \draw[->] (x3.-20) to[out=0,in=180] node[ruolo] {\(R\)} (x5.west);
+        \draw[->] (x4.east) to[out=0,in=180] node[ruolo] {\(S\)} (x6.160);
+        \draw[->] (x5.east) to[out=0,in=180] node[ruolo] {\(S\)} (x6.200);
+    \end{tikzpicture}
+\end{center}
+
+\subsubsection{L'interpretazione rappresentata dal grafo}
+
+Il \textbf{dominio} contiene i sei nodi:
+\[
+    \Delta^{\mathcal I}=\{x_1,x_2,x_3,x_4,x_5,x_6\}.
+\]
+La funzione di interpretazione associa ai \textbf{concetti} questi insiemi:
+\[
+    A^{\mathcal I}=\{x_4,x_5\}
+    \qquad
+    B^{\mathcal I}=\{x_3,x_6\}.
+\]
+Ai \textbf{ruoli} associa gli insiemi delle coppie collegate dalle frecce:
+\begin{gather*}
+    R^{\mathcal I}=\{(x_1,x_3),(x_3,x_4),(x_3,x_5)\},\\
+    S^{\mathcal I}=\{(x_1,x_2),(x_2,x_3),(x_4,x_6),(x_5,x_6)\}.
+\end{gather*}
+
+\subsubsection{Un passaggio tramite \(S\): \(\exists S.B\)}
+
+Il nodo \(x_2\) ha una freccia \(S\) che arriva a \(x_3\), e \(x_3\)
+appartiene a \(B\). Quindi:
+\[
+    x_2\in(\exists S.B)^{\mathcal I}.
+\]
+Significa: \textbf{da \(x_2\) posso raggiungere almeno un elemento di \(B\)
+seguendo una freccia \(S\)}. Anche \(x_4\) e \(x_5\) soddisfano questa
+condizione, perché hanno una freccia \(S\) verso \(x_6\), che appartiene a \(B\).
+
+\subsubsection{Due passaggi tramite \(S\): \(\exists S.\exists S.B\)}
+
+Partendo da \(x_1\) possiamo seguire questo percorso:
+\[
+    x_1\xrightarrow{S}x_2\xrightarrow{S}x_3.
+\]
+Il nodo finale \(x_3\) appartiene a \(B\). Quindi:
+\[
+    x_1\in(\exists S.\exists S.B)^{\mathcal I}.
+\]
+L'espressione richiede \textbf{un primo passaggio tramite \(S\) e poi un
+secondo passaggio tramite \(S\), fino a un elemento di \(B\)}. Non richiede
+che il nodo intermedio appartenga a \(B\).
+
+\subsubsection{Combinare più condizioni: \(\exists R.(B\sqcap\forall R.A)\)}
+
+La formula
+\[
+    \exists R.(B\sqcap\forall R.A)
+\]
+descrive chi ha almeno un successore tramite \(R\) che soddisfa entrambe
+le condizioni: \textbf{appartiene a \(B\)} e \textbf{tutti i suoi successori
+tramite \(R\) appartengono ad \(A\)}.
+
+Il nodo \(x_1\) soddisfa questa descrizione. Infatti, con una freccia \(R\)
+raggiunge \(x_3\), che appartiene a \(B\). Da \(x_3\) partono due frecce
+\(R\), verso \(x_4\) e \(x_5\), ed entrambi appartengono ad \(A\). Quindi:
+\[
+    x_1\in\bigl(\exists R.(B\sqcap\forall R.A)\bigr)^{\mathcal I}.
+\]
+
+\begin{observation}{Leggere le parentesi}
+    In \(\exists R.(B\sqcap\forall R.A)\), le condizioni dentro le
+    parentesi riguardano il \textbf{nodo raggiunto tramite \(R\)}.
+
+    In questo esempio, è \(x_3\) che deve appartenere a \(B\) e avere
+    tutti i successori tramite \(R\) in \(A\).
+\end{observation}
+
+\subsubsection{Un nodo senza frecce uscenti: \(\forall R.\bot\) e \(\forall S.\bot\)}
+
+Dal nodo \(x_6\) non parte alcuna freccia \(R\) o \(S\). Quindi:
+\[
+    x_6\in(\forall R.\bot)^{\mathcal I}
+    \qquad
+    x_6\in(\forall S.\bot)^{\mathcal I}.
+\]
+Ricordiamo che \(\bot^{\mathcal I}=\varnothing\). La formula \(\forall R.\bot\)
+richiede che tutti i successori tramite \(R\) appartengano all'insieme vuoto.
+Poiché nessun elemento può appartenervi, questa condizione è soddisfatta
+\textbf{solo se non esistono successori tramite \(R\)}.
+
+\begin{warning}{La restrizione universale non impone l'esistenza}
+    Se un nodo non ha successori tramite \(R\), allora soddisfa \(\forall R.C\)
+    per qualsiasi concetto \(C\), anche per \(C=\bot\).
+
+    Non ci sono successori che possano violare la condizione: è la
+    \textbf{verità per vacuità}.
+\end{warning}
+
+\subsection{Secondo grafo: contare tutti i successori o solo quelli in \(A\)}
+
+Anche qui introduciamo etichette per distinguere i nodi. Nel grafo, \(y_2\)
+e \(y_3\) appartengono ad \(A\), mentre \(y_1\) non vi appartiene.
+
+\begin{center}
+    \begin{tikzpicture}[
+        >=stealth,
+        vertice/.style={circle, draw=black!40, fill=black!4,
+                        minimum size=9mm, inner sep=2pt},
+        ruolo/.style={fill=white, inner sep=1.5pt, font=\small}
+    ]
+        \node[vertice] (x)  at (0,0)      {\(x\)};
+        \node[vertice] (y1) at (2.8,1.5)  {\(y_1\)};
+        \node[vertice] (y2) at (2.8,0)    {\(y_2\!:\!A\)};
+        \node[vertice] (y3) at (2.8,-1.5) {\(y_3\!:\!A\)};
+
+        \draw[->] (x.30) to[out=0,in=180] node[ruolo] {\(R\)} (y1.west);
+        \draw[->] (x.east) -- node[ruolo] {\(R\)} (y2.west);
+        \draw[->] (x.-30) to[out=0,in=180] node[ruolo] {\(R\)} (y3.west);
+    \end{tikzpicture}
+\end{center}
+
+L'interpretazione è:
+\begin{gather*}
+    \Delta^{\mathcal I}=\{x,y_1,y_2,y_3\}
+    \qquad A^{\mathcal I}=\{y_2,y_3\},\\
+    R^{\mathcal I}=\{(x,y_1),(x,y_2),(x,y_3)\}.
+\end{gather*}
+
+\subsubsection{Almeno tre successori: \((\geq 3\,R)\)}
+
+Il nodo \(x\) ha tre successori distinti tramite \(R\): \(y_1\), \(y_2\)
+e \(y_3\). Quindi:
+\[
+    x\in(\geq 3\,R)^{\mathcal I}.
+\]
+Qui \textbf{non imponiamo alcuna appartenenza a un concetto}. La scrittura
+senza qualificazione è un'abbreviazione di:
+\[
+    (\geq 3\,R)\equiv(\geq 3\,R.\top).
+\]
+Poiché \(\top\) comprende tutti gli elementi del dominio, si contano tutti
+i successori tramite \(R\).
+
+\subsubsection{Almeno due successori in \(A\): \((\geq 2\,R.A)\)}
+
+Dei tre successori di \(x\), solo \(y_2\) e \(y_3\) appartengono ad \(A\).
+Quindi:
+\[
+    x\in(\geq 2\,R.A)^{\mathcal I}.
+\]
+Questa volta contiamo \textbf{solo i successori tramite \(R\) che appartengono
+ad \(A\)}.
+
+\subsubsection{Non almeno tre successori in \(A\): \(\neg(\geq 3\,R.A)\)}
+
+I successori di \(x\) appartenenti ad \(A\) sono due, quindi non sono almeno tre:
+\[
+    x\in\bigl(\neg(\geq 3\,R.A)\bigr)^{\mathcal I}.
+\]
+Negare «almeno tre» significa dire \textbf{«al massimo due»}:
+\[
+    \neg(\geq 3\,R.A)\equiv(\leq 2\,R.A).
+\]
+
+\begin{observation}{Perché le tre condizioni della slide sono compatibili?}
+    \(x\) ha \textbf{tre successori in totale}, ma \textbf{solo due
+    appartengono ad \(A\)}.
+
+    Soddisfa quindi contemporaneamente \((\geq 3\,R)\), \((\geq 2\,R.A)\)
+    e \(\neg(\geq 3\,R.A)\). Le ultime due condizioni stabiliscono che i
+    successori in \(A\) sono \textbf{esattamente due}.
+\end{observation}
+
+\subsection{Terzo grafo: calcolare gli insiemi descritti dalle formule}
+
+Nelle ultime due slide i nodi hanno già le etichette \(d,e,f,g,b\).
+Le manteniamo. I due disegni rappresentano \textbf{lo stesso grafo}.
+
+\begin{center}
+    \begin{tikzpicture}[
+        x=0.21\linewidth, y=1cm, >=stealth,
+        vertice/.style={circle, draw=black!40, fill=black!4,
+                        minimum size=10mm, inner sep=2pt},
+        ruolo/.style={fill=white, inner sep=1.5pt, font=\small}
+    ]
+        \node[vertice] (d) at (0,0)     {\(d\!:\!A\)};
+        \node[vertice] (e) at (1,0)     {\(e\!:\!B\)};
+        \node[vertice] (f) at (2,0)     {\(f\!:\!A\)};
+        \node[vertice] (g) at (2,2.55)  {\(g\!:\!A\)};
+        \node[vertice] (b) at (3,-0.6)  {\(b\!:\!B\)};
+
+        \draw[->] (d.20) to[bend left=22] node[ruolo] {\(S\)} (e.160);
+        \draw[->] (e.200) to[bend left=22] node[ruolo] {\(R\)} (d.-20);
+        \draw[->] (e.50) to[out=55,in=180] node[ruolo,pos=.65] {\(S\)} (g.west);
+        \draw[->] (g.250) .. controls +(250:0.85cm) and +(290:0.85cm) ..
+                  node[below,font=\small] {\(S\)} (g.290);
+        \draw[->] (e.east) -- node[ruolo] {\(R\)} (f.west);
+        \draw[->] (f.east) to[out=0,in=180] node[ruolo] {\(R\)} (b.160);
+        \draw[->] (e.-45) .. controls +(0.13,-1.25) and +(-0.42,-0.55) ..
+                  node[ruolo,pos=.55] {\(R\)} (b.200);
+    \end{tikzpicture}
+\end{center}
+
+\subsubsection{Dominio, concetti e ruoli}
+
+\begin{gather*}
+    \Delta^{\mathcal I}=\{d,e,f,g,b\},\\
+    A^{\mathcal I}=\{d,f,g\}
+    \qquad B^{\mathcal I}=\{e,b\},\\
+    R^{\mathcal I}=\{(e,d),(e,f),(e,b),(f,b)\},\\
+    S^{\mathcal I}=\{(d,e),(e,g),(g,g)\}.
+\end{gather*}
+La coppia \((g,g)\) rappresenta \textbf{la freccia \(S\) che torna da \(g\)
+a sé stesso}.
+
+\subsubsection{Due passaggi tramite \(R\): \(\exists R.\exists R.\top\)}
+
+Cerchiamo i nodi dai quali possiamo percorrere \textbf{due frecce \(R\)
+consecutive}. Il punto di arrivo può essere qualsiasi elemento, perché
+\(\top^{\mathcal I}=\Delta^{\mathcal I}\).
+
+Nel grafo esiste questo percorso:
+\[
+    e\xrightarrow{R}f\xrightarrow{R}b.
+\]
+Nessun altro nodo permette due passaggi consecutivi tramite \(R\). Perciò:
+\[
+    (\exists R.\exists R.\top)^{\mathcal I}=\{e\}.
+\]
+
+\subsubsection{Esattamente un predecessore: \((=1\,R^{-})\)}
+
+Il \textbf{ruolo inverso} inverte la direzione delle coppie:
+\[
+    (u,v)\in(R^{-})^{\mathcal I}\iff(v,u)\in R^{\mathcal I}.
+\]
+Quindi contare i successori tramite \(R^{-}\) equivale a contare
+\textbf{i nodi da cui riceviamo una freccia \(R\)}.
+
+Il nodo \(d\) riceve una freccia \(R\) solo da \(e\). Anche \(f\) riceve
+una freccia \(R\) solo da \(e\). Invece, \(b\) ne riceve da due nodi
+distinti, \(e\) e \(f\), mentre \(e\) e \(g\) non ne ricevono nessuna.
+Quindi:
+\[
+    (=1\,R^{-})^{\mathcal I}=\{d,f\}.
+\]
+
+\subsubsection{Due passaggi tramite \(S\) fino ad \(A\): \(\exists S.\exists S.A\)}
+
+Cerchiamo i nodi dai quali possiamo seguire \textbf{due frecce \(S\)
+consecutive} e terminare in un nodo di \(A\).
+
+I percorsi che soddisfano questa condizione sono:
+\begin{gather*}
+    d\xrightarrow{S}e\xrightarrow{S}g,\\
+    e\xrightarrow{S}g\xrightarrow{S}g,\\
+    g\xrightarrow{S}g\xrightarrow{S}g.
+\end{gather*}
+Il punto finale è sempre \(g\), che appartiene ad \(A\). Quindi:
+\[
+    (\exists S.\exists S.A)^{\mathcal I}=\{d,e,g\}.
+\]
+
+\begin{observation}{Si può attraversare più volte lo stesso nodo}
+    Una catena esistenziale non richiede nodi tutti distinti. La freccia
+    da \(g\) a sé stesso può essere percorsa due volte: per questo anche
+    \(g\) soddisfa \(\exists S.\exists S.A\).
+\end{observation}
+
+\subsubsection{Tutti i successori tramite \(R\) in \(A\): \(\forall R.A\)}
+
+Il nodo \(e\) \textbf{non soddisfa} la condizione: ha due successori in \(A\),
+cioè \(d\) e \(f\), ma ha anche il successore \(b\), che non appartiene ad \(A\).
+
+Nemmeno \(f\) la soddisfa, perché ha una freccia \(R\) verso \(b\).
+
+I nodi \(d\), \(g\) e \(b\) \textbf{non hanno frecce \(R\) uscenti}.
+Soddisfano quindi la condizione per vacuità:
+\[
+    (\forall R.A)^{\mathcal I}=\{d,g,b\}.
+\]
+
+\begin{warning}{Il concetto \(A\) riguarda i nodi raggiunti}
+    \(\forall R.A\) non richiede che il nodo di partenza appartenga ad \(A\).
+    Richiede che appartengano ad \(A\) tutti i suoi successori tramite \(R\).
+
+    Per questo anche \(b\), che appartiene a \(B\), soddisfa la formula:
+    non ha successori tramite \(R\) che possano violarla.
+\end{warning}
+
+\subsubsection{Un successore tramite \(S\) che soddisfa \(\forall R.A\): \(\exists S.\forall R.A\)}
+
+Leggiamo la formula in due passaggi. Prima cerchiamo un successore tramite
+\(S\); poi controlliamo che \textbf{quel successore} soddisfi \(\forall R.A\).
+
+Il nodo \(e\) ha una freccia \(S\) verso \(g\), che soddisfa \(\forall R.A\).
+Anche \(g\) ha una freccia \(S\) verso \(g\) stesso. Quindi entrambi
+soddisfano la formula.
+
+Il nodo \(d\), invece, raggiunge tramite \(S\) solo \(e\), che non soddisfa
+\(\forall R.A\). I nodi \(f\) e \(b\) non hanno successori tramite \(S\),
+quindi non soddisfano la parte esistenziale. Otteniamo:
+\[
+    (\exists S.\forall R.A)^{\mathcal I}=\{e,g\}.
+\]
+
+\subsubsection{Almeno tre successori tramite \(R\): \((\geq 3\,R)\)}
+
+Il nodo \(e\) ha tre successori distinti tramite \(R\): \(d\), \(f\) e \(b\).
+
+Il nodo \(f\) ne ha uno, mentre gli altri non ne hanno. Quindi:
+\[
+    (\geq 3\,R)^{\mathcal I}=\{e\}.
+\]
