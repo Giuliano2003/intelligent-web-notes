@@ -411,10 +411,10 @@ Quindi estendiamo ricorsivamente l'interpretazione alle espressioni costruite me
         \(\neg C\) & \((\neg C)^{\mathcal I}=\Delta^{\mathcal I}\setminus C^{\mathcal I}\) \\
         \(\exists R.C\) &
             \(\{d\in\Delta^{\mathcal I}\mid
-              \exists e\in\Delta^{\mathcal I}.\,[(d,e)\in R^{\mathcal I}\land e\in C^{\mathcal I}]\}\) \\
+              \exists e\in\Delta^{\mathcal I},(d,e)\in R^{\mathcal I}\land e\in C^{\mathcal I}\)\} \\
         \(\forall R.C\) &
             \(\{d\in\Delta^{\mathcal I}\mid
-              \forall e\in\Delta^{\mathcal I}.\,[(d,e)\in R^{\mathcal I}\to e\in C^{\mathcal I}]\}\) \\
+              \forall e\in\Delta^{\mathcal I},(d,e)\in R^{\mathcal I}\to e\in C^{\mathcal I}\)\} \\
         \((\geq n\,R.C)\) &
             \(\{d\in\Delta^{\mathcal I}\mid
               \#\{e\in\Delta^{\mathcal I}\mid(d,e)\in R^{\mathcal I}\land e\in C^{\mathcal I}\}\geq n\}\) \\
@@ -424,7 +424,261 @@ Quindi estendiamo ricorsivamente l'interpretazione alle espressioni costruite me
     \end{tabular}
     \endgroup
 \end{center}
+Possiamo leggere,
+\[
+(\forall R.C)^{\mathcal I}
+=
+\left\{
+d\in\Delta^{\mathcal I}
+\mid
+\forall e\in\Delta^{\mathcal I},
+(d,e)\in R^{\mathcal I}\Rightarrow e\in C^{\mathcal I}
+\right\}
+\]
 
+L'insieme contiene tutti gli individui \(d\) del dominio tali che, per ogni individuo \(e\) del dominio, se \(d\) è collegato a \(e\) tramite \(R\), allora \(e\) appartiene al concetto \(C\).
+il \(\forall\) serve a verificare una proprietà su tutti gli \(e\), mentre l'insieme raccoglie tutti i \(d\) che superano questa verifica, la verifica è un implicazione, cioè:
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+$P$ & $Q$ & $P \Rightarrow Q$ \\
+\hline
+V & V & V \\
+V & F & F \\
+F & V & V \\
+F & F & V \\
+\hline
+\end{tabular}
+\end{center}
+Quindi, se l'antecedente dell'implicazione è vero e anche il conseguente è vero,
+la condizione risulta soddisfatta.
+
+Se invece l'antecedente è falso, l'implicazione risulta vera
+indipendentemente dal valore di verità del conseguente.
+Questo fenomeno prende il nome di \textbf{verità vacua}.
+
+Pertanto, un individuo $d$ appartiene all'insieme
+$(\forall R.C)^{\mathcal I}$ se, per ogni $e \in \Delta^{\mathcal I}$,
+l'implicazione risulta vera.
+
+È sufficiente che esista anche un solo individuo $e$ tale che
+$(d,e) \in R^{\mathcal I}$ ma $e \notin C^{\mathcal I}$
+affinché $d$ non appartenga all'insieme.
+
+
+Quello che puoi pensare, è vedere anche l'implicazione, come un OR,
+\[
+(\forall R.C)^{\mathcal I}
+=
+\left\{
+d\in\Delta^{\mathcal I}
+\mid
+\forall e\in\Delta^{\mathcal I},
+(d,e)\notin R^{\mathcal I}\lor e\in C^{\mathcal I}
+\right\}
+\]
+Quindi per ogni $e$, deve valere quella condizione, e si è giusto fallo valere per ogni $e$, perchè questo o è collegato a $d$ o meno
+Per comprendere questa definizione, analizziamo i due possibili casi:
+
+\begin{itemize}
+    \item \textbf{Caso 1: $(d,e)\notin R^{\mathcal I}$ (vero).}
+
+    Se $d$ non è collegato a $e$ tramite la relazione $R$,
+    la disgiunzione risulta vera indipendentemente
+    dall'appartenenza di $e$ al concetto $C$.
+
+    Questo corrisponde alla cosiddetta \textbf{verità vacua}
+    dell'implicazione originale: quando l'antecedente è falso,
+    l'implicazione è automaticamente vera.
+
+    \item \textbf{Caso 2: $(d,e)\notin R^{\mathcal I}$ (falso).}
+
+    In questo caso, $(d,e)\in R^{\mathcal I}$, ossia
+    $d$ è effettivamente collegato a $e$ tramite la relazione $R$.
+
+    Affinché la disgiunzione risulti vera, è necessario che
+    $e\in C^{\mathcal I}$.
+
+    Questa è proprio la condizione che vogliamo imporre:
+    \textbf{ogni individuo collegato a $d$ tramite $R$
+    deve appartenere al concetto $C$}.
+\end{itemize}
+
+\begin{example}{Differenza tra quantificatore esistenziale e universale}
+
+Consideriamo un'interpretazione $\mathcal I$ con dominio:
+
+\[
+\Delta^{\mathcal I}
+=
+\{Mario, Luigi, Giulia, Anna, Luca, Paolo\}
+\]
+
+Definiamo la relazione $R = haFiglio$ e il concetto $C = Medico$:
+
+\[
+R^{\mathcal I}
+=
+\{
+(Mario,Anna),
+(Mario,Luca),
+(Luigi,Paolo)
+\}
+\]
+
+\[
+C^{\mathcal I}=\{Anna,Paolo\}
+\]
+
+La situazione può essere rappresentata mediante il seguente grafo:
+
+\begin{center}
+\begin{tikzpicture}[
+    >=stealth,
+    every node/.style={
+        draw,
+        rounded corners,
+        minimum width=1.5cm,
+        minimum height=0.7cm,
+        align=center
+    },
+    medico/.style={fill=green!15,draw=green!60!black},
+    nonmedico/.style={fill=red!10,draw=red!60!black}
+]
+
+% Genitori
+\node (mario) at (0,2) {Mario};
+\node (luigi) at (5,2) {Luigi};
+\node (giulia) at (9,2) {Giulia};
+
+% Figli
+\node[medico] (anna) at (-1,0) {Anna};
+\node[nonmedico] (luca) at (1,0) {Luca};
+\node[medico] (paolo) at (5,0) {Paolo};
+
+% Relazioni
+\draw[->] (mario) -- (anna);
+\draw[->] (mario) -- (luca);
+\draw[->] (luigi) -- (paolo);
+
+% Legenda
+\node[medico] at (2,-1.5) {Medico};
+\node[nonmedico] at (5,-1.5) {Non medico};
+
+\end{tikzpicture}
+\end{center}
+
+\textbf{Quantificatore esistenziale: $\exists R.C$}
+
+Consideriamo l'insieme:
+
+\[
+(\exists R.C)^{\mathcal I}
+=
+\left\{
+d\in\Delta^{\mathcal I}
+\mid
+\exists e\in\Delta^{\mathcal I},
+(d,e)\in R^{\mathcal I}
+\land e\in C^{\mathcal I}
+\right\}
+\]
+\[
+\boxed{
+(\exists R.C)^{\mathcal I}
+=
+\{Mario,Luigi\}
+}
+\]
+
+\textbf{Quantificatore universale: $\forall R.C$}
+
+Consideriamo l'insieme:
+
+\[
+(\forall R.C)^{\mathcal I}
+=
+\left\{
+d\in\Delta^{\mathcal I}
+\mid
+\forall e\in\Delta^{\mathcal I},
+(d,e)\in R^{\mathcal I}
+\Rightarrow e\in C^{\mathcal I}
+\right\}
+\]
+
+Analizziamo il caso di Mario, fissando $d=Mario$.
+
+\begin{itemize}
+    \item \textbf{Prima verifica: $e=Anna$.}
+
+    \[
+    \underbrace{(Mario,Anna)\in R^{\mathcal I}}_{\text{Vero}}
+    \Rightarrow
+    \underbrace{Anna\in C^{\mathcal I}}_{\text{Vero}}
+    \]
+
+    L'implicazione è vera.
+
+    \item \textbf{Seconda verifica: $e=Luca$.}
+
+    \[
+    \underbrace{(Mario,Luca)\in R^{\mathcal I}}_{\text{Vero}}
+    \Rightarrow
+    \underbrace{Luca\in C^{\mathcal I}}_{\text{Falso}}
+    \]
+
+    L'implicazione è falsa.
+\end{itemize}
+
+Poiché il quantificatore è universale, la condizione
+deve essere vera per ogni individuo $e$ del dominio.
+
+È sufficiente una sola implicazione falsa per escludere Mario:
+
+\[
+Mario\notin(\forall R.C)^{\mathcal I}
+\]
+
+Consideriamo ora gli altri individui:
+\end{example}
+
+\begin{example}{Continuo}
+\begin{itemize}
+    \item \textbf{Luigi}: il suo unico collegamento tramite
+    $R$ è verso Paolo, che appartiene a $C^{\mathcal I}$.
+    Pertanto soddisfa la condizione universale.
+
+    \item \textbf{Giulia}: non possiede collegamenti tramite
+    $R$. L'implicazione è sempre vera per
+    \textbf{verità vacua}.
+
+    \item \textbf{Anna, Luca e Paolo}: non possiedono
+    collegamenti tramite $R$ e soddisfano anch'essi
+    la condizione per verità vacua.
+\end{itemize}
+
+Otteniamo quindi:
+
+\[
+\boxed{
+(\forall R.C)^{\mathcal I}
+=
+\{Luigi,Giulia,Anna,Luca,Paolo\}
+}
+\]
+
+\textbf{Conclusione.}
+
+Il quantificatore esistenziale richiede almeno un
+collegamento verso un individuo appartenente a $C$.
+
+Il quantificatore universale richiede invece che tutti
+i collegamenti esistenti tramite $R$ conducano a individui
+appartenenti a $C$, ammettendo anche l'assenza
+di collegamenti per verità vacua.
+
+\end{example}
 
 \section{Struttura di una Knowledge Base (KB)}
 
@@ -724,6 +978,8 @@ Ai \textbf{ruoli} associa gli insiemi delle coppie collegate dalle frecce:
     S^{\mathcal I}=\{(x_1,x_2),(x_2,x_3),(x_4,x_6),(x_5,x_6)\}.
 \end{gather*}
 
+\newpage
+
 \subsubsection{Un passaggio tramite \(S\): \(\exists S.B\)}
 
 Il nodo \(x_2\) ha una freccia \(S\) che arriva a \(x_3\), e \(x_3\)
@@ -735,8 +991,148 @@ Significa: \textbf{da \(x_2\) posso raggiungere almeno un elemento di \(B\)
 seguendo una freccia \(S\)}. Anche \(x_4\) e \(x_5\) soddisfano questa
 condizione, perché hanno una freccia \(S\) verso \(x_6\), che appartiene a \(B\).
 
-\subsubsection{Due passaggi tramite \(S\): \(\exists S.\exists S.B\)}
+\subsubsection{Due passaggi tramite $S$: $\exists S.\exists S.B$}
 
+Consideriamo l'espressione:
+
+\[
+\exists S.\exists S.B
+\]
+
+Per comprenderne il significato, è importante ricordare che
+$\exists S.B$ rappresenta esso stesso un \textbf{concetto},
+ottenuto applicando il costruttore esistenziale $\exists S$
+al concetto $B$.
+
+Possiamo quindi riscrivere l'espressione, esplicitando
+le parentesi:
+
+\[
+\exists S.(\exists S.B)
+\]
+
+La struttura è dunque della forma:
+
+\[
+\exists S.\underbrace{(\exists S.B)}_{\text{Nuovo concetto}}
+\]
+
+Questo significa che il costruttore esistenziale più esterno
+viene applicato al concetto costruito dall'espressione interna.
+
+\paragraph{Interpretazione semantica.}
+
+Per comprendere quali individui appartengono al concetto
+$\exists S.\exists S.B$, procediamo dall'interno verso l'esterno.
+
+\begin{enumerate}
+    \item \textbf{Primo passaggio: interpretazione di $\exists S.B$.}
+
+    Consideriamo inizialmente il concetto più interno, lo consideriamo in modo semantico, cioè vediamo la sua definizione:
+
+    \[
+    (\exists S.B)^{\mathcal I}
+    =
+    \left\{
+    e\in\Delta^{\mathcal I}
+    \mid
+    \exists f\in\Delta^{\mathcal I},
+    (e,f)\in S^{\mathcal I}
+    \land f\in B^{\mathcal I}
+    \right\}
+    \]
+
+    Questo insieme contiene tutti gli individui $e$ che,
+    attraverso la relazione $S$, sono collegati
+    \textbf{ad almeno un individuo appartenente a $B$}.
+
+    L'espressione $\exists S.B$ definisce quindi un nuovo
+    concetto, la cui estensione è l'insieme appena costruito.
+
+    \item \textbf{Secondo passaggio: interpretazione di
+    $\exists S.(\exists S.B)$.}
+
+    Applichiamo ora il costruttore esistenziale $\exists S$
+    al concetto ottenuto nel passaggio precedente:
+
+    \[
+    (\exists S.(\exists S.B))^{\mathcal I}
+    =
+    \left\{
+    d\in\Delta^{\mathcal I}
+    \mid
+    \exists e\in\Delta^{\mathcal I},
+    (d,e)\in S^{\mathcal I}
+    \land
+    e\in(\exists S.B)^{\mathcal I}
+    \right\}
+    \]
+
+    Questa volta cerchiamo gli individui $d$ che,
+    attraverso la relazione $S$, sono collegati
+    \textbf{ad almeno un individuo $e$ appartenente
+    al concetto $\exists S.B$}.
+
+    In altre parole, cerchiamo gli individui $d$
+    che possono raggiungere un individuo appartenente
+    a $B$ attraverso due collegamenti consecutivi
+    tramite la relazione $S$.
+\end{enumerate}
+
+\paragraph{Interpretazione complessiva.}
+
+Sostituendo la definizione del concetto interno
+nella formula esterna, otteniamo:
+
+\[
+\boxed{
+\begin{aligned}
+(\exists S.\exists S.B)^{\mathcal I}
+=
+\bigl\{
+d\in\Delta^{\mathcal I}
+\mid {}&
+\exists e,f\in\Delta^{\mathcal I}:\\
+& (d,e)\in S^{\mathcal I}
+\land (e,f)\in S^{\mathcal I}
+\land f\in B^{\mathcal I}
+\bigr\}
+\end{aligned}
+}
+\]
+
+Pertanto, un individuo $d$ appartiene al concetto
+$\exists S.\exists S.B$ se esistono due individui $e$ e $f$
+tali che:
+
+\[
+d\xrightarrow{S}e\xrightarrow{S}f
+\qquad\text{con}\qquad f\in B^{\mathcal I}.
+\]
+
+\begin{observation}{Ordine di interpretazione dei concetti annidati}
+    Quando abbiamo più costruttori annidati,
+    possiamo interpretare l'espressione
+    \textbf{dall'interno verso l'esterno}.
+
+    Prima determiniamo l'estensione del concetto
+    più interno, poi utilizziamo tale estensione
+    per interpretare il concetto più esterno.
+
+    Nel nostro caso, $\exists S.B$ individua
+    gli elementi che raggiungono direttamente
+    almeno un elemento di $B$ tramite $S$.
+
+    Successivamente, $\exists S.(\exists S.B)$
+    individua gli elementi che raggiungono tramite $S$
+    almeno uno degli elementi individuati
+    nel passaggio precedente.
+
+    Di conseguenza, l'espressione descrive
+    l'esistenza di un percorso formato da
+    \textbf{due collegamenti consecutivi tramite $S$},
+    che termina in un individuo appartenente a $B$.
+\end{observation}
 Partendo da \(x_1\) possiamo seguire questo percorso:
 \[
     x_1\xrightarrow{S}x_2\xrightarrow{S}x_3.
@@ -749,15 +1145,83 @@ L'espressione richiede \textbf{un primo passaggio tramite \(S\) e poi un
 secondo passaggio tramite \(S\), fino a un elemento di \(B\)}. Non richiede
 che il nodo intermedio appartenga a \(B\).
 
+Ricordati che la differenza principale è che:
+\[
+(\exists S.(\exists S.B))
+\]
+Esprime il concetto, in modo teorico, cioè si sta esprimendo che quello è un concetto non atomico
+\\
+Invece
+\[
+(\exists S.(\exists S.B))^{\mathcal I}
+\]
+Indica la sua definizione semantica matematica.
+
+
 \subsubsection{Combinare più condizioni: \(\exists R.(B\sqcap\forall R.A)\)}
 
-La formula
+Consideriamo il seguente concetto composto:
+
 \[
-    \exists R.(B\sqcap\forall R.A)
+\exists R.(B\sqcap\forall R.A)
 \]
-descrive chi ha almeno un successore tramite \(R\) che soddisfa entrambe
-le condizioni: \textbf{appartiene a \(B\)} e \textbf{tutti i suoi successori
-tramite \(R\) appartengono ad \(A\)}.
+
+Per comprenderne il significato, analizziamo
+l'espressione dall'interno verso l'esterno:
+
+\begin{enumerate}
+    \item \textbf{Quantificatore universale $\forall R.A$:}
+
+    Il concetto $\forall R.A$ individua tutti gli individui
+    che, se possiedono successori tramite la relazione $R$,
+    allora tali successori devono necessariamente
+    appartenere al concetto $A$.
+
+    Si noti che vengono inclusi anche gli individui
+    che non possiedono alcun successore tramite $R$,
+    per il principio della \textbf{verità vacua}.
+
+    \item \textbf{Intersezione $B\sqcap\forall R.A$:}
+
+    L'intersezione restringe ulteriormente
+    l'insieme individuato nel passaggio precedente.
+
+    In particolare, vengono selezionati soltanto
+    gli individui che soddisfano entrambe le condizioni:
+    \begin{itemize}
+        \item appartengono al concetto $B$;
+        \item tutti i loro eventuali successori tramite $R$
+        appartengono al concetto $A$.
+    \end{itemize}
+
+    Pertanto, il concetto $B\sqcap\forall R.A$
+    individua tutti gli individui appartenenti a $B$
+    che possiedono esclusivamente successori
+    tramite $R$ appartenenti ad $A$.
+
+    \item \textbf{Quantificatore esistenziale esterno
+    $\exists R.(B\sqcap\forall R.A)$:}
+
+    Infine, applichiamo il costruttore esistenziale
+    $\exists R$ al concetto ottenuto nel passaggio
+    precedente.
+
+    Vengono quindi individuati tutti gli individui
+    che possiedono \textbf{almeno un successore tramite $R$}
+    appartenente al concetto $B\sqcap\forall R.A$.
+
+    In altre parole, cerchiamo gli individui $d$
+    che sono collegati tramite $R$ ad almeno
+    un individuo $e$ tale che:
+    \begin{itemize}
+        \item $e$ appartiene al concetto $B$;
+        \item tutti gli eventuali successori di $e$
+        tramite $R$ appartengono al concetto $A$.
+    \end{itemize}
+\end{enumerate}
+
+\paragraph{Interpretazione complessiva.}
+
 
 Il nodo \(x_1\) soddisfa questa descrizione. Infatti, con una freccia \(R\)
 raggiunge \(x_3\), che appartiene a \(B\). Da \(x_3\) partono due frecce
@@ -766,13 +1230,6 @@ raggiunge \(x_3\), che appartiene a \(B\). Da \(x_3\) partono due frecce
     x_1\in\bigl(\exists R.(B\sqcap\forall R.A)\bigr)^{\mathcal I}.
 \]
 
-\begin{observation}{Leggere le parentesi}
-    In \(\exists R.(B\sqcap\forall R.A)\), le condizioni dentro le
-    parentesi riguardano il \textbf{nodo raggiunto tramite \(R\)}.
-
-    In questo esempio, è \(x_3\) che deve appartenere a \(B\) e avere
-    tutti i successori tramite \(R\) in \(A\).
-\end{observation}
 
 \subsubsection{Un nodo senza frecce uscenti: \(\forall R.\bot\) e \(\forall S.\bot\)}
 
@@ -794,6 +1251,9 @@ Poiché nessun elemento può appartenervi, questa condizione è soddisfatta
     Non ci sono successori che possano violare la condizione: è la
     \textbf{verità per vacuità}.
 \end{warning}
+
+\newpage
+
 
 \subsection{Secondo grafo: contare tutti i successori o solo quelli in \(A\)}
 
@@ -988,20 +1448,58 @@ Soddisfano quindi la condizione per vacuità:
 \end{warning}
 
 \subsubsection{Un successore tramite \(S\) che soddisfa \(\forall R.A\): \(\exists S.\forall R.A\)}
+Per comprenderne il significato, procediamo
+\textbf{dall'interno verso l'esterno}, distinguendo due passaggi.
 
-Leggiamo la formula in due passaggi. Prima cerchiamo un successore tramite
-\(S\); poi controlliamo che \textbf{quel successore} soddisfi \(\forall R.A\).
+\begin{enumerate}
+    \item \textbf{Primo passaggio: interpretazione di $\forall R.A$.}
 
-Il nodo \(e\) ha una freccia \(S\) verso \(g\), che soddisfa \(\forall R.A\).
-Anche \(g\) ha una freccia \(S\) verso \(g\) stesso. Quindi entrambi
-soddisfano la formula.
+    Individuiamo tutti gli individui del dominio che,
+    attraverso la relazione $R$, sono collegati
+    esclusivamente a individui appartenenti al concetto $A$.
 
-Il nodo \(d\), invece, raggiunge tramite \(S\) solo \(e\), che non soddisfa
-\(\forall R.A\). I nodi \(f\) e \(b\) non hanno successori tramite \(S\),
-quindi non soddisfano la parte esistenziale. Otteniamo:
-\[
-    (\exists S.\forall R.A)^{\mathcal I}=\{e,g\}.
-\]
+    Formalmente:
+
+    \[
+    (\forall R.A)^{\mathcal I}
+    =
+    \left\{
+    e\in\Delta^{\mathcal I}
+    \mid
+    \forall f\in\Delta^{\mathcal I},
+    (e,f)\in R^{\mathcal I}
+    \Rightarrow f\in A^{\mathcal I}
+    \right\}
+    \]
+
+    Si noti che appartengono a questo insieme anche gli
+    individui che non possiedono alcun successore tramite
+    $R$, per il principio della \textbf{verità vacua}.
+
+    \item \textbf{Secondo passaggio: interpretazione di
+    $\exists S.(\forall R.A)$.}
+
+    Una volta individuati gli elementi appartenenti
+    al concetto $\forall R.A$, cerchiamo tutti gli
+    individui del dominio che sono collegati tramite
+    la relazione $S$ ad \textbf{almeno uno degli individui
+    individuati nel passaggio precedente}.
+
+    Formalmente:
+
+    \[
+    (\exists S.\forall R.A)^{\mathcal I}
+    =
+    \left\{
+    d\in\Delta^{\mathcal I}
+    \mid
+    \exists e\in\Delta^{\mathcal I},
+    (d,e)\in S^{\mathcal I}
+    \land
+    e\in(\forall R.A)^{\mathcal I}
+    \right\}
+    \]
+\end{enumerate}
 
 \subsubsection{Almeno tre successori tramite \(R\): \((\geq 3\,R)\)}
 
