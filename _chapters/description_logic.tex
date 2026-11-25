@@ -207,9 +207,26 @@ Siano \(R\) e \(R'\) due ruoli.
     (il genitore del genitore è il nonno).
 \end{observation}
 
-\section{La semantica formale: cosa significano ma\-te\-ma\-ti\-ca\-men\-te le formule?}
-Ora vedremo la seconda componente di una logica descrittiva, la semantica.
-La semantica stabilisce come interpretare matematicamente i simboli e le espressioni del linguaggio.
+
+\section{La semantica formale: cosa significano matematicamente le formule?}
+
+Dopo aver definito la \textbf{sintassi} di una logica descrittiva, passiamo alla sua seconda componente fondamentale: la \textbf{semantica formale}.
+
+La semantica formale stabilisce come interpretare matematicamente tutti i simboli e le espressioni del linguaggio (cioè quello che abbiamo detto nella sezione precedente), attribuendo loro un significato preciso.
+
+\textbf{In altre parole, mentre la sintassi stabilisce quali espressioni possono essere costruite e come devono essere scritte, la semantica definisce il loro significato matematico.}
+
+\begin{observation}{}
+    nelle logiche descrittive, la semantica viene generalmente definita attraverso un'interpretazione \(\mathcal{I}\), che associa:
+    \begin{enumerate}
+        \item Ai nomi di concetto, insiemi di elementi del dominio.
+        \item Ai nomi di ruolo, relazioni binarie tra elementi del dominio.
+        \item Ai nomi di individuo, elementi del dominio.
+    \end{enumerate}
+Tuttavia, la semantica formale non si limita ad attribuire un significato matematico ai simboli atomici del linguaggio (quelli detti ora, cioè la tripla iniziale), ma definisce anche l'interpretazione delle espressioni complesse che possono essere costruite a partire da essi.
+\textbf{L'interpretazione viene quindi estesa induttivamente alle espressioni complesse, sulla base della loro struttura sintattica e del significato delle espressioni che le compongono.}
+\end{observation}
+
 \begin{definition}{Interpretazione}
     Per dare un significato matematico rigoroso a ogni simbolo si usa
     un'\textbf{interpretazione}
@@ -234,6 +251,7 @@ La semantica stabilisce come interpretare matematicamente i simboli e le espress
     \[
         a^{\mathcal I}\in\Delta^{\mathcal I}.
     \]
+    questo è quello che abbiamo fatto nell'osservazione, ad ogni simbolo della tripla, stiamo dando una definizione matematica.
 \end{definition}
 
 
@@ -680,181 +698,7 @@ di collegamenti per verità vacua.
 
 \end{example}
 
-\section{Struttura di una Knowledge Base (KB)}
 
-\begin{definition}{Base di conoscenza}
-    Una \textbf{base di conoscenza} (\emph{Knowledge Base}, KB) è un insieme
-    finito di \textbf{assiomi}, cioè affermazioni che descrivono le regole di
-    un determinato ambito.
-
-    Queste informazioni si organizzano in tre parti: \textbf{TBox},
-    \textbf{RBox} e \textbf{ABox}.
-\end{definition}
-
-\subsection{TBox (\emph{Terminological Box}): le regole sui concetti}
-
-\begin{definition}{TBox e inclusioni generali di concetto}
-    La \textbf{TBox} descrive le relazioni generali tra i concetti, cioè tra
-    le categorie di oggetti. Contiene le \textbf{inclusioni generali di
-    concetto} (GCI), che hanno la forma
-    \[
-        C\sqsubseteq D.
-    \]
-    Questa espressione significa che \textbf{ogni individuo che appartiene al
-    concetto \(C\) appartiene anche al concetto \(D\)}.
-\end{definition}
-
-\begin{observation}{Esempio di inclusione di concetto}
-    \[
-        \mathsf{Studente}\sqsubseteq\mathsf{Persona}.
-    \]
-    Significa che \textbf{ogni studente è una persona}. È una regola generale
-    che vale per tutti gli studenti.
-\end{observation}
-
-Dal punto di vista degli insiemi, in un'interpretazione \(\mathcal I\):
-\[
-    C^{\mathcal I}\subseteq D^{\mathcal I}.
-\]
-
-\subsection{RBox (\emph{Role Box}): le regole sulle relazioni}
-
-\begin{definition}{RBox}
-    La \textbf{RBox} descrive le proprietà dei ruoli, cioè delle relazioni tra
-    individui. Può contenere:
-    \begin{itemize}
-        \item inclusioni di ruolo;
-        \item dichiarazioni di funzionalità;
-        \item transitività.
-    \end{itemize}
-\end{definition}
-
-\subsubsection{Inclusioni di ruolo}
-
-\begin{definition}{Inclusione di ruolo}
-    Un'inclusione di ruolo ha la forma
-    \[
-        R\sqsubseteq R'.
-    \]
-    Significa che \textbf{ogni coppia di individui collegata da \(R\) è
-    collegata anche da \(R'\)}.
-\end{definition}
-\begin{observation}{Esempio di inclusione di ruolo}
-    \[
-        \mathsf{haPadre}\sqsubseteq\mathsf{haGenitore}.
-    \]
-    Se Mario ha Luigi come padre, allora Mario ha Luigi anche come genitore.
-\end{observation}
-
-\subsubsection{Ruoli funzionali}
-
-\begin{definition}{Funzionalità di un ruolo}
-    La dichiarazione
-    \[
-        \operatorname{func}(R)
-    \]
-    stabilisce che \textbf{ogni individuo può essere collegato tramite \(R\)
-    ad al massimo un individuo distinto}.
-\end{definition}
-\begin{observation}{Esempio di ruolo funzionale}
-    \[
-        \operatorname{func}(\mathsf{haMadreBiologica}).
-    \]
-    Significa che ogni individuo può avere \textbf{al massimo una madre biologica}.
-\end{observation}
-\begin{warning}{«Al massimo uno» non significa «esattamente uno»}
-    La funzionalità impedisce di avere due individui distinti come destinazione
-    dello stesso ruolo, ma \textbf{non impone che una relazione esista}.
-\end{warning}
-
-
-\subsubsection{Ruoli transitivi}
-
-\begin{definition}{Transitività di un ruolo}
-    La dichiarazione
-    \[
-        \operatorname{trans}(R)
-    \]
-    stabilisce che, se \(a\) è collegato a \(b\) tramite \(R\) e \(b\) è
-    collegato a \(c\) tramite \(R\), allora anche \(a\) è collegato a \(c\)
-    tramite \(R\):
-    \[
-        R(a,b)\land R(b,c)\ \Rightarrow\ R(a,c).
-    \]
-\end{definition}
-\begin{observation}{Esempio di ruolo transitivo}
-    Il ruolo \(\mathsf{haAntenato}\) è transitivo. Se Luigi è un antenato di
-    Mario e Giovanni è un antenato di Luigi, allora \textbf{Giovanni è anche
-    un antenato di Mario}. In OWL: \texttt{owl:TransitiveProperty}.
-\end{observation}
-
-\subsection{ABox (\emph{Assertion Box}): i fatti sui singoli individui}
-
-\begin{definition}{ABox}
-    La \textbf{ABox} contiene le \textbf{asserzioni}, cioè le affermazioni
-    che riguardano individui specifici, come \(\mathsf{mario}\) o \(\mathsf{luigi}\).
-\end{definition}
-
-\subsubsection{Asserzioni di concetto}
-
-\begin{definition}{Asserzione di concetto}
-    Un'asserzione di concetto ha la forma
-    \[
-        C(a).
-    \]
-    Significa che \textbf{l'individuo \(a\) appartiene al concetto \(C\)}.
-\end{definition}
-\begin{observation}{Esempio di asserzione di concetto}
-    \[
-        \mathsf{Studente}(\mathsf{mario}).
-    \]
-    Questa affermazione dice che \textbf{Mario è uno studente}.
-    In RDF: \texttt{rdf:type}.
-\end{observation}
-
-\subsubsection{Asserzioni di ruolo}
-
-\begin{definition}{Asserzione di ruolo}
-    Un'asserzione di ruolo ha la forma
-    \[
-        R(a,b).
-    \]
-    Significa che \textbf{l'individuo \(a\) è collegato all'individuo \(b\)
-    tramite il ruolo \(R\)}.
-\end{definition}
-\begin{observation}{Esempio di asserzione di ruolo}
-    \[
-        \mathsf{haAmico}(\mathsf{mario},\mathsf{luigi}).
-    \]
-    Questa affermazione dice che \textbf{Mario ha Luigi come amico}.
-\end{observation}
-
-\begin{observation}{Come si usano insieme queste informazioni?}
-    Nella \textbf{TBox} possiamo avere la regola generale
-    \(\mathsf{Studente}\sqsubseteq\mathsf{Persona}\).
-
-    Nella \textbf{ABox} possiamo avere il fatto \(\mathsf{Studente}(\mathsf{mario})\).
-
-    Combinando queste informazioni, possiamo \textbf{dedurre che Mario è
-    una persona}, cioè \(\mathsf{Persona}(\mathsf{mario})\).
-\end{observation}
-La Knowledge Base quindi \(\mathcal K\) contiene un insieme di assiomi che rappresentano le conoscenze che assumiamo vere sul dominio.
-\textbf{Tuttavia, non è detto che questi assiomi siano veri in qualsiasi interpretazione.}
-
-
-Infatti:
-\begin{itemize}
-    \item Se un'interpretazione \(\mathcal I\) soddisfa tutti gli assiomi della KB, allora è un modello della KB:
-    \[
-    \mathcal I\models\mathcal K
-    \]
-    (poi piu in la vedremo la definizione formale, per il momento ti basta sapere questo.)
-    \item Se un'interpretazione non è un modello della KB:
-    \[
-\mathcal I\not\models\mathcal K
-    \]
-\end{itemize}
-La KB specifica ciò che vogliamo sia vero (ma non tutti le interpretazioni possono soddisfare), mentre le interpretazioni rappresentano i possibili significati matematici dei simboli. I modelli sono precisamente quelle interpretazioni in cui tutti gli assiomi della KB risultano veri.
 \section{Come leggere i nomi delle Logiche Descrittive}
 
 I nomi delle DL sono acronimi che indicano quali «strumenti» o operatori
@@ -1508,4 +1352,491 @@ Il nodo \(e\) ha tre successori distinti tramite \(R\): \(d\), \(f\) e \(b\).
 Il nodo \(f\) ne ha uno, mentre gli altri non ne hanno. Quindi:
 \[
     (\geq 3\,R)^{\mathcal I}=\{e\}.
+\]
+
+\section{Calcolo}
+\subsection{Struttura di una Knowledge Base (KB)}
+
+\begin{definition}{Base di conoscenza}
+    Una \textbf{base di conoscenza} (\emph{Knowledge Base}, KB) è un insieme
+    finito di \textbf{assiomi}, cioè affermazioni che descrivono le regole di
+    un determinato ambito.
+
+    Queste informazioni si organizzano in tre parti: \textbf{TBox},
+    \textbf{RBox} e \textbf{ABox}.
+\end{definition}
+
+\subsection{TBox (\emph{Terminological Box}): le regole sui concetti}
+
+\begin{definition}{TBox e inclusioni generali di concetto}
+    La \textbf{TBox} descrive le relazioni generali tra i concetti, cioè tra
+    le categorie di oggetti. Contiene le \textbf{inclusioni generali di
+    concetto} (GCI), che hanno la forma
+    \[
+        C\sqsubseteq D.
+    \]
+    Questa espressione significa che \textbf{ogni individuo che appartiene al
+    concetto \(C\) appartiene anche al concetto \(D\)}.
+\end{definition}
+
+\begin{observation}{Esempio di inclusione di concetto}
+    \[
+        \mathsf{Studente}\sqsubseteq\mathsf{Persona}.
+    \]
+    Significa che \textbf{ogni studente è una persona}. È una regola generale
+    che vale per tutti gli studenti.
+\end{observation}
+
+Dal punto di vista degli insiemi, in un'interpretazione \(\mathcal I\):
+\[
+    C^{\mathcal I}\subseteq D^{\mathcal I}.
+\]
+
+\subsection{RBox (\emph{Role Box}): le regole sulle relazioni}
+
+\begin{definition}{RBox}
+    La \textbf{RBox} descrive le proprietà dei ruoli, cioè delle relazioni tra
+    individui. Può contenere:
+    \begin{itemize}
+        \item inclusioni di ruolo;
+        \item dichiarazioni di funzionalità;
+        \item transitività.
+    \end{itemize}
+\end{definition}
+
+\subsubsection{Inclusioni di ruolo}
+
+\begin{definition}{Inclusione di ruolo}
+    Un'inclusione di ruolo ha la forma
+    \[
+        R\sqsubseteq R'.
+    \]
+    Significa che \textbf{ogni coppia di individui collegata da \(R\) è
+    collegata anche da \(R'\)}.
+\end{definition}
+\begin{observation}{Esempio di inclusione di ruolo}
+    \[
+        \mathsf{haPadre}\sqsubseteq\mathsf{haGenitore}.
+    \]
+    Se Mario ha Luigi come padre, allora Mario ha Luigi anche come genitore.
+\end{observation}
+
+\subsubsection{Ruoli funzionali}
+
+\begin{definition}{Funzionalità di un ruolo}
+    La dichiarazione
+    \[
+        \operatorname{func}(R)
+    \]
+    stabilisce che \textbf{ogni individuo può essere collegato tramite \(R\)
+    ad al massimo un individuo distinto}.
+\end{definition}
+\begin{observation}{Esempio di ruolo funzionale}
+    \[
+        \operatorname{func}(\mathsf{haMadreBiologica}).
+    \]
+    Significa che ogni individuo può avere \textbf{al massimo una madre biologica}.
+\end{observation}
+\begin{warning}{«Al massimo uno» non significa «esattamente uno»}
+    La funzionalità impedisce di avere due individui distinti come destinazione
+    dello stesso ruolo, ma \textbf{non impone che una relazione esista}.
+\end{warning}
+
+
+\subsubsection{Ruoli transitivi}
+
+\begin{definition}{Transitività di un ruolo}
+    La dichiarazione
+    \[
+        \operatorname{trans}(R)
+    \]
+    stabilisce che, se \(a\) è collegato a \(b\) tramite \(R\) e \(b\) è
+    collegato a \(c\) tramite \(R\), allora anche \(a\) è collegato a \(c\)
+    tramite \(R\):
+    \[
+        R(a,b)\land R(b,c)\ \Rightarrow\ R(a,c).
+    \]
+\end{definition}
+\begin{observation}{Esempio di ruolo transitivo}
+    Il ruolo \(\mathsf{haAntenato}\) è transitivo. Se Luigi è un antenato di
+    Mario e Giovanni è un antenato di Luigi, allora \textbf{Giovanni è anche
+    un antenato di Mario}. In OWL: \texttt{owl:TransitiveProperty}.
+\end{observation}
+
+\subsection{ABox (\emph{Assertion Box}): i fatti sui singoli individui}
+
+\begin{definition}{ABox}
+    La \textbf{ABox} contiene le \textbf{asserzioni}, cioè le affermazioni
+    che riguardano individui specifici, come \(\mathsf{mario}\) o \(\mathsf{luigi}\).
+\end{definition}
+
+\subsubsection{Asserzioni di concetto}
+
+\begin{definition}{Asserzione di concetto}
+    Un'asserzione di concetto ha la forma
+    \[
+        C(a).
+    \]
+    Significa che \textbf{l'individuo \(a\) appartiene al concetto \(C\)}.
+\end{definition}
+\begin{observation}{Esempio di asserzione di concetto}
+    \[
+        \mathsf{Studente}(\mathsf{mario}).
+    \]
+    Questa affermazione dice che \textbf{Mario è uno studente}.
+    In RDF: \texttt{rdf:type}.
+\end{observation}
+
+\subsubsection{Asserzioni di ruolo}
+
+\begin{definition}{Asserzione di ruolo}
+    Un'asserzione di ruolo ha la forma
+    \[
+        R(a,b).
+    \]
+    Significa che \textbf{l'individuo \(a\) è collegato all'individuo \(b\)
+    tramite il ruolo \(R\)}.
+\end{definition}
+\begin{observation}{Esempio di asserzione di ruolo}
+    \[
+        \mathsf{haAmico}(\mathsf{mario},\mathsf{luigi}).
+    \]
+    Questa affermazione dice che \textbf{Mario ha Luigi come amico}.
+\end{observation}
+
+\begin{observation}{Come si usano insieme queste informazioni?}
+    Nella \textbf{TBox} possiamo avere la regola generale
+    \(\mathsf{Studente}\sqsubseteq\mathsf{Persona}\).
+
+    Nella \textbf{ABox} possiamo avere il fatto \(\mathsf{Studente}(\mathsf{mario})\).
+
+    Combinando queste informazioni, possiamo \textbf{dedurre che Mario è
+    una persona}, cioè \(\mathsf{Persona}(\mathsf{mario})\).
+\end{observation}
+La Knowledge Base quindi \(\mathcal K\) contiene un insieme di assiomi che rappresentano le conoscenze che assumiamo vere sul dominio.
+\textbf{Tuttavia, non è detto che questi assiomi siano veri in qualsiasi interpretazione.}
+
+
+Infatti:
+\begin{itemize}
+    \item Se un'interpretazione \(\mathcal I\) soddisfa tutti gli assiomi della KB, allora è un modello della KB:
+    \[
+    \mathcal I\models\mathcal K
+    \]
+    (poi piu in la vedremo la definizione formale, per il momento ti basta sapere questo.)
+    \item Se un'interpretazione non è un modello della KB:
+    \[
+\mathcal I\not\models\mathcal K
+    \]
+\end{itemize}
+La KB specifica ciò che vogliamo sia vero (ma non tutti le interpretazioni possono soddisfare), mentre le interpretazioni rappresentano i possibili significati matematici dei simboli. I modelli sono precisamente quelle interpretazioni in cui tutti gli assiomi della KB risultano veri.
+
+\begin{definition}{$Ax$}
+    $Ax$ indica un \textbf{assioma generico}, cioè una formula logica che esprime una regola, un vincolo o un fatto.
+
+    Ad esempio,$\mathsf{Vegetable}\sqsubseteq\mathsf{Food}$ è un'assioma che esprime la regola "Ogni verdura è un alimento".
+
+    Tutte le inclusioni di ruolo, di concetto, o tutte le asserzioni di ruolo o di concetto, sono delle $Ax$.
+\end{definition}
+
+
+\begin{definition}{Modello di una KB, $\mathcal{I} \models KB$}
+    Un'interpretazione $\mathcal{I}$ è detta \textbf{modello} di una
+    Knowledge Base $KB$ se e solo se soddisfa ($\models$) tutti gli assiomi
+    contenuti nella $KB$.
+
+    Formalmente:
+    \[
+        \mathcal{I} \models KB
+        \iff
+        \forall Ax \in KB, \quad \mathcal{I} \models Ax.
+    \]
+\end{definition}
+
+
+\begin{observation}{}
+    Dire che un'interpretazione $\mathcal{I}$ soddisfa un assioma
+    $Ax$, ossia
+    \[
+        \mathcal{I} \models Ax,
+    \]
+    significa che l'assioma $Ax$ risulta vero sotto l'interpretazione
+    $\mathcal{I}$.
+
+    Se tutti gli assiomi della $KB$ risultano veri sotto la stessa
+    interpretazione $\mathcal{I}$, allora tale interpretazione
+    è detta \textbf{modello della KB}.
+\end{observation}
+
+
+\begin{definition}{Conseguenza semantica, $KB \models Ax$ }
+    Un assioma $Ax$ è detto \textbf{conseguenza semantica} di una
+    Knowledge Base $KB$ se e solo se viene soddisfatto da tutti
+    i possibili modelli della $KB$.
+
+    Formalmente:
+    \[
+        KB \models Ax
+        \iff
+        \forall \mathcal{I}, \quad
+        \mathcal{I} \models KB
+        \implies
+        \mathcal{I} \models Ax.
+    \]
+\end{definition}
+
+
+\newpage
+\subsubsection{Requisiti dei motori di inferenza (Inference Engines)}
+
+\begin{observation}{}
+\textbf{Inferire} significa ricavare una conclusione a partire dagli assiomi della KB, applicando una
+regola di ragionamento.
+\end{observation}
+
+I software che effettuano ragionamenti sulle ontologie, detti
+\textbf{reasoner} (o motori di inferenza), devono soddisfare due
+proprietà fondamentali:
+
+\begin{itemize}
+    \item \textbf{Correttezza (Soundness):} il motore di inferenza
+    deve inferire \textbf{solamente} gli assiomi che sono
+    effettivamente conseguenze semantiche della $KB$.
+
+    Formalmente:
+    \[
+        KB \vdash Ax \implies KB \models Ax.
+    \]
+
+    \item \textbf{Completezza (Completeness):} il motore di inferenza
+    deve essere in grado di inferire \textbf{tutti} gli assiomi
+    che sono conseguenze semantiche della $KB$.
+
+    Formalmente:
+    \[
+        KB \models Ax \implies KB \vdash Ax.
+    \]
+\end{itemize}
+
+Dove:
+\begin{itemize}
+    \item $KB \vdash Ax$ \textbf{indica che l'assioma $Ax$ è derivabile
+    dalla $KB$ mediante il sistema di inferenza considerato;}
+    \item $KB \models Ax$ indica che l'assioma $Ax$ è una
+    conseguenza semantica della $KB$.
+\end{itemize}
+
+Pertanto, se un motore di inferenza è sia corretto sia completo,
+allora vale la seguente equivalenza:
+\[
+    \boxed{KB \vdash Ax \iff KB \models Ax}
+\]
+
+
+\subsection{Vantaggio della riduzione dei reasoning tasks}
+    Un reasoner ha il compito di risolvere diversi problemi di
+    ragionamento, detti \textbf{reasoning tasks}.
+
+    I reasoning tasks sono problemi di ragionamento che un reasoner deve risolvere a partire dalla conoscenza formalizzata in una Knowledge Base (\(KB\)).
+
+    Nelle logiche descrittive sufficientemente espressive,
+    tuttavia, \textbf{i principali reasoning tasks possono essere
+    ridotti l'uno all'altro}.
+
+    Questa proprietà ci permette di sviluppare un reasoner
+    che \textbf{implementa direttamente gli algoritmi risolutivi
+    soltanto per alcuni task fondamentali}.
+
+    Quando viene richiesto di risolvere un task per il quale
+    non \textbf{è stato implementato un algoritmo risolutivo specifico,
+    è sufficiente ricondurlo, mediante un'opportuna riduzione,
+    a un task che il reasoner è già in grado di risolvere}.
+
+    \textbf{Il vantaggio consiste quindi nel fatto che non è
+    necessario progettare un algoritmo risolutivo specifico
+    per ciascun reasoning task, ma è possibile concentrare
+    gli sforzi sull'implementazione e sull'ottimizzazione
+    di pochi algoritmi fondamentali.}
+
+
+
+\newpage
+\subsubsection{Principali Reasoning Task}
+I principali reasoning task, di cui abbiamo accenato anche prima, sono principalmente:
+
+
+\begin{table}[htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.8}
+    \begin{tabular}{|p{0.27\textwidth}|p{0.24\textwidth}|p{0.39\textwidth}|}
+        \hline
+        \textbf{Reasoning Task} &
+        \textbf{Formula logica} &
+        \textbf{Definizione semantica} \\
+        \hline
+
+        \textbf{1. Sussunzione}
+        \newline
+        \textit{(Subsumption)}
+        &
+        $KB \models C \sqsubseteq D$?
+        &
+        $\displaystyle
+        \forall \mathcal{I}, \quad
+        \mathcal{I} \models KB
+        \implies
+        C^{\mathcal{I}} \subseteq D^{\mathcal{I}}$
+        \\
+        \hline
+
+        \textbf{2. Coerenza della KB}
+        \newline
+        \textit{(KB Consistency)}
+        &
+        $KB \not\models \top \sqsubseteq \bot$?
+        &
+        $\displaystyle
+        \exists \mathcal{I} :
+        \mathcal{I} \models KB$
+        \\
+        \hline
+
+        \textbf{3. Coerenza del concetto}
+        \newline
+        \textit{(Concept Consistency / Satisfiability)}
+        &
+        $KB \not\models C \sqsubseteq \bot$?
+        &
+        $\displaystyle
+        \exists \mathcal{I} :
+        \mathcal{I} \models KB
+        \land
+        C^{\mathcal{I}} \neq \emptyset$
+        \\
+        \hline
+
+        \textbf{4. Controllo di istanza}
+        \newline
+        \textit{(Instance Checking)}
+        &
+        $KB \models C(a)$?
+        \newline
+        oppure
+        \newline
+        $KB \models R(a,b)$?
+        &
+        $\displaystyle
+        \forall \mathcal{I}, \quad
+        \mathcal{I} \models KB
+        \implies
+        a^{\mathcal{I}} \in C^{\mathcal{I}}$
+        \newline
+        oppure
+        \newline
+        $\displaystyle
+        \forall \mathcal{I}, \quad
+        \mathcal{I} \models KB
+        \implies
+        (a^{\mathcal{I}},b^{\mathcal{I}})
+        \in R^{\mathcal{I}}$
+        \\
+        \hline
+    \end{tabular}
+    \caption{Principali reasoning tasks e relative definizioni semantiche.}
+    \label{tab:reasoning_tasks}
+\end{table}
+
+\begin{observation}
+    Per ottenere la definizione semantica, quello che si fa è (considero la prima, poi il procedimento è uguale):
+    \[
+KB\models C\sqsubseteq D.
+\]
+
+Per definizione di conseguenza semantica:
+\[
+\iff
+\forall\mathcal I,\quad
+(\mathcal I\models KB\implies
+\mathcal I\models C\sqsubseteq D).
+\]
+
+Tuttavia, grazie alla definizione di soddisfazione, sappiamo che:
+\[
+\mathcal I\models C\sqsubseteq D
+\iff
+C^{\mathcal I}\subseteq D^{\mathcal I}.
+\]
+\end{observation}
+
+\subsubsection{I meccanismi di riduzione}
+La riduzione si basa su precise equivalenze logiche. Di seguito sono illustrati i passaggi
+fondamentali, per la riduzione fra i 4 problemi principali. 
+\paragraph{Da Sussunzione a Coerenza del Concetto}
+L'idea è che vogliamo risolvere il task di sussunzione, ma senza utilizzare direttamente un algoritmo di sussunzione. Vogliamo invece sfruttare un algoritmo che sappia già risolvere il task di soddisfacibilità di un concetto (Concept Satisfiability)
+\begin{observation}{}
+    Per questa riduzione, useremo una regola che conosciamo dalla teoria degli insiemi, cioè
+    \[
+    A \subseteq B \Leftrightarrow A \cup \neg B = \emptyset
+    \]
+    Cioè questo significa:
+    \begin{enumerate}
+        \item Il membro a sinistra significa che ogni elemento di $A$ appartiene anche a $B$.
+        \item Il membro di destra identifica solo gli elementi di A e non di B, quindi gli elementi esclusivamente di $A$, questo deve essere vuoto, perchè se sono sottoinsiemi, $A$ non deve avere nessun elemento esclusivo.
+    \end{enumerate}
+\end{observation}
+Quindi supponiamo che ci viene dato il seguente task
+\[
+KB\models C\sqsubseteq D.
+\]
+
+Dalla definizione di conseguenza semantica sappiamo che ciò equivale a verificare:
+\[
+\forall\mathcal I,\quad
+\mathcal I\models KB
+\implies C^{\mathcal I}\subseteq D^{\mathcal I}.
+\]
+
+pplicando la semantica formale dell'intersezione, otteniamo:
+\[
+\boxed{
+C^{\mathcal I}\subseteq D^{\mathcal I}
+\iff
+(C\sqcap\neg D)^{\mathcal I}=\emptyset
+}
+\]
+
+Applicando la definizione semantica:
+\[
+\iff
+\forall\mathcal I,\quad
+\mathcal I\models KB
+\implies C^{\mathcal I}\subseteq D^{\mathcal I}
+\]
+
+Utilizzando l'equivalenza insiemistica appena vista:
+\[
+\iff
+\forall\mathcal I,\quad
+\mathcal I\models KB
+\implies(C\sqcap\neg D)^{\mathcal I}=\emptyset
+\]
+
+Ciò equivale a dire che non esiste alcun modello della \(KB\) nel quale il concetto \(C\sqcap\neg D\) sia non vuoto:
+\[
+\iff
+\neg\exists\mathcal I:
+\bigl(\mathcal I\models KB
+\land
+(C\sqcap\neg D)^{\mathcal I}\neq\emptyset\bigr).
+\]
+
+Ma questa è esattamente la negazione della definizione di soddisfacibilità di un concetto rispetto alla \(KB\).
+
+Abbiamo quindi ottenuto la regola di riduzione:
+\[
+\boxed{
+KB\models C\sqsubseteq D
+\iff
+KB\models(C\sqcap\neg D)\sqsubseteq\bot
+}
 \]
