@@ -2133,7 +2133,7 @@ concetti fondamentali:
 
 \paragraph{Tautologie di equivalenza tra concetti}
 
-Se un assioma di equivalenza tra due concetti $C$ e $D$ (si indica con le tre frecce orizzontali e significa che i due concetti sono uguali)
+Se un assioma di equivalenza tra due concetti $C$ e $D$ (si indica con le tre frecce orizzontali e significa che i due concetti sono uguali, queste tre freccie è chiamata "definizione" ed è un assioma che vedremo piu avanti)
 è una tautologia, ossia:
 \[
     \models C \equiv D,
@@ -2404,3 +2404,192 @@ allora:
     \implies
     (a^{\mathcal{I}},c^{\mathcal{I}}) \in R^{\mathcal{I}}.
 \]
+
+\newpage
+
+\subsection{Terminologia nelle logiche descrittive}
+
+Una \textbf{terminologia}, anche detta \textbf{TBox strutturata},
+è un \textbf{insieme di definizioni che permettono di esprimere il
+significato di concetti atomici attraverso altri concetti e ruoli
+della Logica Descrittiva}.
+
+Ricordiamo che la segnatura di una Logica Descrittiva è
+rappresentata dalla tripla:
+\[
+    \Sigma = (N_C, N_R, N_I)
+\]
+dove:
+\begin{itemize}
+    \item $N_C$ è l'insieme dei nomi dei concetti atomici;
+    \item $N_R$ è l'insieme dei nomi dei ruoli;
+    \item $N_I$ è l'insieme dei nomi degli individui.
+\end{itemize}
+
+La segnatura stabilisce quali simboli atomici possono essere
+utilizzati nella Logica Descrittiva, mentre la terminologia
+permette di \textbf{definire il significato di alcuni concetti atomici
+attraverso altri concetti}.
+
+\subsubsection{Definizioni e requisiti di una terminologia}
+
+Una \textbf{definizione} è un assioma di equivalenza della forma:
+\[
+    A \equiv C
+\]
+dove:
+\begin{itemize}
+    \item $A \in N_C$ è un concetto atomico della segnatura,
+    ossia il concetto che si vuole definire;
+    \item $C$ è un concetto della Logica Descrittiva,
+    \textbf{eventualmente complesso}, costruito utilizzando i simboli
+    della segnatura e i costruttori della logica
+\end{itemize}
+Ricordiamo che come già osservato all'inizio di questo paragrafo:
+\begin{observation}{Concetti atomici e complessi}
+    Nelle Logiche Descrittive distinguiamo due tipologie
+    di concetti:
+    \begin{enumerate}
+        \item \textbf{Concetti atomici}: sono i nomi di
+        concetto appartenenti all'insieme $N_C$.
+        Rappresentano i concetti primitivi del linguaggio,
+        non costruiti mediante operatori logici.
+
+        \item \textbf{Concetti complessi (non atomici)}:
+        sono espressioni costruite applicando i
+        \textbf{costruttori logici} (come l'intersezione) a concetti atomici
+        o ad altri concetti complessi.
+    \end{enumerate}
+\end{observation}
+
+
+\begin{definition}{Terminologia}
+    Un insieme di definizioni è una terminologia se \textbf{nessun concetto atomico compare più
+    di una volta a sinistra} di una definizione.
+
+    In altre parole, non possiamo dare due definizioni dello stesso nome.
+\end{definition}
+
+\begin{observation}{}
+    Un concetto atomico rimane tale dal punto di vista
+    sintattico anche quando viene definito, all'interno
+    della terminologia, mediante un concetto complesso.
+
+    Ad esempio, consideriamo la definizione:
+    \[
+        \mathsf{Woman} \equiv
+        \mathsf{Person} \sqcap \mathsf{Female}.
+    \]
+
+    Il concetto $\mathsf{Woman}$ continua ad essere un
+    concetto atomico appartenente a $N_C$, mentre
+    $\mathsf{Person} \sqcap \mathsf{Female}$ è un concetto
+    complesso.
+\end{observation}
+
+\subsubsection{Concetti di base e concetti definiti}
+
+Data una terminologia $\mathcal{T}$, possiamo distinguere
+i concetti atomici della segnatura in due categorie:
+
+\begin{itemize}
+    \item \textbf{Concetti di base (Base Concepts)}:
+    sono i concetti atomici che non compaiono mai nella parte
+    sinistra (LHS) di una definizione della terminologia.
+
+    Rappresentano i concetti fondamentali a partire dai quali
+    possono essere definiti altri concetti.
+
+    \item \textbf{Concetti definiti (Defined Concepts)}:
+    sono i concetti atomici che compaiono nella parte
+    sinistra (LHS) di una definizione della terminologia.
+
+    Il loro significato viene espresso attraverso concetti
+    di base, altri concetti definiti ed eventualmente ruoli.
+\end{itemize}
+
+\begin{observation}{}
+    Sia i concetti di base sia i concetti definiti sono
+    concetti atomici appartenenti alla segnatura della
+    Logica Descrittiva.
+
+    La distinzione tra concetti di base e concetti definiti
+    non dipende dalla segnatura, ma dalla terminologia
+    $\mathcal{T}$ che si sta considerando.
+
+    Di conseguenza, uno stesso concetto atomico può essere
+    un concetto di base in una terminologia e un concetto
+    definito in un'altra terminologia, pur mantenendo
+    invariata la segnatura.
+\end{observation}
+
+\subsubsection{Esempio di una terminologia}
+
+Consideriamo una Logica Descrittiva caratterizzata dai
+seguenti insiemi di concetti atomici e ruoli:
+\[
+\begin{aligned}
+    N_C = \{&
+    \mathsf{Person}, \mathsf{Female},
+    \mathsf{Woman}, \mathsf{Man},\\
+    &\mathsf{Mother}, \mathsf{Father},
+    \mathsf{Parent}, \mathsf{Grandmother}\},
+\end{aligned}
+\]
+\[
+    N_R = \{\mathsf{hasChild}\}.
+\]
+
+Consideriamo la seguente terminologia $\mathcal{T}$:
+\[
+\begin{aligned}
+    \mathsf{Woman}
+    &\equiv \mathsf{Person} \sqcap \mathsf{Female}\\
+    \mathsf{Man}
+    &\equiv \mathsf{Person} \sqcap \neg\mathsf{Woman}\\
+    \mathsf{Mother}
+    &\equiv \mathsf{Woman} \sqcap
+    \exists\mathsf{hasChild}.\mathsf{Person}\\
+    \mathsf{Father}
+    &\equiv \mathsf{Man} \sqcap
+    \exists\mathsf{hasChild}.\mathsf{Person}\\
+    \mathsf{Parent}
+    &\equiv \mathsf{Father} \sqcup \mathsf{Mother}\\
+    \mathsf{Grandmother}
+    &\equiv \mathsf{Mother} \sqcap
+    \exists\mathsf{hasChild}.\mathsf{Parent}.
+\end{aligned}
+\]
+
+Possiamo osservare che ogni concetto atomico compare al
+massimo una volta nella parte sinistra di una definizione.
+Pertanto, $\mathcal{T}$ costituisce una terminologia.
+
+\textbf{Tramite una terminologia stiamo definendo alcuni concetti atomici ai quali diamo dei "vincoli" sui valori che devono avere quando l'interpretazione assegna dei valori.}
+Una generica interpretazione \(\mathcal I\) può assegnare arbitrariamente a questi concetti dei sottoinsiemi del dominio:
+\[
+\begin{aligned}
+\mathsf{Person}^{\mathcal I}&\subseteq\Delta^{\mathcal I}\\
+\mathsf{Female}^{\mathcal I}&\subseteq\Delta^{\mathcal I}\\
+\mathsf{Woman}^{\mathcal I}&\subseteq\Delta^{\mathcal I}
+\end{aligned}
+\]
+
+Non esiste necessariamente alcuna relazione tra questi tre insiemi.
+
+Supponiamo adesso di introdurre:
+\[
+\mathcal T=\{\mathsf{Woman}\equiv
+\mathsf{Person}\sqcap\mathsf{Female}\}
+\]
+
+Una generica interpretazione \(\mathcal I\) continua ad assegnare un insieme a ciascuno dei tre concetti atomici.
+
+Tuttavia, affinché \(\mathcal I\) \textbf{sia un modello della terminologia} (si può esserlo, perchè una terminologia è un insieme di definizioni, che possono essere visti come degli assiomi $Ax$), deve necessariamente valere:
+\[
+\mathsf{Woman}^{\mathcal I}=
+\mathsf{Person}^{\mathcal I}\cap
+\mathsf{Female}^{\mathcal I}
+\]
+
+Di conseguenza, il significato di \(\mathsf{Woman}\) non può più essere scelto indipendentemente dal significato degli altri due concetti, se vogliamo ottenere un modello della terminologia.
