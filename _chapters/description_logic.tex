@@ -1639,6 +1639,8 @@ allora vale la seguente equivalenza:
 
     I reasoning tasks sono problemi di ragionamento che un reasoner deve risolvere a partire dalla conoscenza formalizzata in una Knowledge Base (\(KB\)).
 
+    principalmente sono problemi che sono di conseguenza semantica, ovvero la "$KB$ è conseguenza semantica di un assioma?"
+
     Nelle logiche descrittive sufficientemente espressive,
     tuttavia, \textbf{i principali reasoning tasks possono essere
     ridotti l'uno all'altro}.
@@ -1839,4 +1841,566 @@ KB\models C\sqsubseteq D
 \iff
 KB\models(C\sqcap\neg D)\sqsubseteq\bot
 }
+\]
+
+\newpage
+
+\paragraph{Riduzione da coerenza del concetto a coerenza della KB}
+L'idea alla base della riduzione è che io voglio risolvere un compito di coerenza del concetto, avendo a disposizione un algoritmo di coerenza della $KB$
+
+
+Supponiamo di voler verificare se un concetto $C$ è coerente
+rispetto a una Knowledge Base $KB$ (quindi ci viene dato questo task in input insomma), ossia per definizione:
+\[
+    KB \not\models C \sqsubseteq \bot.
+\]
+
+Dalla definizione semantica di coerenza di un concetto, sappiamo
+che ciò equivale a verificare se:
+\[
+    \exists \mathcal{I} :
+    \bigl(\mathcal{I} \models KB
+    \land C^{\mathcal{I}} \neq \emptyset\bigr).
+\]
+
+Quindi Il nostro obiettivo iniziale è verificare la coerenza del concetto \(C\) rispetto alla \(KB\), ossia:
+\[
+\exists\mathcal I:
+\underbrace{\mathcal I\models KB}_{\text{Prima condizione}}
+\land
+\underbrace{C^{\mathcal I}\neq\emptyset}_{\text{Seconda condizione}}.
+\]
+
+Quindi dobbiamo trovare un'interpretazione che soddisfi contemporaneamente due condizioni.
+
+Però noi abbiamo a disposizione solo un reasoner che sappia risolvere solamente il task di coerenza della KB.
+
+Questo reasoner è in grado di verificare:
+\[
+\exists\mathcal I:\mathcal I\models KB.
+\]
+
+Cioè il reasoner ci sa solo dire se una $KB$ è coerente.
+
+L'idea alla base della riduzione è quella di costruire una nuova Knowledge Base:
+\[
+    KB' = KB \cup
+    \{\top \sqsubseteq \exists R_{\mathrm{new}}.C\},
+\]
+dove $R_{\mathrm{new}}$ è un nuovo nome di ruolo, non presente
+né nella $KB$ originale né nel concetto $C$.
+
+Il nuovo assioma è \textbf{un'assioma di inclusione di ruolo}:
+\[
+    \top \sqsubseteq \exists R_{\mathrm{new}}.C
+\]
+impone che ogni elemento del dominio sia collegato, attraverso
+il ruolo $R_{\mathrm{new}}$, ad almeno un elemento appartenente
+al concetto $C$.
+
+Applicando la definizione che un interpretazione deve essere un modello rispetto alla $KB'$ si ha che ogni assioma della nuova Knowledge Base deve essere vero nell'interpretazione, otteniamo quindi quando si arriva al nuovo assioma:
+\[
+    \mathcal{I} \models
+    \top \sqsubseteq \exists R_{\mathrm{new}}.C
+    \iff
+    \forall x \in \Delta^{\mathcal{I}}, \quad
+    \exists y \in C^{\mathcal{I}} :
+    (x,y) \in R_{\mathrm{new}}^{\mathcal{I}}.
+\]
+
+Poiché, per definizione di interpretazione, il dominio
+$\Delta^{\mathcal{I}}$ è sempre non vuoto, affinché questo
+assioma possa essere soddisfatto deve necessariamente valere:
+\[
+    C^{\mathcal{I}} \neq \emptyset.
+\]
+
+Quindi abbiamo trasformato il task iniziare, di coerenza del concetto, dove devo verificare due principali condizioni, in un task dove devo verificare la coerenza di una nuova $KB'$, che esattamente quello che il mio reasoner sa fare
+\[
+\exists\mathcal I:\mathcal I\models KB'.
+\]
+e se so verificare questo, allora ho risolto il mio problema originale, soddisfando entrambe le condizioni.
+
+\newpage
+\paragraph{Riduzione da Coerenza della KB a Instance Checking}
+L'idea alla base di questa riduzione è che voglio risolvere un problema di Coerenza dell KB, avendo però a disposizione un algoritmo
+di Instance Checking.
+
+Supponiamo di voler verificare se una Knowledge Base $KB$
+è coerente, ossia se:
+\[
+    KB \not\models \top \sqsubseteq \bot.
+\]
+
+Dalla definizione semantica di coerenza della KB, sappiamo
+che ciò equivale a verificare se esiste almeno un modello
+della $KB$:
+\[
+    \exists \mathcal{I} : \mathcal{I} \models KB.
+\]
+
+Supponiamo, tuttavia, di avere a disposizione solamente
+un algoritmo in grado di risolvere il task di controllo
+di istanza (\textit{Instance Checking}).
+
+L'idea alla base della riduzione consiste nello sfruttare
+il fatto che, per definizione di semantica formale,
+il concetto $\bot$ viene sempre interpretato come
+l'insieme vuoto:
+\[
+    \forall \mathcal{I}, \quad
+    \bot^{\mathcal{I}} = \emptyset.
+\]
+
+Consideriamo quindi un generico nome di individuo $a$
+(eventualmente introdotto appositamente) e chiediamoci
+se l'asserzione $\bot(a)$ sia una conseguenza semantica
+della $KB$:
+\[
+    KB \models \bot(a).
+\]
+
+Dalla definizione semantica del task di controllo di
+istanza, sappiamo che:
+\[
+    KB \models \bot(a)
+    \iff
+    \forall \mathcal{I}, \quad
+    \bigl(\mathcal{I} \models KB
+    \implies
+    a^{\mathcal{I}} \in \bot^{\mathcal{I}}\bigr).
+\]
+
+Poiché $\bot^{\mathcal{I}} = \emptyset$, otteniamo:
+\[
+    KB \models \bot(a)
+    \iff
+    \forall \mathcal{I}, \quad
+    \bigl(\mathcal{I} \models KB
+    \implies
+    a^{\mathcal{I}} \in \emptyset\bigr).
+\]
+
+Tuttavia, nessun elemento può appartenere all'insieme
+vuoto. Il conseguente dell'implicazione è quindi
+\textbf{sempre falso}.
+
+Ricordando la seguente equivalenza logica:
+\[
+    (P \implies \mathrm{False}) \iff \neg P,
+\]
+otteniamo:
+\[
+    KB \models \bot(a)
+    \iff
+    \forall \mathcal{I}, \quad
+    \mathcal{I} \not\models KB.
+\]
+
+Applicando le proprietà dei quantificatori:
+\[
+    KB \models \bot(a)
+    \iff
+    \neg \exists \mathcal{I} :
+    \mathcal{I} \models KB.
+\]
+
+Abbiamo quindi ottenuto esattamente la definizione
+semantica di incoerenza della $KB$.
+
+Negando entrambi i membri dell'equivalenza, otteniamo:
+\[
+    KB \not\models \bot(a)
+    \iff
+    \exists \mathcal{I} :
+    \mathcal{I} \models KB.
+\]
+
+Riconosciamo, nel membro di destra, la definizione
+semantica di coerenza della $KB$.
+
+\medskip
+\textbf{Regola di riduzione.}
+
+Possiamo quindi esprimere la riduzione mediante la
+seguente equivalenza:
+\[
+    \boxed{
+        KB \not\models \top \sqsubseteq \bot
+        \iff
+        KB \not\models \bot(a)
+    }
+\]
+
+Quindi verificare la Coerenza della $KB$ può essere fatto medianete un task di Instance Checking.
+
+\paragraph{Riduzione di tutti i task alla Sussunzione}
+Sappi che tutti i task fondamentali visti prima possono essere ridotti alla Sussunzione.
+
+\newpage
+\subsection{Tautologie}
+Nelle Logiche Descrittive (DL) è importante distinguere due
+concetti fondamentali:
+\begin{itemize}
+    \item Le \textbf{tautologie}, ossia formule logiche che
+    risultano vere in qualsiasi interpretazione possibile,
+    indipendentemente dagli assiomi presenti nella $KB$.
+
+    \item Le \textbf{regole di derivazione}, ossia regole logiche
+    che permettono di ricavare nuove conclusioni a partire da
+    determinate premesse.
+    Le regole di derivazione permettono di inferire.
+    I reasoner possono sfruttare tali regole per inferire
+    conoscenza implicitamente contenuta nella $KB$.
+\end{itemize}
+
+\begin{observation}{}
+    Le regole di derivazione e i reasoning tasks sono due concetti distinti, ma strettamente collegati.
+    \begin{enumerate}
+        \item I reasoning tasks rappresentano i problemi di ragionamento che il reasoner deve risolvere a partire da una \(KB\).
+        \item Le regole di derivazione rappresentano gli strumenti logici che il reasoner può utilizzare per inferire nuova conoscenza e, quindi, per risolvere i reasoning tasks.
+    \end{enumerate}
+    In altre parole, il reasoning task rappresenta che cosa vogliamo verificare, mentre le regole di derivazione rappresentano uno dei modi attraverso cui possiamo ottenere la risposta.
+    Comunque tieni conto che noi prima abbiamo visto meccanismi di riduzione, ma il task a cui ci riduciamo comunque deve essere risolto.
+    Supponiamo di avere la seguente Knowledge Base:
+    \[
+    KB=\{A\sqsubseteq B,\ B\sqsubseteq C\}.
+    \]
+
+    Il reasoning task che vogliamo risolvere è quello di sussunzione:
+    \[
+    KB\models A\sqsubseteq C\;?
+    \]
+    E quindi per risolverlo useremo delle regole di derivazione, partendo appunto dalla $KB$.
+\end{observation}
+
+\subsection{Tautologie nelle Logiche Descrittive}
+
+\begin{definition}{Tautologia}
+    Una \textbf{tautologia} è un assioma $Ax$ che viene
+    soddisfatto da qualsiasi interpretazione $\mathcal{I}$,
+    indipendentemente dalla Knowledge Base considerata.
+    Cioè è vero in ogni interpretazione.
+
+    Formalmente, un assioma $Ax$ è una tautologia se e solo se:
+    \[
+        \forall \mathcal{I}, \quad \mathcal{I} \models Ax.
+    \]
+
+    Per indicare che un assioma è una tautologia, possiamo
+    utilizzare la seguente notazione:
+    \[
+        \models Ax.
+    \]
+\end{definition}
+
+\begin{observation}{Differenza tra tautologia e conseguenza semantica}
+    Non bisogna confondere il concetto di tautologia con
+    quello di conseguenza semantica di una $KB$.
+
+    Infatti:
+    \begin{itemize}
+        \item $KB \models Ax$ significa che l'assioma $Ax$
+        è vero in tutte le interpretazioni che sono modelli
+        della $KB$:
+        \[
+            \forall \mathcal{I}, \quad
+            \bigl(\mathcal{I} \models KB
+            \implies \mathcal{I} \models Ax\bigr).
+        \]
+
+        \item $\models Ax$ significa che l'assioma $Ax$
+        è vero in tutte le possibili interpretazioni,
+        indipendentemente dal fatto che esse siano o meno
+        modelli della $KB$:
+        \[
+            \forall \mathcal{I}, \quad
+            \mathcal{I} \models Ax.
+        \]
+    \end{itemize}
+
+    Pertanto, una tautologia è sempre una conseguenza
+    semantica di qualsiasi $KB$:
+    \[
+        \models Ax
+        \implies
+        KB \models Ax.
+    \]
+    Tuttavia, non vale necessariamente il viceversa.
+\end{observation}
+
+\newpage
+
+\paragraph{Tautologie di equivalenza tra concetti}
+
+Se un assioma di equivalenza tra due concetti $C$ e $D$ (si indica con le tre frecce orizzontali e significa che i due concetti sono uguali)
+è una tautologia, ossia:
+\[
+    \models C \equiv D,
+\]
+allora, applicando la semantica formale dell'equivalenza
+tra concetti, otteniamo:
+\[
+    \models C \equiv D
+    \iff
+    \forall \mathcal{I}, \quad
+    C^{\mathcal{I}} = D^{\mathcal{I}}.
+\]
+
+Questo significa che, indipendentemente dall'interpretazione
+considerata, le due espressioni concettuali rappresentano
+sempre lo stesso insieme di individui.
+
+\paragraph{Tautologie di inclusione tra concetti}
+
+Analogamente, se un assioma di inclusione tra due concetti
+$C$ e $D$ è una tautologia, ossia:
+\[
+    \models C \sqsubseteq D,
+\]
+allora:
+\[
+    \models C \sqsubseteq D
+    \iff
+    \forall \mathcal{I}, \quad
+    C^{\mathcal{I}} \subseteq D^{\mathcal{I}}.
+\]
+
+\begin{example}{Esempio di Tautologia}
+Consideriamo l'assioma:
+\[
+    C \sqcap \top \equiv C.
+\]
+
+Applicando la semantica formale, otteniamo:
+\[
+    (C \sqcap \top)^{\mathcal{I}}
+    = C^{\mathcal{I}} \cap \top^{\mathcal{I}}
+    = C^{\mathcal{I}} \cap \Delta^{\mathcal{I}}
+    = C^{\mathcal{I}}.
+\]
+
+Poiché questa uguaglianza è verificata per qualsiasi
+interpretazione $\mathcal{I}$, possiamo concludere che:
+\[
+    \boxed{\models C \sqcap \top \equiv C}
+\]
+
+L'assioma è quindi una tautologia, poiché la sua validità
+deriva direttamente dalla semantica formale dei costruttori
+e dalle proprietà della teoria degli insiemi, senza
+utilizzare alcun assioma della $KB$.        
+\end{example}
+
+
+\begin{table}[htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.8}
+    \begin{tabular}{|p{0.43\textwidth}|p{0.47\textwidth}|}
+        \hline
+        \textbf{Nome della tautologia} &
+        \textbf{Formula logica} \\
+        \hline
+
+        \textbf{Doppia negazione}
+        &
+        $\neg(\neg C) \equiv C$
+        \\
+        \hline
+
+        \textbf{Dualità dei quantificatori}
+        \newline
+        \textit{(De Morgan per i ruoli)}
+        &
+        $\forall R.C \equiv \neg\exists R.\neg C$
+        \newline
+        $\exists R.C \equiv \neg\forall R.\neg C$
+        \\
+        \hline
+
+        \textbf{Leggi di De Morgan per i concetti}
+        &
+        $\neg(C \sqcap D) \equiv \neg C \sqcup \neg D$
+        \newline
+        $\neg(C \sqcup D) \equiv \neg C \sqcap \neg D$
+        \\
+        \hline
+
+        \textbf{Dualità tra Top ($\top$) e Bottom ($\bot$)}
+        &
+        $\neg\top \equiv \bot$
+        \newline
+        $\neg\bot \equiv \top$
+        \\
+        \hline
+
+        \textbf{Assorbimento con Top e Bottom}
+        &
+        $C \sqcap \top \equiv C$
+        \newline
+        $C \sqcup \bot \equiv C$
+        \newline
+        $C \sqcap \bot \equiv \bot$
+        \newline
+        $C \sqcup \top \equiv \top$
+        \\
+        \hline
+
+        \textbf{Dualità delle restrizioni numeriche qualificate}
+        &
+        $\neg(\geq n\, R.C) \equiv
+        (\leq (n-1)\, R.C)$
+        \newline
+        con $n \geq 1$
+        \\
+        \hline
+
+        \textbf{Sussunzione tautologica}
+        \newline
+        \textit{(Assiomi vuoti e universali)}
+        &
+        $\bot \sqsubseteq C$
+        \newline
+        $C \sqsubseteq \top$
+        \\
+        \hline
+    \end{tabular}
+    \caption{Principali tautologie nelle Logiche Descrittive.}
+    \label{tab:tautologie_dl}
+\end{table}
+
+\newpage
+
+\subsection{Regole di Derivazione}
+La seguente regola di derivazione, basata sulla transitività dell'inclusione:
+\[
+\frac{A\sqsubseteq B\qquad B\sqsubseteq C}
+{A\sqsubseteq C}
+\]
+\paragraph{Come funziona?}
+Consideriamo la seguente Knowledge Base:
+\[
+KB=\{A\sqsubseteq B,\ B\sqsubseteq C\}.
+\]
+
+Applichiamo la regola di derivazione della transitività:
+\[
+\frac{A\sqsubseteq B\qquad B\sqsubseteq C}
+{A\sqsubseteq C}
+\]
+
+Posso dire che $A\sqsubseteq C$ è una conseguenza semantica della $KB$.
+\[
+KB \models A\sqsubseteq C
+\]
+
+Questo perchè prendiamo una generica interpretazione \(\mathcal I\) che sia un modello della \(KB\):
+\[
+\mathcal I\models KB.
+\]
+
+Per definizione di modello, essa deve soddisfare tutti gli assiomi della \(KB\). Pertanto:
+\[
+A^{\mathcal I}\subseteq B^{\mathcal I}
+\qquad\land\qquad
+B^{\mathcal I}\subseteq C^{\mathcal I}.
+\]
+
+Per la proprietà di transitività dell'inclusione insiemistica:
+\[
+A^{\mathcal I}\subseteq B^{\mathcal I}
+\land
+B^{\mathcal I}\subseteq C^{\mathcal I}
+\implies
+A^{\mathcal I}\subseteq C^{\mathcal I}.
+\]
+
+Quindi:
+\[
+\mathcal I\models A\sqsubseteq C.
+\]
+
+Per definizione, posso dire quindi:
+
+\[
+\forall\mathcal I,\quad
+(\mathcal I\models KB
+\implies
+\mathcal I\models A\sqsubseteq C).
+\]
+
+
+
+\paragraph{Propagazione per inclusione di ruolo}
+
+Se un ruolo $R$ è incluso in un ruolo $R'$ e la coppia
+di individui $(a,b)$ appartiene al ruolo $R$, allora
+la stessa coppia appartiene necessariamente anche al ruolo $R'$.
+
+La regola di derivazione è:
+\[
+    \frac{R \sqsubseteq R' \qquad R(a,b)}
+         {R'(a,b)}
+\]
+
+La correttezza della regola deriva direttamente dalla
+semantica formale:
+\[
+    R^{\mathcal{I}} \subseteq R'^{\mathcal{I}}
+    \land
+    (a^{\mathcal{I}},b^{\mathcal{I}}) \in R^{\mathcal{I}}
+    \implies
+    (a^{\mathcal{I}},b^{\mathcal{I}}) \in R'^{\mathcal{I}}.
+\]
+
+Ad esempio:
+\[
+    \frac{
+        \text{haPadre} \sqsubseteq \text{haGenitore}
+        \qquad
+        \text{haPadre}(a,b)
+    }{
+        \text{haGenitore}(a,b)
+    }
+\]
+
+\paragraph{Propagazione per transitività del ruolo}
+
+Se nella RBox è presente un assioma che dichiara il
+ruolo $R$ come transitivo, allora è possibile concatenare
+due relazioni dello stesso tipo, quando il secondo
+individuo della prima relazione coincide con il primo
+individuo della seconda relazione.
+
+La regola di derivazione è:
+\[
+    \frac{\operatorname{trans}(R)
+          \qquad R(a,b)
+          \qquad R(b,c)}
+         {R(a,c)}
+\]
+
+La correttezza della regola deriva dalla semantica formale
+della transitività di un ruolo:
+\[
+    \mathcal{I} \models \operatorname{trans}(R)
+    \iff
+    \forall x,y,z \in \Delta^{\mathcal{I}}, \quad
+    \bigl(
+        (x,y) \in R^{\mathcal{I}}
+        \land
+        (y,z) \in R^{\mathcal{I}}
+        \implies
+        (x,z) \in R^{\mathcal{I}}
+    \bigr).
+\]
+
+Pertanto, se l'interpretazione soddisfa tutte le premesse,
+allora:
+\[
+    (a^{\mathcal{I}},b^{\mathcal{I}}) \in R^{\mathcal{I}}
+    \land
+    (b^{\mathcal{I}},c^{\mathcal{I}}) \in R^{\mathcal{I}}
+    \implies
+    (a^{\mathcal{I}},c^{\mathcal{I}}) \in R^{\mathcal{I}}.
 \]
