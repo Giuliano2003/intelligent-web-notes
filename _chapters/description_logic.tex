@@ -237,9 +237,10 @@ Tuttavia, la semantica formale non si limita ad attribuire un significato matema
         \item \(\Delta^{\mathcal I}\) (\textbf{dominio di interpretazione}):
             un insieme non vuoto di oggetti.
         \item \(\cdot^{\mathcal I}\) (\textbf{funzione di interpretazione}):
-            assegna un significato ai simboli del linguaggio.
+            assegna un significato ai simboli della segnatura, come vedi sotto.
     \end{itemize}
-    Ogni concetto \(A\) diventa un insieme di elementi (che se ci pensi è quello che matematicamente è un concetto) :
+    Se l'interpretazione è definita rispetto alla segnatura originale allora
+    Ogni concetto \(A\) che appartiene a $\Sigma$ diventa un insieme di elementi (che se ci pensi è quello che matematicamente è un concetto) :
     \[
         A^{\mathcal I}\subseteq\Delta^{\mathcal I}.
     \]
@@ -414,6 +415,11 @@ Tuttavia, la semantica formale non si limita ad attribuire un significato matema
 \subsection{Traduzione matematica di ogni formula}
 Dopo aver stabilito come interpretare i simboli della segnatura \(N_C,N_R,N_I\), il passo successivo consiste nel definire formalmente la semantica delle espressioni complesse del linguaggio.
 Quindi estendiamo ricorsivamente l'interpretazione alle espressioni costruite mediante gli operatori logici e le costanti logiche.
+
+La funzione di interpretazione assegna direttamente un significato ai simboli della segnatura e, a partire da queste assegnazioni, determina il significato di tutti i concetti complessi attraverso le regole semantiche della logica.
+
+Quindi, una volta fissato il dominio e l'interpretazione di tutti i simboli della segnatura, risulta determinata anche l'interpretazione di tutti i concetti complessi costruibili a partire da essa.
+
 \begin{center}
     \begingroup
     \small
@@ -2593,3 +2599,569 @@ Tuttavia, affinché \(\mathcal I\) \textbf{sia un modello della terminologia} (s
 \]
 
 Di conseguenza, il significato di \(\mathsf{Woman}\) non può più essere scelto indipendentemente dal significato degli altri due concetti, se vogliamo ottenere un modello della terminologia.
+
+\subsection{Estensione di un'interpretazione e terminologia definitoria}
+
+\subsubsection{L'interpretazione di base $\mathcal{J}$}
+
+Si parte da un'interpretazione dei soli concetti di base della terminologia:
+\[
+    \mathcal{J} = \langle \Delta_{\mathcal{J}},
+    \cdot^{\mathcal{J}} \rangle
+\]
+
+$\Delta_{\mathcal{J}}$ è il \textbf{dominio}, cioè l'insieme
+degli individui considerati. La funzione $\cdot^{\mathcal{J}}$
+assegna a ciascun concetto di base l'insieme degli individui
+che vi appartengono.
+
+Per esempio, $B^{\mathcal{J}}$ indica \textbf{l'insieme degli
+individui che appartengono al concetto di base $B$ secondo
+$\mathcal{J}$}.
+
+\begin{observation}{}
+    Nota che qui non stiamo considerando una interpretazione "a metà", semplicemente stiamo considerando una segnatura ristretta, cioè una segnatura solo dei concetti atomici di base.
+    La segnatura di base \(\Sigma_{\mathrm{base}}\), contenente solamente i concetti atomici di base.
+\end{observation}
+
+\subsubsection{L'estensione $\mathcal{I}$}
+
+Un'interpretazione $\mathcal{I}$ di \textbf{tutti i simboli
+della terminologia} è un'estensione di $\mathcal{J}$ se
+mantiene il dominio e il significato dei concetti di base,
+aggiungendo un'interpretazione \textbf{anche per i concetti definiti}.
+
+Le condizioni sono:
+\[
+    \Delta_{\mathcal{I}} = \Delta_{\mathcal{J}}
+\]
+cioè \textbf{le due interpretazioni considerano gli stessi
+individui}, e:
+\[
+    B^{\mathcal{I}} = B^{\mathcal{J}}
+    \qquad \text{per ogni concetto di base } B
+\]
+cioè \textbf{ogni concetto di base contiene gli stessi
+individui nelle due interpretazioni}.
+
+\begin{observation}{Che cosa viene ``esteso''?}
+    Viene esteso il \textbf{vocabolario interpretato}:
+    $\mathcal{I}$ assegna un significato anche ai concetti
+    definiti, mantenendo quanto già stabilito da $\mathcal{J}$.
+
+    Essere un'estensione non basta per essere un modello
+    della terminologia: occorre anche
+    \textbf{soddisfarne tutte le definizioni}.
+\end{observation}
+
+Quindi quello che fa $\mathcal{I}$ è dare un significato tramite l'interpretazione anche ai concetti definiti, cioè i concetti atomici che compaiono nella parte sinistra,
+\begin{observation}{}
+    Nota che non è detto che l'intepretazione $\mathcal{I}$ intepreta tutti i simboli della segnatura originale \(\Sigma\), ad esempio:
+    Supponiamo di avere una segnatura \(\Sigma\) con:
+\[
+N_C=\{
+\mathsf{Person},\mathsf{Female},\mathsf{Woman},
+\mathsf{Student},\mathsf{Animal}
+\}
+\]
+
+e consideriamo la terminologia:
+\[
+\mathcal T=\{
+\mathsf{Woman}\equiv
+\mathsf{Person}\sqcap\mathsf{Female}
+\}
+\]
+
+Come puoi notare, i concetti atomici \(\mathsf{Student}\) e \(\mathsf{Animal}\) non compaiono nella terminologia, pur appartenendo alla segnatura originale.
+Potremmo avere:
+\begin{enumerate}
+    \item Un'interpretazione di base \(\mathcal J\), che interpreta \(\mathsf{Person}\) e \(\mathsf{Female}\), questo perchè questa interpreazone $\mathcal{J}$ è definita su $\Sigma_{base}$
+    \item Un'estensione \(\mathcal I\), che interpreta anche \(\mathsf{Woman}\), preservando il dominio e le assegnazioni di \(\mathcal J\). Definita solo sui concetti atomici che vengono usati nella terminologia
+\end{enumerate}
+Quindi l'estensione non intepreta tutti i simboli che si trovano nella segnatura originale, però questo dipende molto dalla segnatura rispetto alla quale definiamo \(\mathcal I\)
+\begin{enumerate}
+    \item Se \(\mathcal I\) è un'interpretazione del vocabolario della terminologia, allora non è necessario interpretare anche \(\mathsf{Student}\) e \(\mathsf{Animal}\), quello che si fa è definire $\mathcal{I}$ su una segnatura ristretta.
+    \item Se \(\mathcal I\) è un'interpretazione della segnatura originale, allora deve necessariamente interpretare anche \(\mathsf{Student}\) e \(\mathsf{Animal}\), ma la terminologia non impone alcun vincolo sul loro significato.
+\end{enumerate}
+\end{observation}
+\newpage
+\begin{definition}{Terminologia definitoria}
+    Una terminologia $\mathcal{T}$ si dice \textbf{definitoria}
+    se, per ogni interpretazione di base $\mathcal{J}$,
+    esiste un'unica estensione $\mathcal{I}$ di $\mathcal{J}$
+    che è anche un modello di $\mathcal{T}$.
+
+    Formalmente:
+    \[
+        \forall \mathcal{J}, \quad
+        \exists! \mathcal{I} :
+        \begin{cases}
+            \mathcal{I} \text{ è un'estensione di } \mathcal{J},\\
+            \mathcal{I} \models \mathcal{T}.
+        \end{cases}
+    \]
+
+    Questo significa che, una volta fissata l'interpretazione
+    dei simboli di base, esiste uno e un solo modo di
+    interpretare i concetti definiti della terminologia,
+    affinché tutte le definizioni contenute in $\mathcal{T}$
+    siano soddisfatte.
+
+    In altre parole, il significato semantico dei concetti
+    definiti è determinato univocamente dall'interpretazione
+    di base e dalle definizioni della terminologia.
+\end{definition}
+
+\begin{example}{Terminologia definitoria}
+    Consideriamo la seguente terminologia:
+    \[
+        \mathcal{T} =
+        \{\mathsf{Woman} \equiv
+        \mathsf{Person} \sqcap \mathsf{Female}\}.
+    \]
+
+    Supponiamo che un'interpretazione di base $\mathcal{J}$
+    stabilisca:
+    \[
+        \mathsf{Person}^{\mathcal{J}} = \{Anna,Luca\},
+        \qquad
+        \mathsf{Female}^{\mathcal{J}} = \{Anna\}.
+    \]
+
+    Una qualsiasi estensione $\mathcal{I}$ di $\mathcal{J}$
+    deve necessariamente preservare il dominio e il
+    significato dei concetti di base:
+    \[
+        \Delta_{\mathcal{I}} = \Delta_{\mathcal{J}}
+    \]
+    \[
+        \mathsf{Person}^{\mathcal{I}} =
+        \mathsf{Person}^{\mathcal{J}},
+        \qquad
+        \mathsf{Female}^{\mathcal{I}} =
+        \mathsf{Female}^{\mathcal{J}}.
+    \]
+
+    Tuttavia, affinché $\mathcal{I}$ sia anche un modello
+    della terminologia $\mathcal{T}$, deve valere:
+
+    \[
+    \mathcal{I} \models \mathcal{T}
+    \iff
+    \forall Ax \in \mathcal{T}, \quad
+    \mathcal{I} \models Ax.
+    \]
+    Dove $Ax$ = $\mathsf{Woman} \equiv
+        \mathsf{Person} \sqcap \mathsf{Female}$
+
+    
+    Quindi:
+    \[
+        \mathsf{Woman}^{\mathcal{I}} =
+        \mathsf{Person}^{\mathcal{I}} \cap
+        \mathsf{Female}^{\mathcal{I}}.
+    \]
+
+    Pertanto:
+    \[
+        \mathsf{Woman}^{\mathcal{I}} =
+        \{Anna,Luca\} \cap \{Anna\} = \{Anna\}.
+    \]
+
+    L'interpretazione del concetto definito
+    $\mathsf{Woman}$ è quindi \textbf{determinata
+    univocamente} dall'interpretazione di base
+    $\mathcal{J}$ e dalla terminologia $\mathcal{T}$.
+\end{example}
+
+\newpage
+
+\subsection{Terminologie cicliche e acicliche}
+
+\subsubsection{Dipendenza diretta e indiretta}
+
+\begin{definition}{Dipendenza diretta}
+    Dati due concetti atomici $A$ e $B$, dove $A$ è un
+    concetto definito, si dice che $A$ \textbf{dipende
+    direttamente} da $B$ se $B$ compare nella parte destra
+    (RHS) della definizione di $A$.
+\end{definition}
+
+\begin{example}{Dipendenza diretta}
+    Consideriamo la seguente definizione:
+    \[
+        \mathsf{Mother} \equiv
+        \mathsf{Woman} \sqcap
+        \exists\mathsf{hasChild}.\mathsf{Person}.
+    \]
+
+    Il concetto $\mathsf{Mother}$ dipende direttamente
+    dai concetti $\mathsf{Woman}$ e $\mathsf{Person}$,
+    poiché entrambi compaiono nella sua definizione.
+\end{example}
+
+\begin{definition}{Dipendenza indiretta}
+    Un concetto definito $A$ \textbf{dipende indirettamente}
+    da un concetto $B$ se esiste una catena di dipendenze
+    dirette di almeno due passaggi che collega $A$ a $B$.
+\end{definition}
+
+\begin{example}{Dipendenza indiretta}
+    Consideriamo le seguenti definizioni:
+    \[
+        \mathsf{Mother} \equiv
+        \mathsf{Woman} \sqcap
+        \exists\mathsf{hasChild}.\mathsf{Person}
+    \]
+    \[
+        \mathsf{Woman} \equiv
+        \mathsf{Person} \sqcap \mathsf{Female}.
+    \]
+
+    Poiché $\mathsf{Mother}$ dipende direttamente da
+    $\mathsf{Woman}$ e $\mathsf{Woman}$ dipende direttamente
+    da $\mathsf{Female}$, possiamo concludere che
+    $\mathsf{Mother}$ dipende indirettamente da
+    $\mathsf{Female}$.
+
+    Possiamo rappresentare tale catena di dipendenze come:
+    \[
+        \mathsf{Mother}
+        \longrightarrow
+        \mathsf{Woman}
+        \longrightarrow
+        \mathsf{Female}.
+    \]
+\end{example}
+
+\newpage
+
+\subsubsection{Terminologie acicliche e cicliche}
+
+\begin{definition}{Terminologia sintatticamente aciclica}
+    Una terminologia $\mathcal{T}$ si dice
+    \textbf{sintatticamente aciclica} se nessun concetto
+    definito dipende da se stesso, direttamente o
+    indirettamente, attraverso una catena di dipendenze
+    di almeno un passaggio.
+
+    In altre parole, possiamo seguire le dipendenze tra
+    i concetti senza mai ritornare al concetto da cui
+    siamo partiti.
+\end{definition}
+
+\begin{definition}{Terminologia sintatticamente ciclica}
+    Una terminologia $\mathcal{T}$ si dice
+    \textbf{sintatticamente ciclica} se esiste almeno
+    un concetto definito che dipende da se stesso,
+    direttamente o indirettamente.
+\end{definition}
+
+\begin{example}{Dipendenza ciclica indiretta}
+    Consideriamo la seguente terminologia:
+    \[
+        \mathcal{T} =
+        \left\{
+            A \equiv \exists R.B,\quad
+            B \equiv C \sqcap A
+        \right\}.
+    \]
+
+    Il concetto $A$ dipende direttamente da $B$,
+    il quale, a sua volta, dipende direttamente da $A$.
+
+    Si forma quindi un \textbf{ciclo di dipendenze}:
+    \[
+        A \longrightarrow B \longrightarrow A.
+    \]
+
+    Il concetto $A$ dipende indirettamente da se stesso.
+    Pertanto, $\mathcal{T}$ è una terminologia
+    sintatticamente ciclica.
+\end{example}
+
+\begin{example}{Dipendenza ciclica diretta}
+    Consideriamo la seguente terminologia:
+    \[
+        \mathcal{T} =
+        \left\{A \equiv B \sqcap \forall R.A\right\}.
+    \]
+
+    Anche in questo caso è presente un ciclo di dipendenze,
+    poiché il concetto $A$ compare direttamente nella
+    propria definizione:
+    \[
+        A \longrightarrow A.
+    \]
+
+    Pertanto, $A$ dipende direttamente da se stesso
+    e la terminologia $\mathcal{T}$ è sintatticamente
+    ciclica.
+\end{example}
+
+\newpage
+
+\subsubsection{Ciclicità apparente}
+
+Una terminologia può sembrare ciclica osservando la struttura
+sintattica delle sue definizioni, ma il riferimento di un
+concetto a se stesso potrebbe essere \textbf{eliminabile
+tramite equivalenze logiche}.
+
+\begin{example}{Ciclo apparente}
+    Consideriamo la seguente definizione:
+    \[
+        A \equiv \exists R.\left[B \sqcap (A \sqcup \neg A)\right].
+    \]
+
+    Il concetto $A$ compare nella propria definizione,
+    pertanto siamo in presenza di un ciclo sintattico.
+
+    Tuttavia, per le equivalenze logiche, sappiamo che:
+    \[
+        A \sqcup \neg A \equiv \top.
+    \]
+
+    Di conseguenza:
+    \[
+        B \sqcap (A \sqcup \neg A)
+        \equiv B \sqcap \top
+        \equiv B.
+    \]
+
+    La definizione iniziale è quindi equivalente a:
+    \[
+        A \equiv \exists R.B
+    \]
+    che non contiene più alcun riferimento ad $A$ nella
+    parte destra della definizione.
+
+    Il ciclo sintattico è stato quindi eliminato mediante
+    equivalenze logiche, senza modificare il significato
+    semantico della definizione.
+\end{example}
+
+
+\begin{observation}{Ciclicità sintattica e semantica}
+    Il fatto che un concetto compaia nella propria
+    definizione è sufficiente per riconoscere un
+    \textbf{ciclo sintattico}, ma non è sufficiente
+    per affermare che la terminologia sia semanticamente ciclica. (cioè "veramente" ciclica, perchè il ciclo potrebbe essere eliminabile)
+
+    Infatti, potrebbe trattarsi di un ciclo apparente,
+    eliminabile attraverso equivalenze logiche.
+
+    Pertanto, una terminologia sintatticamente ciclica
+    non è necessariamente semanticamente ciclica, questo perchè il ciclo potrebbe .
+\end{observation}
+\subsection{Concept unfolding e terminologie definitorie}
+
+\begin{definition}{Concept unfolding}
+    Il \textbf{concept unfolding}, o espansione dei concetti,
+    consiste nel sostituire ogni occorrenza di un concetto
+    definito (cioè un concetto atomico che appare a sinistra degli assegnamenti) 
+    con la parte destra della sua definizione.
+
+    La sostituzione viene ripetuta ricorsivamente, questo succede se nella
+    definizione inserita compaiono altri concetti definiti,
+    si espandono anche questi ultimi.
+\end{definition}
+
+\begin{example}{Concept unfolding}
+    Consideriamo la seguente definizione:
+    \[
+        \mathsf{Man} \equiv
+        \mathsf{Person} \sqcap \neg\mathsf{Woman}.
+    \]
+
+    Poiché il concetto $\mathsf{Woman}$ è a sua volta
+    definito come:
+    \[
+        \mathsf{Woman} \equiv
+        \mathsf{Person} \sqcap \mathsf{Female},
+    \]
+
+    sostituendo $\mathsf{Woman}$ con la sua definizione
+    otteniamo:
+    \[
+        \mathsf{Man} \equiv
+        \mathsf{Person} \sqcap
+        \neg(\mathsf{Person} \sqcap \mathsf{Female}).
+    \]
+
+    La parte destra della nuova definizione contiene
+    soltanto \textbf{concetti di base}, ossia
+    $\mathsf{Person}$ e $\mathsf{Female}$.
+\end{example}
+
+\begin{theorem}{}
+    Una terminologia aciclica $\mathcal{T}$ è sempre definitoria
+\end{theorem}
+\begin{proof}
+    Ricordiamo la definizione di Terminologia definitoria:
+    \begin{definition}{Terminologia definitoria}
+    Una terminologia $\mathcal{T}$ si dice \textbf{definitoria}
+    se, per ogni interpretazione di base $\mathcal{J}$,
+    esiste un'unica estensione $\mathcal{I}$ di $\mathcal{J}$
+    che è anche un modello di $\mathcal{T}$.
+
+    Formalmente:
+    \[
+        \forall \mathcal{J}, \quad
+        \exists! \mathcal{I} :
+        \begin{cases}
+            \mathcal{I} \text{ è un'estensione di } \mathcal{J},\\
+            \mathcal{I} \models \mathcal{T}.
+        \end{cases}
+    \]
+\end{definition}
+Consideriamo due concetti di base $P,Q$ e questa
+    terminologia aciclica:
+    \[
+        A \equiv P \sqcap Q
+        \qquad
+        B \equiv \neg A
+    \]
+
+    Scegliamo un'interpretazione di base $\mathcal{J}$:
+    \[
+        \Delta_{\mathcal{J}} = \{a,b,c\},
+        \qquad P^{\mathcal{J}} = \{a,b\},
+        \qquad Q^{\mathcal{J}} = \{b,c\}
+    \]
+
+    Per costruire un'estensione che soddisfi la definizione di definitoria,
+    dobbiamo assegnare un insieme ad $A$ e uno a $B$.
+
+    $\mathcal{I}$ deve essere un'estensione di $\mathcal{J}$, e lo è, per come abbiamo costrutito $\mathcal{I}$ lo è.
+
+    Inoltre:
+
+
+    \[
+    \mathcal{I} \models \mathcal{T} \iff \forall Ax \in \mathcal{T} , \mathcal{I} \models Ax
+    \]
+
+    Di conseguenza:
+
+    \begin{enumerate}
+        \item $\mathcal{I} \models A \equiv P \sqcap Q$
+        \item $\mathcal{I} \models B \equiv \neg A$
+    \end{enumerate}
+
+    Per soddisfare allora si ha:
+
+
+    \[
+        A^{\mathcal{I}} =
+        P^{\mathcal{J}} \cap Q^{\mathcal{J}} = \{b\}
+    \]
+
+    Qualunque altro insieme violerebbe $A \equiv P \sqcap Q$.
+
+    Ora anche $A$ è determinato, quindi la seconda
+    definizione \textbf{obbliga} ad assegnare:
+    \[
+        B^{\mathcal{I}} =
+        \Delta_{\mathcal{J}} \setminus A^{\mathcal{I}}
+        = \{a,c\}
+    \]
+
+    Abbiamo così costruito un'estensione, e
+    \textbf{non possiamo costruirne una diversa che
+    rispetti le stesse definizioni}.
+
+    \begin{observation}{Che cosa può succedere con un ciclo?}
+        Consideriamo invece:
+        \[
+            A \equiv P \sqcap A
+        \]
+
+        Fissando $P^{\mathcal{J}} = \{a,b\}$, possiamo scegliere:
+        \[
+            A^{\mathcal{I}} = \emptyset,
+            \qquad A^{\mathcal{I}} = \{a\},
+            \qquad A^{\mathcal{I}} = \{a,b\}
+        \]
+
+        Tutte queste scelte soddisfano la definizione, che impone
+        soltanto $A^{\mathcal{I}} \subseteq P^{\mathcal{J}}$.
+
+        Qui conoscere $P$ \textbf{non determina esattamente} $A$:
+        rimangono più estensioni possibili della stessa
+        interpretazione di base.
+    \end{observation}
+\end{proof}
+
+\subsection{Concept unfolding nella pratica}
+\subsubsection{Espansione del concetto Grandmother}
+
+Partiamo dalla definizione:
+\[
+    \mathsf{Grandmother} \equiv
+    \mathsf{Mother} \sqcap
+    \exists\mathsf{hasChild}.\mathsf{Parent}
+\]
+
+Sostituiamo $\mathsf{Mother}$ e $\mathsf{Parent}$ con le
+rispettive definizioni:
+\[
+\begin{aligned}
+    \mathsf{Grandmother} \equiv {} &
+    (\mathsf{Woman} \sqcap
+    \exists\mathsf{hasChild}.\mathsf{Person})\\
+    & \sqcap \exists\mathsf{hasChild}.
+    (\mathsf{Father} \sqcup \mathsf{Mother})
+\end{aligned}
+\]
+
+Continuiamo sostituendo $\mathsf{Father}$, $\mathsf{Mother}$,
+$\mathsf{Man}$ e $\mathsf{Woman}$, fino a ottenere:
+\[
+\begin{aligned}
+    \mathsf{Grandmother} \equiv {} &
+    \mathsf{Person} \sqcap \mathsf{Female}
+    \sqcap \exists\mathsf{hasChild}.\mathsf{Person}\\
+    & \sqcap \exists\mathsf{hasChild}.\Bigl[\\
+    & \quad (\mathsf{Person} \sqcap
+    \neg(\mathsf{Person} \sqcap \mathsf{Female})
+    \sqcap \exists\mathsf{hasChild}.\mathsf{Person})\\
+    & \quad \sqcup
+    (\mathsf{Person} \sqcap \mathsf{Female}
+    \sqcap \exists\mathsf{hasChild}.\mathsf{Person})
+    \Bigr]
+\end{aligned}
+\]
+
+\subsubsection{Il problema: l'espansione può diventare molto grande}
+
+Consideriamo la terminologia:
+\[
+\begin{aligned}
+    A_0 &\equiv \exists L.A_1 \sqcap \exists R.A_1\\
+    A_1 &\equiv \exists L.A_2 \sqcap \exists R.A_2\\
+        &\vdots\\
+    A_{n-1} &\equiv \exists L.A_n \sqcap \exists R.A_n
+\end{aligned}
+\]
+
+Ogni definizione contiene \textbf{due occorrenze del concetto
+successivo}.
+
+Espandendo $A_0$, dobbiamo quindi inserire due copie della
+definizione di $A_1$:
+\[
+    A_0 \equiv
+    \exists L.(\exists L.A_2 \sqcap \exists R.A_2)
+    \sqcap
+    \exists R.(\exists L.A_2 \sqcap \exists R.A_2)
+\]
+
+Ora compaiono \textbf{quattro occorrenze di $A_2$}.
+Continuando, il numero di occorrenze raddoppia a ogni
+livello, fino ad arrivare a:
+\[
+    2^n
+\]
+occorrenze di $A_n$ nell'espansione completa di $A_0$.
